@@ -39,9 +39,8 @@ export default function SubscriptionHome() {
     if (!user) return;
     setLoading(true);
     try {
-      const { data: { session } } = await supabase.auth.getSession();
       const res = await supabase.functions.invoke("create-checkout-session", {
-        headers: { Authorization: `Bearer ${session?.access_token}` },
+        body: { user_id: user.id, email: user.email },
       });
 
       if (res.error) throw new Error(res.error.message);
