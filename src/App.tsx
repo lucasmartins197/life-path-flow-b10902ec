@@ -51,6 +51,7 @@ import LegalHome from "./pages/app/LegalHome";
 import FinancialSupportHome from "./pages/app/FinancialSupportHome";
 import RecoveryIndexPage from "./pages/app/RecoveryIndexPage";
 import CommunityHome from "./pages/app/CommunityHome";
+import AulaoSemanal from "./pages/app/AulaoSemanal";
 
 // Pro pages (PROFESSIONAL role)
 import ProHome from "./pages/pro/ProHome";
@@ -233,6 +234,14 @@ const App = () => (
               element={
                 <ProtectedRoute allowedRoles={["user", "admin"]}>
                   <CommunityHome />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/app/aulao"
+              element={
+                <ProtectedRoute allowedRoles={["user", "admin"]}>
+                  <AulaoSemanal />
                 </ProtectedRoute>
               }
             />
