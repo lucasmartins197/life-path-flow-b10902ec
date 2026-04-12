@@ -20,8 +20,8 @@ Deno.serve(async (req) => {
       });
     }
 
-    const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
-    const priceId = Deno.env.get("STRIPE_PRICE_ID");
+    const stripeKey = mk_1SxFpw0oEfdN4xGLvWxegfAY;
+    const priceId = Deno.env.get("price_1TLUzt0oEfdN4xGLLTXrRqyH");
 
     if (!stripeKey || !priceId) {
       return new Response(JSON.stringify({ error: "Stripe not configured" }), {
