@@ -5,30 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
-import { useAuth } from "@/contexts/AuthContext";
-import { Loader2 } from "lucide-react";
-
-// Public pages
-import Auth from "./pages/Auth";
-import ForgotPassword from "./pages/auth/ForgotPassword";
-import ResetPassword from "./pages/auth/ResetPassword";
-import ProfessionalRegister from "./pages/auth/ProfessionalRegister";
-import NotFound from "./pages/NotFound";
-
-// Smart root redirect based on auth state
-function RootRedirect() {
-  const { user, isLoading } = useAuth();
-  
-  if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    );
-  }
-  
-  return <Navigate to={user ? "/app" : "/auth"} replace />;
-}
+import { RootRedirect } from "@/components/RootRedirect";
 
 // App pages (USER role)
 import AppHome from "./pages/app/AppHome";
