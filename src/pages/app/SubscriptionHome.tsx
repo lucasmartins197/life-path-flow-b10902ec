@@ -36,16 +36,34 @@ export default function SubscriptionHome() {
   }, [success, canceled]);
 
   const handleSubscribe = async () => {
-    if (!user) return;
     setLoading(true);
     try {
-      const res = await supabase.functions.invoke("create-checkout-session", {
-        body: { user_id: user.id, email: user.email },
+      const { data: { user: authUser } } = await supabase.auth.getUser();
+      if (!authUser) {
+        toast({
+          title: "Erro",
+          description: "Você precisa estar logado para assinar.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      const response = await supabase.functions.invoke("create-checkout-session", {
+        body: JSON.stringify({
+          user_id: authUser.id,
+          email: authUser.email,
+        }),
       });
 
-      if (res.error) throw new Error(res.error.message);
-      const { url } = res.data;
-      if (url) window.location.href = url;
+      if (response.data?.url) {
+        window.open(response.data.url, "_blank");
+      } else {
+        toast({
+          title: "Erro",
+          description: "Não foi possível iniciar o pagamento.",
+          variant: "destructive",
+        });
+      }
     } catch (err: any) {
       toast({
         title: "Erro",
