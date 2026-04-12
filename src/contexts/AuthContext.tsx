@@ -39,13 +39,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     let isMounted = true;
 
-    // Safety timeout — never stay loading forever
+    // Safety timeout — never stay loading forever (3 seconds)
     const timeout = setTimeout(() => {
       if (isMounted && isLoading) {
         console.warn("Auth loading timeout reached, forcing ready state");
         setIsLoading(false);
       }
-    }, 5000);
+    }, 3000);
 
     // Check for existing session first
     supabase.auth.getSession().then(async ({ data: { session: existingSession } }) => {
@@ -54,23 +54,41 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUser(existingSession?.user ?? null);
       
       if (existingSession?.user) {
-        await fetchUserData(existingSession.user.id);
+        try {
+          await fetchUserData(existingSession.user.id);
+        } catch (error) {
+          console.error("Error fetching user data on init:", error);
+          setProfile(null);
+          setRoles([]);
+        }
       }
       
       if (isMounted) setIsLoading(false);
-    }).catch(() => {
-      if (isMounted) setIsLoading(false);
+    }).catch((error) => {
+      console.error("Error getting session:", error);
+      if (isMounted) {
+        setProfile(null);
+        setRoles([]);
+        setIsLoading(false);
+      }
     });
 
     // Then set up listener for subsequent changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, currentSession) => {
+      (event, currentSession) => {
         if (!isMounted) return;
         setSession(currentSession);
         setUser(currentSession?.user ?? null);
         
         if (currentSession?.user) {
-          await fetchUserData(currentSession.user.id);
+          // Fire and forget to avoid blocking the auth state change callback
+          fetchUserData(currentSession.user.id).catch((error) => {
+            console.error("Error fetching user data on auth change:", error);
+            if (isMounted) {
+              setProfile(null);
+              setRoles([]);
+            }
+          });
         } else {
           setProfile(null);
           setRoles([]);
