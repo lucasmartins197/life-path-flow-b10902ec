@@ -13,6 +13,21 @@ import ResetPassword from "./pages/auth/ResetPassword";
 import ProfessionalRegister from "./pages/auth/ProfessionalRegister";
 import NotFound from "./pages/NotFound";
 
+// Smart root redirect based on auth state
+function RootRedirect() {
+  const { user, isLoading } = useAuth();
+  
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+  
+  return <Navigate to={user ? "/app" : "/auth"} replace />;
+}
+
 // App pages (USER role)
 import AppHome from "./pages/app/AppHome";
 import JourneysHome from "./pages/app/JourneysHome";
