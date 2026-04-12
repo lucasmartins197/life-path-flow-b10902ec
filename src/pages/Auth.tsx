@@ -18,27 +18,28 @@ export default function Auth() {
   const [signupName, setSignupName] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   
-  const { signIn, signUp, user, roles } = useAuth();
+  const { signIn, signUp, user, roles, isLoading: authLoading } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const { toast } = useToast();
 
-  // Redirect if already logged in - using useEffect to avoid render-time navigation
+  // Redirect if already logged in — only after auth is fully resolved
   useEffect(() => {
-    if (user) {
-      const from = (location.state as { from?: { pathname: string } })?.from?.pathname;
-      
-      if (from) {
-        navigate(from, { replace: true });
-      } else if (roles.includes("admin")) {
-        navigate("/admin", { replace: true });
-      } else if (roles.includes("professional")) {
-        navigate("/pro", { replace: true });
-      } else {
-        navigate("/app", { replace: true });
-      }
+    if (authLoading) return;
+    if (!user) return;
+    
+    const from = (location.state as { from?: { pathname: string } })?.from?.pathname;
+    
+    if (from) {
+      navigate(from, { replace: true });
+    } else if (roles.includes("admin")) {
+      navigate("/admin", { replace: true });
+    } else if (roles.includes("professional")) {
+      navigate("/pro", { replace: true });
+    } else {
+      navigate("/app", { replace: true });
     }
-  }, [user, roles, navigate, location.state]);
+  }, [user, roles, authLoading, navigate, location.state]);
 
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault();
@@ -112,21 +113,15 @@ export default function Auth() {
         }),
       });
       
-      toast({
-        title: "Conta criada!",
-        description: "Redirecionando para o app...",
-      });
-      
-      // Redirecionar para a dashboard
-      navigate("/app", { replace: true });
+      // signup redirect handled by useEffect when user state updates
     } catch (webhookError) {
       console.error("Erro ao enviar para webhook:", webhookError);
-      toast({
-        title: "Conta criada!",
-        description: "Redirecionando para o app...",
-      });
-      navigate("/app", { replace: true });
     }
+    
+    toast({
+      title: "Conta criada!",
+      description: "Verifique seu email para confirmar o cadastro.",
+    });
     
     setIsLoading(false);
   }

@@ -34,17 +34,30 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Set up auth state listener BEFORE checking session
+    let isMounted = true;
+
+    // Check for existing session first
+    supabase.auth.getSession().then(async ({ data: { session: existingSession } }) => {
+      if (!isMounted) return;
+      setSession(existingSession);
+      setUser(existingSession?.user ?? null);
+      
+      if (existingSession?.user) {
+        await fetchUserData(existingSession.user.id);
+      }
+      
+      if (isMounted) setIsLoading(false);
+    });
+
+    // Then set up listener for subsequent changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, currentSession) => {
+        if (!isMounted) return;
         setSession(currentSession);
         setUser(currentSession?.user ?? null);
         
         if (currentSession?.user) {
-          // Defer fetching profile and roles to avoid blocking
-          setTimeout(() => {
-            fetchUserData(currentSession.user.id);
-          }, 0);
+          await fetchUserData(currentSession.user.id);
         } else {
           setProfile(null);
           setRoles([]);
@@ -54,19 +67,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     );
 
-    // Check for existing session
-    supabase.auth.getSession().then(({ data: { session: existingSession } }) => {
-      setSession(existingSession);
-      setUser(existingSession?.user ?? null);
-      
-      if (existingSession?.user) {
-        fetchUserData(existingSession.user.id);
-      }
-      
-      setIsLoading(false);
-    });
-
     return () => {
+      isMounted = false;
       subscription.unsubscribe();
     };
   }, []);
