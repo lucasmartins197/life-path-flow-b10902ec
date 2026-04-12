@@ -246,6 +246,14 @@ const App = () => (
                 </ProtectedRoute>
               }
             />
+            <Route
+              path="/app/assinatura"
+              element={
+                <ProtectedRoute allowedRoles={["user", "admin"]}>
+                  <SubscriptionHome />
+                </ProtectedRoute>
+              }
+            />
             
             {/* Protected PRO routes (PROFESSIONAL role) */}
             <Route
