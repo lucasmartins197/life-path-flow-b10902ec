@@ -7,7 +7,13 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { RootRedirect } from "@/components/RootRedirect";
 
-// App pages (USER role)
+// Public pages
+import Auth from "./pages/Auth";
+import ForgotPassword from "./pages/auth/ForgotPassword";
+import ResetPassword from "./pages/auth/ResetPassword";
+import ProfessionalRegister from "./pages/auth/ProfessionalRegister";
+import NotFound from "./pages/NotFound";
+
 import AppHome from "./pages/app/AppHome";
 import JourneysHome from "./pages/app/JourneysHome";
 import JourneyStep from "./pages/app/JourneyStep";
