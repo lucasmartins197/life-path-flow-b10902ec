@@ -223,11 +223,11 @@ export function useExercise(date?: string) {
       return null;
     }
 
-    const { data } = supabase.storage
+    const { data } = await supabase.storage
       .from("exercise-photos")
-      .getPublicUrl(filePath);
+      .createSignedUrl(filePath, 3600);
 
-    return data.publicUrl;
+    return data?.signedUrl || null;
   };
 
   const uploadBodyPhoto = async (file: File): Promise<string | null> => {
@@ -249,9 +249,11 @@ export function useExercise(date?: string) {
       return null;
     }
 
-    const { data } = supabase.storage.from("body-photos").getPublicUrl(filePath);
+    const { data } = await supabase.storage
+      .from("body-photos")
+      .createSignedUrl(filePath, 3600);
 
-    return data.publicUrl;
+    return data?.signedUrl || null;
   };
 
   const dailyStats = logs.reduce(
