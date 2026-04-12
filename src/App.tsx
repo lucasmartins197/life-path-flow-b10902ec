@@ -249,7 +249,7 @@ const App = () => (
             <Route
               path="/app/assinatura"
               element={
-                <ProtectedRoute allowedRoles={["user", "admin"]} requireSubscription>
+                <ProtectedRoute allowedRoles={["user", "admin"]}>
                   <SubscriptionHome />
                 </ProtectedRoute>
               }
