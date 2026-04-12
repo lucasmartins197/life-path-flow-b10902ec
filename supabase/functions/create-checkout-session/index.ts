@@ -10,7 +10,22 @@ Deno.serve(async (req) => {
     return new Response("ok", { headers: corsHeaders });
   }
   try {
-    const { user_id, email } = await req.json();
+    let user_id, email;
+    try {
+      const body = await req.json();
+      user_id = body.user_id;
+      email = body.email;
+    } catch(e) {
+      user_id = null;
+      email = null;
+    }
+
+    if (!user_id || !email) {
+      return new Response(JSON.stringify({ error: "Missing user_id or email" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
     const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY")!, { apiVersion: "2023-10-16" });
     const session = await stripe.checkout.sessions.create({
       customer_email: email,
