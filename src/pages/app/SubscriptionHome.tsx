@@ -14,8 +14,8 @@ export default function SubscriptionHome() {
   const [searchParams] = useSearchParams();
   const [loading, setLoading] = useState(false);
 
-  const isActive = (profile as any)?.subscription_status === "active";
-  const subscriptionEnd = (profile as any)?.subscription_end;
+  const isActive = profile?.subscription_status === "active";
+  const subscriptionEnd = profile?.subscription_end;
   const success = searchParams.get("success") === "true";
   const canceled = searchParams.get("canceled") === "true";
 
