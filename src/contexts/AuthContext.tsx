@@ -39,6 +39,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     let isMounted = true;
 
+    // Safety timeout — never stay loading forever
+    const timeout = setTimeout(() => {
+      if (isMounted && isLoading) {
+        console.warn("Auth loading timeout reached, forcing ready state");
+        setIsLoading(false);
+      }
+    }, 5000);
+
     // Check for existing session first
     supabase.auth.getSession().then(async ({ data: { session: existingSession } }) => {
       if (!isMounted) return;
@@ -49,6 +57,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         await fetchUserData(existingSession.user.id);
       }
       
+      if (isMounted) setIsLoading(false);
+    }).catch(() => {
       if (isMounted) setIsLoading(false);
     });
 
@@ -72,21 +82,38 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     return () => {
       isMounted = false;
+      clearTimeout(timeout);
       subscription.unsubscribe();
     };
   }, []);
 
   async function fetchUserData(userId: string) {
     try {
-      // Fetch profile
-      const { data: profileData } = await supabase
+      // Fetch profile — upsert if missing
+      let { data: profileData } = await supabase
         .from("profiles")
         .select("*")
         .eq("user_id", userId)
         .maybeSingle();
       
+      if (!profileData) {
+        // Profile doesn't exist yet — create with defaults
+        const { data: newProfile } = await supabase
+          .from("profiles")
+          .insert({
+            user_id: userId,
+            subscription_status: "inactive",
+          })
+          .select("*")
+          .single();
+        profileData = newProfile;
+      }
+
       if (profileData) {
-        setProfile(profileData);
+        setProfile({
+          ...profileData,
+          subscription_status: profileData.subscription_status ?? "inactive",
+        });
       }
 
       // Fetch roles
