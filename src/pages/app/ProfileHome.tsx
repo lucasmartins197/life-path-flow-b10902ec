@@ -8,7 +8,8 @@ import {
   ChevronRight,
   Bell,
   HelpCircle,
-  Heart
+  Heart,
+  CreditCard
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -28,6 +29,7 @@ export default function ProfileHome() {
 
   const menuItems = [
     { icon: User, label: "Meus Dados", path: "/app/onboarding" },
+    { icon: CreditCard, label: "Minha Assinatura", path: "/app/assinatura" },
     { icon: Shield, label: "Rede de Apoio", path: "/app/ancora" },
     { icon: Bell, label: "Notificações", path: "/app/configuracoes" },
     { icon: Settings, label: "Configurações", path: "/app/configuracoes" },

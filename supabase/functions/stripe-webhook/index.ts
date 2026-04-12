@@ -1,0 +1,87 @@
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import Stripe from "https://esm.sh/stripe@14.21.0?target=deno";
+
+serve(async (req) => {
+  try {
+    const stripeKey = Deno.env.get("STRIPE_SECRET_KEY")!;
+    const stripe = new Stripe(stripeKey, { apiVersion: "2023-10-16" });
+
+    const body = await req.text();
+    const sig = req.headers.get("stripe-signature");
+
+    // If STRIPE_WEBHOOK_SECRET is set, verify signature
+    const webhookSecret = Deno.env.get("STRIPE_WEBHOOK_SECRET");
+    let event: Stripe.Event;
+
+    if (webhookSecret && sig) {
+      event = stripe.webhooks.constructEvent(body, sig, webhookSecret);
+    } else {
+      event = JSON.parse(body) as Stripe.Event;
+    }
+
+    const supabase = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
+    );
+
+    if (event.type === "checkout.session.completed") {
+      const session = event.data.object as Stripe.Checkout.Session;
+      const customerId = session.customer as string;
+
+      // Get subscription details
+      let subscriptionEnd: string | null = null;
+      if (session.subscription) {
+        const sub = await stripe.subscriptions.retrieve(session.subscription as string);
+        subscriptionEnd = new Date(sub.current_period_end * 1000).toISOString();
+      }
+
+      await supabase
+        .from("profiles")
+        .update({
+          subscription_status: "active",
+          stripe_customer_id: customerId,
+          subscription_end: subscriptionEnd,
+        })
+        .eq("stripe_customer_id", customerId);
+    }
+
+    if (event.type === "customer.subscription.deleted") {
+      const subscription = event.data.object as Stripe.Subscription;
+      const customerId = subscription.customer as string;
+
+      await supabase
+        .from("profiles")
+        .update({
+          subscription_status: "inactive",
+          subscription_end: null,
+        })
+        .eq("stripe_customer_id", customerId);
+    }
+
+    if (event.type === "customer.subscription.updated") {
+      const subscription = event.data.object as Stripe.Subscription;
+      const customerId = subscription.customer as string;
+      const status = subscription.status === "active" ? "active" : "inactive";
+
+      await supabase
+        .from("profiles")
+        .update({
+          subscription_status: status,
+          subscription_end: new Date(subscription.current_period_end * 1000).toISOString(),
+        })
+        .eq("stripe_customer_id", customerId);
+    }
+
+    return new Response(JSON.stringify({ received: true }), {
+      headers: { "Content-Type": "application/json" },
+      status: 200,
+    });
+  } catch (err) {
+    console.error("Webhook error:", err);
+    return new Response(JSON.stringify({ error: err.message }), {
+      status: 400,
+      headers: { "Content-Type": "application/json" },
+    });
+  }
+});

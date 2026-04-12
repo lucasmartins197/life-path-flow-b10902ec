@@ -1122,6 +1122,9 @@ export type Database = {
           phone: string | null
           state: string | null
           street: string | null
+          stripe_customer_id: string | null
+          subscription_end: string | null
+          subscription_status: string
           updated_at: string
           user_id: string
           zip_code: string | null
@@ -1142,6 +1145,9 @@ export type Database = {
           phone?: string | null
           state?: string | null
           street?: string | null
+          stripe_customer_id?: string | null
+          subscription_end?: string | null
+          subscription_status?: string
           updated_at?: string
           user_id: string
           zip_code?: string | null
@@ -1162,6 +1168,9 @@ export type Database = {
           phone?: string | null
           state?: string | null
           street?: string | null
+          stripe_customer_id?: string | null
+          subscription_end?: string | null
+          subscription_status?: string
           updated_at?: string
           user_id?: string
           zip_code?: string | null

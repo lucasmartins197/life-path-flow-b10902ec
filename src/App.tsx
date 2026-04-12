@@ -52,6 +52,7 @@ import FinancialSupportHome from "./pages/app/FinancialSupportHome";
 import RecoveryIndexPage from "./pages/app/RecoveryIndexPage";
 import CommunityHome from "./pages/app/CommunityHome";
 import AulaoSemanal from "./pages/app/AulaoSemanal";
+import SubscriptionHome from "./pages/app/SubscriptionHome";
 
 // Pro pages (PROFESSIONAL role)
 import ProHome from "./pages/pro/ProHome";
@@ -80,7 +81,7 @@ const App = () => (
             <Route
               path="/app"
               element={
-                <ProtectedRoute allowedRoles={["user", "admin"]}>
+                <ProtectedRoute allowedRoles={["user", "admin"]} requireSubscription>
                   <AppHome />
                 </ProtectedRoute>
               }
@@ -88,7 +89,7 @@ const App = () => (
             <Route
               path="/app/jornada"
               element={
-                <ProtectedRoute allowedRoles={["user", "admin"]}>
+                <ProtectedRoute allowedRoles={["user", "admin"]} requireSubscription>
                   <JourneysHome />
                 </ProtectedRoute>
               }
@@ -96,7 +97,7 @@ const App = () => (
             <Route
               path="/app/jornada/:stepNumber"
               element={
-                <ProtectedRoute allowedRoles={["user", "admin"]}>
+                <ProtectedRoute allowedRoles={["user", "admin"]} requireSubscription>
                   <JourneyStep />
                 </ProtectedRoute>
               }
@@ -104,7 +105,7 @@ const App = () => (
             <Route
               path="/app/terapia"
               element={
-                <ProtectedRoute allowedRoles={["user", "admin"]}>
+                <ProtectedRoute allowedRoles={["user", "admin"]} requireSubscription>
                   <TherapyHome />
                 </ProtectedRoute>
               }
@@ -112,7 +113,7 @@ const App = () => (
             <Route
               path="/app/rotina"
               element={
-                <ProtectedRoute allowedRoles={["user", "admin"]}>
+                <ProtectedRoute allowedRoles={["user", "admin"]} requireSubscription>
                   <RoutineHome />
                 </ProtectedRoute>
               }
@@ -120,7 +121,7 @@ const App = () => (
             <Route
               path="/app/nutricao"
               element={
-                <ProtectedRoute allowedRoles={["user", "admin"]}>
+                <ProtectedRoute allowedRoles={["user", "admin"]} requireSubscription>
                   <NutritionHome />
                 </ProtectedRoute>
               }
@@ -128,7 +129,7 @@ const App = () => (
             <Route
               path="/app/exercicios"
               element={
-                <ProtectedRoute allowedRoles={["user", "admin"]}>
+                <ProtectedRoute allowedRoles={["user", "admin"]} requireSubscription>
                   <ExerciseHome />
                 </ProtectedRoute>
               }
@@ -136,7 +137,7 @@ const App = () => (
             <Route
               path="/app/agenda"
               element={
-                <ProtectedRoute allowedRoles={["user", "admin"]}>
+                <ProtectedRoute allowedRoles={["user", "admin"]} requireSubscription>
                   <CalendarHome />
                 </ProtectedRoute>
               }
@@ -144,7 +145,7 @@ const App = () => (
             <Route
               path="/app/ancora"
               element={
-                <ProtectedRoute allowedRoles={["user", "admin"]}>
+                <ProtectedRoute allowedRoles={["user", "admin"]} requireSubscription>
                   <AnchorHome />
                 </ProtectedRoute>
               }
@@ -152,7 +153,7 @@ const App = () => (
             <Route
               path="/app/configuracoes"
               element={
-                <ProtectedRoute allowedRoles={["user", "admin"]}>
+                <ProtectedRoute allowedRoles={["user", "admin"]} requireSubscription>
                   <SettingsHome />
                 </ProtectedRoute>
               }
@@ -160,7 +161,7 @@ const App = () => (
             <Route
               path="/app/onboarding"
               element={
-                <ProtectedRoute allowedRoles={["user", "admin"]}>
+                <ProtectedRoute allowedRoles={["user", "admin"]} requireSubscription>
                   <OnboardingProfile />
                 </ProtectedRoute>
               }
@@ -168,7 +169,7 @@ const App = () => (
             <Route
               path="/app/saude"
               element={
-                <ProtectedRoute allowedRoles={["user", "admin"]}>
+                <ProtectedRoute allowedRoles={["user", "admin"]} requireSubscription>
                   <HealthHome />
                 </ProtectedRoute>
               }
@@ -176,7 +177,7 @@ const App = () => (
             <Route
               path="/app/financas"
               element={
-                <ProtectedRoute allowedRoles={["user", "admin"]}>
+                <ProtectedRoute allowedRoles={["user", "admin"]} requireSubscription>
                   <FinanceHome />
                 </ProtectedRoute>
               }
@@ -184,7 +185,7 @@ const App = () => (
             <Route
               path="/app/perfil"
               element={
-                <ProtectedRoute allowedRoles={["user", "admin"]}>
+                <ProtectedRoute allowedRoles={["user", "admin"]} requireSubscription>
                   <ProfileHome />
                 </ProtectedRoute>
               }
@@ -192,7 +193,7 @@ const App = () => (
             <Route
               path="/app/evolucao"
               element={
-                <ProtectedRoute allowedRoles={["user", "admin"]}>
+                <ProtectedRoute allowedRoles={["user", "admin"]} requireSubscription>
                   <EvolutionHome />
                 </ProtectedRoute>
               }
@@ -200,7 +201,7 @@ const App = () => (
             <Route
               path="/app/prontuario"
               element={
-                <ProtectedRoute allowedRoles={["user", "admin"]}>
+                <ProtectedRoute allowedRoles={["user", "admin"]} requireSubscription>
                   <ProntuarioHome />
                 </ProtectedRoute>
               }
@@ -208,7 +209,7 @@ const App = () => (
             <Route
               path="/app/juridico"
               element={
-                <ProtectedRoute allowedRoles={["user", "admin"]}>
+                <ProtectedRoute allowedRoles={["user", "admin"]} requireSubscription>
                   <LegalHome />
                 </ProtectedRoute>
               }
@@ -216,7 +217,7 @@ const App = () => (
             <Route
               path="/app/apoio-financeiro"
               element={
-                <ProtectedRoute allowedRoles={["user", "admin"]}>
+                <ProtectedRoute allowedRoles={["user", "admin"]} requireSubscription>
                   <FinancialSupportHome />
                 </ProtectedRoute>
               }
@@ -224,7 +225,7 @@ const App = () => (
             <Route
               path="/app/indice"
               element={
-                <ProtectedRoute allowedRoles={["user", "admin"]}>
+                <ProtectedRoute allowedRoles={["user", "admin"]} requireSubscription>
                   <RecoveryIndexPage />
                 </ProtectedRoute>
               }
@@ -232,7 +233,7 @@ const App = () => (
             <Route
               path="/app/comunidade"
               element={
-                <ProtectedRoute allowedRoles={["user", "admin"]}>
+                <ProtectedRoute allowedRoles={["user", "admin"]} requireSubscription>
                   <CommunityHome />
                 </ProtectedRoute>
               }
@@ -240,8 +241,16 @@ const App = () => (
             <Route
               path="/app/aulao"
               element={
-                <ProtectedRoute allowedRoles={["user", "admin"]}>
+                <ProtectedRoute allowedRoles={["user", "admin"]} requireSubscription>
                   <AulaoSemanal />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/app/assinatura"
+              element={
+                <ProtectedRoute allowedRoles={["user", "admin"]}>
+                  <SubscriptionHome />
                 </ProtectedRoute>
               }
             />
