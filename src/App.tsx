@@ -237,6 +237,14 @@ const App = () => (
                 </ProtectedRoute>
               }
             />
+            <Route
+              path="/app/aulao"
+              element={
+                <ProtectedRoute allowedRoles={["user", "admin"]}>
+                  <AulaoSemanal />
+                </ProtectedRoute>
+              }
+            />
             
             {/* Protected PRO routes (PROFESSIONAL role) */}
             <Route
