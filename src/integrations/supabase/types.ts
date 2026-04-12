@@ -1567,6 +1567,33 @@ export type Database = {
         }
         Relationships: []
       }
+      weekly_class: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          link: string
+          scheduled_at: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          link?: string
+          scheduled_at?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          link?: string
+          scheduled_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
