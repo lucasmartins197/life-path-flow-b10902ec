@@ -188,11 +188,14 @@ export default function JourneyStep() {
   async function callAI(isInitial = false) {
     setAiLoading(true);
     try {
-      const body: any = { answers, stepNumber, conversation: isInitial ? [] : conversation };
+      let updatedConvo = isInitial ? [] : [...conversation];
+      const body: any = { answers, stepNumber, conversation: updatedConvo };
+      
       if (!isInitial && chatInput.trim()) {
         const userMsg: ConvoMsg = { role: "user", content: chatInput };
-        setConversation((prev) => [...prev, userMsg]);
-        body.conversation = [...conversation, userMsg];
+        updatedConvo = [...updatedConvo, userMsg];
+        setConversation(updatedConvo);
+        body.conversation = updatedConvo;
         setChatInput("");
       }
 
@@ -205,10 +208,11 @@ export default function JourneyStep() {
       }
 
       const aiMsg: ConvoMsg = { role: "assistant", content: data.message };
-      setConversation((prev) => [...prev, aiMsg]);
+      const finalConvo = [...updatedConvo, aiMsg];
+      setConversation(finalConvo);
       await saveProgress({
         current_section: 4,
-        ai_conversation: [...(isInitial ? [] : conversation), ...(isInitial ? [] : chatInput.trim() ? [{ role: "user", content: chatInput }] : []), aiMsg],
+        ai_conversation: finalConvo as unknown as any,
       });
     } catch (e: any) {
       toast({ variant: "destructive", title: "Erro", description: "Não foi possível obter resposta da IA." });
