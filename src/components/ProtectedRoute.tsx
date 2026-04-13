@@ -8,14 +8,14 @@ interface ProtectedRouteProps {
   children: React.ReactNode;
   allowedRoles?: AppRole[];
   redirectTo?: string;
-  requireSubscription?: boolean;
+  
 }
 
 export function ProtectedRoute({
   children,
   allowedRoles,
   redirectTo = "/auth",
-  requireSubscription = false,
+  
 }: ProtectedRouteProps) {
   const { user, roles, profile, isLoading } = useAuth();
   const location = useLocation();
