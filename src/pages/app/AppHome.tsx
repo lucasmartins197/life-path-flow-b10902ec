@@ -1,11 +1,13 @@
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Bell, Flame } from "lucide-react";
+import { Bell, Flame, Award } from "lucide-react";
 import { BottomNavigation } from "@/components/BottomNavigation";
 import { PortoSeguroButton } from "@/components/PortoSeguroButton";
 import { AIChatPanel } from "@/components/chat/AIChatPanel";
 import { PremiumNavCards } from "@/components/home/PremiumNavCards";
+import { useMedals } from "@/hooks/useMedals";
 
 /* ── Motivational quotes ── */
 const quotes = [
@@ -50,7 +52,9 @@ function calcStreak(dates: string[]): number {
 }
 
 export default function AppHome() {
+  const navigate = useNavigate();
   const { user, profile } = useAuth();
+  const { totalEarned } = useMedals();
   const greeting = getGreeting();
   const quote = getDailyQuote();
 
@@ -96,6 +100,20 @@ export default function AppHome() {
             <h1 className="text-lg font-bold text-foreground truncate">{greetingText}</h1>
             <p className="text-[11px] text-muted-foreground capitalize">{today}</p>
           </div>
+          <button
+            onClick={() => navigate("/app/medalhas")}
+            className="relative w-10 h-10 flex items-center justify-center rounded-full bg-card touch-target"
+          >
+            <Award className="h-5 w-5" style={{ color: "#C9A84C" }} />
+            {totalEarned > 0 && (
+              <span
+                className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] flex items-center justify-center rounded-full text-[10px] font-bold text-white"
+                style={{ background: "linear-gradient(135deg, #C9A84C, #E8D590)" }}
+              >
+                {totalEarned}
+              </span>
+            )}
+          </button>
           <button className="w-10 h-10 flex items-center justify-center rounded-full bg-card touch-target">
             <Bell className="h-5 w-5 text-muted-foreground" />
           </button>
