@@ -361,6 +361,30 @@ export type Database = {
         }
         Relationships: []
       }
+      daily_reflections: {
+        Row: {
+          ai_response: string | null
+          content: string
+          created_at: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          ai_response?: string | null
+          content: string
+          created_at?: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          ai_response?: string | null
+          content?: string
+          created_at?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       daily_reports: {
         Row: {
           ai_recommendations: string[] | null
@@ -1309,6 +1333,42 @@ export type Database = {
         }
         Relationships: []
       }
+      routine_activities: {
+        Row: {
+          activity_data: Json
+          ai_feedback: string | null
+          category: string
+          completed_at: string
+          created_at: string
+          duration_minutes: number
+          id: string
+          rating: number | null
+          user_id: string
+        }
+        Insert: {
+          activity_data?: Json
+          ai_feedback?: string | null
+          category: string
+          completed_at?: string
+          created_at?: string
+          duration_minutes?: number
+          id?: string
+          rating?: number | null
+          user_id: string
+        }
+        Update: {
+          activity_data?: Json
+          ai_feedback?: string | null
+          category?: string
+          completed_at?: string
+          created_at?: string
+          duration_minutes?: number
+          id?: string
+          rating?: number | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       routine_days: {
         Row: {
           afternoon_plan: Json | null
@@ -1617,6 +1677,33 @@ export type Database = {
           created_at?: string
           id?: string
           role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_routine: {
+        Row: {
+          categories: Json
+          created_at: string
+          id: string
+          preferences: Json
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          categories?: Json
+          created_at?: string
+          id?: string
+          preferences?: Json
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          categories?: Json
+          created_at?: string
+          id?: string
+          preferences?: Json
+          updated_at?: string
           user_id?: string
         }
         Relationships: []
