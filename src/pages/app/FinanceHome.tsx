@@ -123,7 +123,7 @@ export default function FinanceHome() {
     }
   };
 
-  // Computed values
+  // Computed values from real profile data
   const totalIncome = profile?.income?.monthly || 0;
   const totalExpenses = Array.isArray(profile?.fixed_expenses)
     ? profile.fixed_expenses.reduce((s: number, e: any) => s + (e.amount || 0), 0)
@@ -133,10 +133,27 @@ export default function FinanceHome() {
     : 0;
   const debtsArray = Array.isArray(profile?.debts) ? profile.debts : [];
 
-  // Mock monthly history (will be real once user uses it over time)
-  const monthlyHistory = [
-    { month: "Jan", debts: totalDebts, available: totalIncome - totalExpenses },
-  ];
+  // Build monthly history from real transactions (grouped by month)
+  const buildMonthlyHistory = () => {
+    if (transactions.length === 0 && !profile) return [];
+    const now = new Date();
+    const months: { month: string; debts: number; available: number }[] = [];
+    for (let i = 5; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const monthKey = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+      const monthLabel = d.toLocaleDateString("pt-BR", { month: "short" }).replace(".", "");
+      const monthTxs = transactions.filter(t => t.transaction_date?.startsWith(monthKey));
+      const spent = monthTxs.reduce((s: number, t: any) => s + (t.amount || 0), 0);
+      months.push({
+        month: monthLabel.charAt(0).toUpperCase() + monthLabel.slice(1),
+        debts: totalDebts,
+        available: Math.max(0, totalIncome - totalExpenses - spent),
+      });
+    }
+    return months;
+  };
+
+  const monthlyHistory = profile ? buildMonthlyHistory() : [];
 
   if (loading) {
     return (
@@ -151,9 +168,9 @@ export default function FinanceHome() {
       {showOnboarding && <FinanceOnboarding onComplete={handleOnboardingComplete} />}
 
       {/* Header */}
-      <header className="bg-card border-b border-border/60 px-5 pt-8 pb-5">
+      <header className="bg-card border-b border-border/60 px-5 pt-8 pb-4">
         <div className="max-w-lg mx-auto">
-          <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center justify-between mb-3">
             <button onClick={() => navigate("/app")}
               className="flex items-center gap-1.5 text-muted-foreground hover:text-foreground transition-colors text-sm">
               <ChevronLeft className="h-4 w-4" /> Home
@@ -165,7 +182,7 @@ export default function FinanceHome() {
               </button>
             )}
           </div>
-          <h1 className="text-2xl font-bold text-foreground">Planejamento Financeiro</h1>
+          <h1 className="text-2xl font-bold text-foreground">Minhas Finanças</h1>
           <p className="text-sm text-muted-foreground mt-0.5">Inteligência financeira para sua recuperação</p>
         </div>
       </header>
@@ -180,9 +197,9 @@ export default function FinanceHome() {
           </button>
         </div>
       ) : (
-        <main className="max-w-lg mx-auto px-5 pt-5">
+        <main className="max-w-lg mx-auto px-5 pt-4">
           <Tabs defaultValue="dashboard" className="w-full">
-            <TabsList className="w-full grid grid-cols-5 mb-5 bg-muted/50 rounded-xl p-1 h-auto">
+            <TabsList className="w-full grid grid-cols-5 mb-4 bg-muted/50 rounded-xl p-1 h-auto">
               <TabsTrigger value="dashboard" className="text-xs py-2 flex flex-col items-center gap-0.5 data-[state=active]:bg-card">
                 <BarChart3 className="h-3.5 w-3.5" /> Painel
               </TabsTrigger>
