@@ -38,6 +38,12 @@ export function FinanceDebtSimulator({ debts }: FinanceDebtSimulatorProps) {
   const [selectedIdx, setSelectedIdx] = useState(0);
   const [extra, setExtra] = useState(0);
 
+  const debt = debts[selectedIdx] || debts[0];
+  const minPayment = debt?.monthly_payment || 100;
+
+  const minSim = useMemo(() => debt ? simulateDebt(debt.total, debt.interest_rate, minPayment) : { months: 0, totalPaid: 0, data: [] }, [debt, minPayment]);
+  const extraSim = useMemo(() => debt ? simulateDebt(debt.total, debt.interest_rate, minPayment + extra) : { months: 0, totalPaid: 0, data: [] }, [debt, minPayment, extra]);
+
   if (debts.length === 0) {
     return (
       <div className="card-premium p-8 text-center">
