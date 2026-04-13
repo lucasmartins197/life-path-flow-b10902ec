@@ -585,6 +585,102 @@ export type Database = {
         }
         Relationships: []
       }
+      financial_goals: {
+        Row: {
+          created_at: string
+          current_amount: number
+          deadline: string | null
+          id: string
+          target_amount: number
+          title: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          current_amount?: number
+          deadline?: string | null
+          id?: string
+          target_amount?: number
+          title: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          current_amount?: number
+          deadline?: string | null
+          id?: string
+          target_amount?: number
+          title?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      financial_profile: {
+        Row: {
+          created_at: string
+          debts: Json
+          fixed_expenses: Json
+          goal: string | null
+          goal_deadline: string | null
+          id: string
+          income: Json
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          debts?: Json
+          fixed_expenses?: Json
+          goal?: string | null
+          goal_deadline?: string | null
+          id?: string
+          income?: Json
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          debts?: Json
+          fixed_expenses?: Json
+          goal?: string | null
+          goal_deadline?: string | null
+          id?: string
+          income?: Json
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      financial_transactions: {
+        Row: {
+          amount: number
+          category: string
+          created_at: string
+          description: string | null
+          id: string
+          transaction_date: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          category: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          transaction_date?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          category?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          transaction_date?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       journey_progress: {
         Row: {
           ai_conversation: Json | null
