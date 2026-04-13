@@ -12,7 +12,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import {
   ChevronLeft, Pencil, Loader2, Star, Play, Pause,
-  CheckCircle, SmartphoneOff, Send,
+  CheckCircle, Smartphone, Send,
 } from "lucide-react";
 
 interface CategoryConfig { id: string; label: string; emoji: string; color: string; }
