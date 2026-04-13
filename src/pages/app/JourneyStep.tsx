@@ -63,7 +63,7 @@ export default function JourneyStep() {
   const [checkedItems, setCheckedItems] = useState<boolean[]>(new Array(CHECKLIST_ITEMS.length).fill(false));
   const [answers, setAnswers] = useState({ feeling: "", hardest_moment: "", commitment: "" });
   const [conversation, setConversation] = useState<ConvoMsg[]>([]);
-  const [chatInput, setChatInput] = useState("");
+  const [chatInput] = useState(""); // kept for compat
   const [aiLoading, setAiLoading] = useState(false);
   const [startedAt, setStartedAt] = useState<string | null>(null);
   const [showCelebration, setShowCelebration] = useState(false);
@@ -476,7 +476,7 @@ export default function JourneyStep() {
                 </div>
                 <div className="flex items-center gap-2">
                   {conversation.length > 0 ? <CheckCircle className="h-4 w-4 text-green-600" /> : <Clock className="h-4 w-4 text-muted-foreground" />}
-                  <span className={conversation.length > 0 ? "text-green-700" : "text-muted-foreground"}>Conversa com a Lia</span>
+                  <span className={conversation.length > 0 ? "text-green-700" : "text-muted-foreground"}>Carta da Ana recebida</span>
                 </div>
                 <div className="flex items-center gap-2">
                   {timeRemaining <= 0 ? <CheckCircle className="h-4 w-4 text-green-600" /> : <Clock className="h-4 w-4 text-muted-foreground" />}
