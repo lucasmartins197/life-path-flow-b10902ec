@@ -67,6 +67,7 @@ export default function JourneyStep() {
   const [aiLoading, setAiLoading] = useState(false);
   const [startedAt, setStartedAt] = useState<string | null>(null);
   const [showCelebration, setShowCelebration] = useState(false);
+  const [userName, setUserName] = useState("");
 
   const allChecked = checkedItems.every(Boolean);
   const answersComplete = answers.feeling.trim() && answers.hardest_moment.trim() && answers.commitment.trim();
