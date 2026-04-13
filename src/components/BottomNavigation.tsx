@@ -13,8 +13,8 @@ export function BottomNavigation() {
   const location = useLocation();
 
   const isActive = (path: string) => {
-    if (path === "/app/jornada") {
-      return location.pathname.startsWith("/app/jornada") || location.pathname === "/app";
+    if (path === "/app") {
+      return location.pathname === "/app";
     }
     return location.pathname.startsWith(path);
   };
