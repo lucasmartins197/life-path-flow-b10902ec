@@ -1,13 +1,11 @@
 import { useNavigate, useLocation } from "react-router-dom";
-import { Compass, Stethoscope, Calendar, TrendingUp, Users, PlayCircle } from "lucide-react";
+import { House, Compass, Stethoscope, Calendar } from "lucide-react";
 
 const navItems = [
+  { id: "home",    label: "Home",     icon: House,        path: "/app" },
   { id: "jornada", label: "Jornada",  icon: Compass,      path: "/app/jornada" },
   { id: "terapia", label: "Terapia",  icon: Stethoscope,  path: "/app/terapia" },
   { id: "rotina",  label: "Rotina",   icon: Calendar,     path: "/app/rotina" },
-  { id: "comunidade", label: "Histórias", icon: Users,     path: "/app/comunidade" },
-  { id: "aulao",   label: "Aulão",    icon: PlayCircle,   path: "/app/aulao" },
-  { id: "evolucao", label: "Evolução", icon: TrendingUp,  path: "/app/evolucao" },
 ];
 
 export function BottomNavigation() {
@@ -15,8 +13,8 @@ export function BottomNavigation() {
   const location = useLocation();
 
   const isActive = (path: string) => {
-    if (path === "/app/jornada") {
-      return location.pathname.startsWith("/app/jornada") || location.pathname === "/app";
+    if (path === "/app") {
+      return location.pathname === "/app";
     }
     return location.pathname.startsWith(path);
   };
