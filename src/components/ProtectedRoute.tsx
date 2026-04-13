@@ -8,16 +8,14 @@ interface ProtectedRouteProps {
   children: React.ReactNode;
   allowedRoles?: AppRole[];
   redirectTo?: string;
-  
 }
 
 export function ProtectedRoute({
   children,
   allowedRoles,
   redirectTo = "/auth",
-  
 }: ProtectedRouteProps) {
-  const { user, roles, profile, isLoading } = useAuth();
+  const { user, roles, isLoading } = useAuth();
   const location = useLocation();
 
   if (isLoading) {
@@ -43,17 +41,6 @@ export function ProtectedRoute({
       if (roles.includes("professional")) return <Navigate to="/pro" replace />;
       return <Navigate to="/app" replace />;
     }
-  }
-
-  // Subscription gate for user role (not admin/professional)
-  if (
-    requireSubscription &&
-    !roles.includes("admin") &&
-    !roles.includes("professional") &&
-    profile?.subscription_status !== "active" &&
-    location.pathname !== "/app/assinatura"
-  ) {
-    return <Navigate to="/app/assinatura" replace />;
   }
 
   return <>{children}</>;
