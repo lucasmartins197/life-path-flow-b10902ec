@@ -227,8 +227,8 @@ export function PremiumNavCards() {
             background: card.gradient,
             borderRadius: 20,
             height: card.wide ? 160 : 140,
+            maxHeight: card.wide ? 160 : 140,
             boxShadow: "0 8px 24px rgba(0,0,0,0.15)",
-            minHeight: 44,
           }}
         >
           <card.Illustration />
