@@ -561,6 +561,51 @@ export type Database = {
         }
         Relationships: []
       }
+      journey_progress: {
+        Row: {
+          ai_conversation: Json | null
+          answers: Json | null
+          checklist_items: Json | null
+          completed_at: string | null
+          created_at: string
+          current_section: number | null
+          id: string
+          is_completed: boolean | null
+          started_at: string | null
+          step_number: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          ai_conversation?: Json | null
+          answers?: Json | null
+          checklist_items?: Json | null
+          completed_at?: string | null
+          created_at?: string
+          current_section?: number | null
+          id?: string
+          is_completed?: boolean | null
+          started_at?: string | null
+          step_number: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          ai_conversation?: Json | null
+          answers?: Json | null
+          checklist_items?: Json | null
+          completed_at?: string | null
+          created_at?: string
+          current_section?: number | null
+          id?: string
+          is_completed?: boolean | null
+          started_at?: string | null
+          step_number?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       journey_steps: {
         Row: {
           created_at: string
