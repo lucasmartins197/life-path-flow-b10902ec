@@ -78,6 +78,14 @@ export default function RoutineHome() {
   const [breathPhase, setBreathPhase] = useState<"inspire" | "hold" | "expire">("inspire");
   const [breathTimer, setBreathTimer] = useState(0);
   const [breathActive, setBreathActive] = useState(false);
+  // Meditation audio
+  const [meditationAudioLoading, setMeditationAudioLoading] = useState(false);
+  const [meditationAudioUrl, setMeditationAudioUrl] = useState<string | null>(null);
+  const [meditationPlaying, setMeditationPlaying] = useState(false);
+  const [meditationAudioRef] = useState<{ current: HTMLAudioElement | null }>({ current: null });
+  const [meditationProgress, setMeditationProgress] = useState(0);
+  const [meditationDuration, setMeditationDuration] = useState(0);
+  const [meditationSpeed, setMeditationSpeed] = useState(1);
 
   const greeting = useMemo(() => {
     const h = new Date().getHours();
@@ -221,6 +229,67 @@ export default function RoutineHome() {
     } catch { toast({ variant: "destructive", title: "Erro" }); }
     setReflectionLoading(false);
   }
+
+  async function generateMeditationAudio() {
+    if (!activityData?.steps) return;
+    setMeditationAudioLoading(true);
+    try {
+      const meditationText = [
+        activityData.title || "Meditação guiada",
+        ...activityData.steps,
+        activityData.closingMessage || "",
+      ].filter(Boolean).join(". ");
+
+      const { data, error } = await supabase.functions.invoke("generate-meditation-audio", {
+        body: { text: meditationText },
+      });
+      if (error) throw error;
+      if (data?.audioBase64) {
+        const url = `data:audio/mpeg;base64,${data.audioBase64}`;
+        setMeditationAudioUrl(url);
+        const audio = new Audio(url);
+        meditationAudioRef.current = audio;
+        audio.addEventListener("loadedmetadata", () => setMeditationDuration(audio.duration));
+        audio.addEventListener("timeupdate", () => setMeditationProgress(audio.currentTime));
+        audio.addEventListener("ended", () => { setMeditationPlaying(false); setMeditationProgress(0); });
+      } else if (data?.audioUrl) {
+        setMeditationAudioUrl(data.audioUrl);
+        const audio = new Audio(data.audioUrl);
+        meditationAudioRef.current = audio;
+        audio.addEventListener("loadedmetadata", () => setMeditationDuration(audio.duration));
+        audio.addEventListener("timeupdate", () => setMeditationProgress(audio.currentTime));
+        audio.addEventListener("ended", () => { setMeditationPlaying(false); setMeditationProgress(0); });
+      }
+    } catch (e: any) {
+      toast({ variant: "destructive", title: "Erro ao gerar áudio", description: e?.message || "Tente novamente" });
+    }
+    setMeditationAudioLoading(false);
+  }
+
+  function toggleMeditationPlay() {
+    const audio = meditationAudioRef.current;
+    if (!audio) return;
+    if (meditationPlaying) { audio.pause(); } else { audio.play(); }
+    setMeditationPlaying(!meditationPlaying);
+  }
+
+  function seekMeditation(delta: number) {
+    const audio = meditationAudioRef.current;
+    if (!audio) return;
+    audio.currentTime = Math.max(0, Math.min(audio.duration, audio.currentTime + delta));
+  }
+
+  function changeMeditationSpeed() {
+    const speeds = [0.75, 1, 1.25];
+    const next = speeds[(speeds.indexOf(meditationSpeed) + 1) % speeds.length];
+    setMeditationSpeed(next);
+    if (meditationAudioRef.current) meditationAudioRef.current.playbackRate = next;
+  }
+
+  const fmtAudioTime = (s: number) => {
+    if (!s || isNaN(s)) return "00:00";
+    return `${String(Math.floor(s / 60)).padStart(2, "0")}:${String(Math.floor(s % 60)).padStart(2, "0")}`;
+  };
 
   const fmt = (s: number) => `${String(Math.floor(s / 60)).padStart(2, "0")}:${String(s % 60).padStart(2, "0")}`;
   const todayCount = activities.filter(a => new Date(a.completed_at).toDateString() === new Date().toDateString()).length;
@@ -373,6 +442,82 @@ export default function RoutineHome() {
                     </div>
                   )}
                 </CardContent></Card>
+              )}
+
+              {/* Meditation audio player */}
+              {activeActivity === "espiritualidade" && (preferences.espiritualidade?.practice === "Meditação" || !preferences.espiritualidade?.practice) && activityData?.steps && (
+                <Card className="border-none shadow-lg overflow-hidden" style={{ background: "linear-gradient(135deg, #1B4332, #2D6A4F)" }}>
+                  <CardContent className="pt-5 pb-5 space-y-4">
+                    {!meditationAudioUrl ? (
+                      <div className="text-center space-y-3">
+                        <Button
+                          onClick={generateMeditationAudio}
+                          disabled={meditationAudioLoading}
+                          className="text-white border-white/30 hover:bg-white/10"
+                          variant="outline"
+                        >
+                          {meditationAudioLoading ? (
+                            <><Loader2 className="h-4 w-4 animate-spin mr-2" />Ana está preparando sua meditação...</>
+                          ) : (
+                            <>🎧 Ouvir meditação guiada</>
+                          )}
+                        </Button>
+                      </div>
+                    ) : (
+                      <div className="space-y-4">
+                        {/* Animated waves background */}
+                        <div className="relative h-32 rounded-2xl overflow-hidden" style={{ background: "linear-gradient(180deg, #0f3d2e, #1B4332)" }}>
+                          <div className="absolute inset-0 flex items-end justify-center gap-[3px] px-4 pb-2 opacity-60">
+                            {Array.from({ length: 40 }).map((_, i) => (
+                              <div key={i} className="w-1 rounded-full" style={{
+                                background: "linear-gradient(to top, #C9A84C, #E8D590)",
+                                height: `${meditationPlaying ? 10 + Math.sin(Date.now() / 300 + i * 0.5) * 30 + Math.random() * 15 : 8}px`,
+                                transition: "height 0.3s ease",
+                                animation: meditationPlaying ? `wave ${0.5 + i * 0.05}s ease-in-out infinite alternate` : "none",
+                              }} />
+                            ))}
+                          </div>
+                          <div className="absolute inset-0 flex flex-col items-center justify-center">
+                            <div className="w-16 h-16 rounded-full flex items-center justify-center" style={{ background: "linear-gradient(135deg, #C9A84C, #E8D590)" }}>
+                              <span className="text-2xl">🌱</span>
+                            </div>
+                            <p className="text-white/90 text-xs font-medium mt-2">Meditação guiada por Ana</p>
+                          </div>
+                        </div>
+
+                        {/* Progress bar */}
+                        <div className="space-y-1">
+                          <div className="w-full h-1.5 rounded-full overflow-hidden" style={{ background: "rgba(255,255,255,0.15)" }}>
+                            <div className="h-full rounded-full transition-all" style={{
+                              width: `${meditationDuration ? (meditationProgress / meditationDuration) * 100 : 0}%`,
+                              background: "linear-gradient(90deg, #C9A84C, #E8D590)",
+                            }} />
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-[10px] text-white/50">{fmtAudioTime(meditationProgress)}</span>
+                            <span className="text-[10px] text-white/50">{fmtAudioTime(meditationDuration)}</span>
+                          </div>
+                        </div>
+
+                        {/* Controls */}
+                        <div className="flex items-center justify-center gap-4">
+                          <button onClick={() => seekMeditation(-15)} className="text-white/60 hover:text-white text-xs font-medium">-15s</button>
+                          <button onClick={toggleMeditationPlay} className="w-14 h-14 rounded-full flex items-center justify-center" style={{ background: "linear-gradient(135deg, #C9A84C, #E8D590)" }}>
+                            {meditationPlaying ? <Pause className="h-6 w-6 text-[#1B4332]" /> : <Play className="h-6 w-6 text-[#1B4332] ml-0.5" />}
+                          </button>
+                          <button onClick={() => seekMeditation(15)} className="text-white/60 hover:text-white text-xs font-medium">+15s</button>
+                        </div>
+
+                        {/* Speed control */}
+                        <div className="flex justify-center">
+                          <button onClick={changeMeditationSpeed} className="px-3 py-1 rounded-full text-xs font-medium text-white/70 hover:text-white border border-white/20">
+                            {meditationSpeed}x
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
               )}
 
               {/* Social suggestion */}
