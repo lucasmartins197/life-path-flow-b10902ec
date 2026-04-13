@@ -1,9 +1,10 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { BottomNavigation } from "@/components/BottomNavigation";
 import { FloatingAIButton } from "@/components/FloatingAIButton";
 import { useCommunity, CommunityStory } from "@/hooks/useCommunity";
 import { useAuth } from "@/contexts/AuthContext";
-import { Heart, MessageCircle, Bookmark, Plus, Users, Clock, Sparkles, Award, Compass, Shield } from "lucide-react";
+import { Heart, MessageCircle, Bookmark, Plus, Users, Clock, Sparkles, Award, Compass, Shield, ChevronLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";

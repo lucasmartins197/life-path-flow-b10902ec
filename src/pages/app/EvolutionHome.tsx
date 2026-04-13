@@ -18,6 +18,7 @@ import {
   Wallet,
   CheckCircle,
   ChevronRight,
+  ChevronLeft,
   BarChart3,
 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";

@@ -6,6 +6,7 @@ import {
   Shield,
   LogOut,
   ChevronRight,
+  ChevronLeft,
   Bell,
   HelpCircle,
   Heart,
