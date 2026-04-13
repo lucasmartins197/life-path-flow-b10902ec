@@ -358,8 +358,8 @@ export function FinanceMonthly({
       {/* ── Action Menu ── */}
       {menuOpen && (
         <>
-          <div className="fixed inset-0 z-30" onClick={() => setMenuOpen(false)} />
-          <div className="fixed bottom-[7.5rem] right-5 z-40 flex flex-col gap-2 items-end">
+          <div className="fixed inset-0 z-[55]" onClick={() => setMenuOpen(false)} />
+          <div className="fixed z-[60] flex flex-col gap-2 items-end" style={{ bottom: "calc(14rem + env(safe-area-inset-bottom, 0px))", right: "1.25rem" }}>
             {[
               { label: "💰 Nova Entrada", type: "income" as const },
               { label: "💸 Nova Saída", type: "expense" as const },
