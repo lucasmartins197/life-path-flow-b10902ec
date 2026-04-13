@@ -1,22 +1,11 @@
-import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import {
-  Compass,
-  Heart,
-  Calendar,
-  Users,
-  PlayCircle,
-  Wallet,
-  Scale,
-  Anchor,
-  ChevronRight,
-  Flame,
-} from "lucide-react";
+import { Bell, Flame } from "lucide-react";
 import { BottomNavigation } from "@/components/BottomNavigation";
 import { PortoSeguroButton } from "@/components/PortoSeguroButton";
 import { AIChatPanel } from "@/components/chat/AIChatPanel";
+import { PremiumNavCards } from "@/components/home/PremiumNavCards";
 
 /* ── Motivational quotes ── */
 const quotes = [
@@ -54,32 +43,13 @@ function calcStreak(dates: string[]): number {
     d.setHours(0, 0, 0, 0);
     const expected = new Date(today);
     expected.setDate(expected.getDate() - i);
-    if (d.getTime() === expected.getTime()) {
-      streak++;
-    } else {
-      break;
-    }
+    if (d.getTime() === expected.getTime()) streak++;
+    else break;
   }
   return streak;
 }
 
-/* ── Module grid data ── */
-const primaryModules = [
-  { label: "A Jornada",   sub: "12 Passos",    icon: Compass, path: "/app/jornada" },
-  { label: "Terapia",     sub: "Profissionais", icon: Heart,   path: "/app/terapia" },
-  { label: "Rotina",      sub: "Painel do dia", icon: Calendar, path: "/app/rotina" },
-  { label: "Histórias",   sub: "Comunidade",   icon: Users,   path: "/app/comunidade" },
-];
-
-const secondaryModules = [
-  { label: "Aulão",    icon: PlayCircle, path: "/app/aulao" },
-  { label: "Finanças", icon: Wallet,     path: "/app/financas" },
-  { label: "Jurídico", icon: Scale,      path: "/app/juridico" },
-  { label: "Âncora",   icon: Anchor,     path: "/app/ancora" },
-];
-
 export default function AppHome() {
-  const navigate = useNavigate();
   const { user, profile } = useAuth();
   const greeting = getGreeting();
   const quote = getDailyQuote();
@@ -93,22 +63,7 @@ export default function AppHome() {
     month: "long",
   });
 
-  // Journey progress from DB
-  const { data: journeyData } = useQuery({
-    queryKey: ["home-journey", user?.id],
-    enabled: !!user?.id,
-    queryFn: async () => {
-      const [{ data: steps }, { data: progress }] = await Promise.all([
-        supabase.from("journey_steps").select("id").eq("is_published", true),
-        supabase.from("trail_progress").select("step_id, is_completed").eq("user_id", user!.id),
-      ]);
-      const totalSteps = steps?.length || 12;
-      const completedSteps = progress?.filter((p) => p.is_completed).length || 0;
-      return { totalSteps, completedSteps, currentStep: completedSteps + 1 };
-    },
-  });
-
-  // Streak from routine_days
+  // Streak
   const { data: streakDays = 0 } = useQuery({
     queryKey: ["home-streak", user?.id],
     enabled: !!user?.id,
@@ -123,69 +78,61 @@ export default function AppHome() {
     },
   });
 
-  const totalSteps = journeyData?.totalSteps || 12;
-  const currentStep = journeyData?.currentStep || 1;
-  const progressPct = Math.round(((currentStep - 1) / totalSteps) * 100);
-
   return (
     <div className="min-h-screen bg-background safe-top pb-28">
       {/* ── Header ── */}
-      <header className="px-5 pt-8 pb-2">
+      <header className="px-5 pt-7 pb-1">
         <div className="max-w-lg mx-auto flex items-center gap-3">
-          <div className="w-12 h-12 rounded-2xl bg-primary flex items-center justify-center shadow-md shrink-0">
-            <span className="text-primary-foreground text-sm font-extrabold tracking-tight">
-              AV
+          {/* Avatar */}
+          <div
+            className="w-11 h-11 rounded-full flex items-center justify-center shrink-0"
+            style={{ background: "linear-gradient(135deg, #1B4332, #2D6A4F)" }}
+          >
+            <span className="text-white text-sm font-bold">
+              {firstName ? firstName.charAt(0).toUpperCase() : "A"}
             </span>
           </div>
           <div className="flex-1 min-w-0">
-            <h1 className="text-xl font-bold text-foreground truncate">
-              {greetingText}
-            </h1>
-            <p className="text-xs text-muted-foreground capitalize">{today}</p>
+            <h1 className="text-lg font-bold text-foreground truncate">{greetingText}</h1>
+            <p className="text-[11px] text-muted-foreground capitalize">{today}</p>
           </div>
+          <button className="w-10 h-10 flex items-center justify-center rounded-full bg-card touch-target">
+            <Bell className="h-5 w-5 text-muted-foreground" />
+          </button>
         </div>
       </header>
 
-      <main className="max-w-lg mx-auto px-5 pt-4 space-y-4">
+      <main className="max-w-lg mx-auto px-5 pt-3 space-y-3">
         {/* ── Motivational Quote ── */}
-        <section className="quote-card">
-          <p className="text-primary-foreground/90 text-sm font-medium leading-relaxed italic">
-            "{quote}"
+        <section
+          className="relative overflow-hidden p-4"
+          style={{
+            background: "linear-gradient(135deg, #1B4332, #2D6A4F)",
+            borderRadius: 16,
+          }}
+        >
+          {/* Decorative quote mark */}
+          <span
+            className="absolute top-1 left-3 text-white/10 font-serif leading-none select-none"
+            style={{ fontSize: 64 }}
+          >
+            "
+          </span>
+          <p className="relative text-white/90 text-sm font-medium leading-relaxed italic pl-4">
+            {quote}
           </p>
         </section>
 
-        {/* ── Journey Progress Card ── */}
-        <section
-          className="card-warm p-4 cursor-pointer active:scale-[0.98] transition-transform"
-          onClick={() => navigate("/app/jornada")}
-        >
-          <div className="flex items-center justify-between mb-2.5">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-2xl bg-primary/10 flex items-center justify-center">
-                <Compass className="h-5 w-5 text-primary" />
-              </div>
-              <div>
-                <p className="text-sm font-bold text-foreground">Sua Jornada</p>
-                <p className="text-xs text-muted-foreground">
-                  Passo {currentStep} de {totalSteps}
-                </p>
-              </div>
-            </div>
-            <ChevronRight className="h-5 w-5 text-muted-foreground" />
-          </div>
-          <div className="progress-bar">
-            <div className="progress-fill" style={{ width: `${progressPct}%` }} />
-          </div>
-          <div className="flex items-center justify-between mt-1.5">
-            <span className="text-[11px] text-muted-foreground">{progressPct}% completo</span>
-            <span className="text-xs font-semibold text-primary">Continuar →</span>
-          </div>
-        </section>
-
         {/* ── Streak Card ── */}
-        <section className="card-warm p-4 flex items-center gap-3">
-          <div className="w-10 h-10 rounded-2xl bg-accent/20 flex items-center justify-center shrink-0">
-            <Flame className="h-5 w-5 text-accent" />
+        <section
+          className="flex items-center gap-3 p-3.5 bg-card border border-border/30"
+          style={{ borderRadius: 16 }}
+        >
+          <div
+            className="w-10 h-10 rounded-2xl flex items-center justify-center shrink-0"
+            style={{ background: "linear-gradient(135deg, #C4530A, #E8750A)" }}
+          >
+            <Flame className="h-5 w-5 text-white" />
           </div>
           <div className="flex-1">
             <p className="text-sm font-bold text-foreground">
@@ -199,47 +146,8 @@ export default function AppHome() {
           </div>
         </section>
 
-        {/* ── Primary Modules 2x2 ── */}
-        <section>
-          <p className="section-title">Acesso rápido</p>
-          <div className="grid grid-cols-2 gap-3">
-            {primaryModules.map((mod) => (
-              <button
-                key={mod.path}
-                onClick={() => navigate(mod.path)}
-                className="card-warm p-4 text-left flex flex-col gap-3 active:scale-[0.97] transition-transform touch-target"
-              >
-                <div className="w-11 h-11 rounded-2xl bg-primary/10 flex items-center justify-center">
-                  <mod.icon className="h-5 w-5 text-primary" />
-                </div>
-                <div>
-                  <h3 className="font-bold text-foreground text-sm leading-tight">{mod.label}</h3>
-                  <p className="text-muted-foreground text-xs mt-0.5">{mod.sub}</p>
-                </div>
-              </button>
-            ))}
-          </div>
-        </section>
-
-        {/* ── Secondary Modules ── */}
-        <section>
-          <p className="section-title">Mais recursos</p>
-          <div className="grid grid-cols-4 gap-2">
-            {secondaryModules.map((mod) => (
-              <button
-                key={mod.path}
-                onClick={() => navigate(mod.path)}
-                className="flex flex-col items-center gap-2 p-3 rounded-2xl bg-card border border-border/30 active:scale-95 transition-transform touch-target"
-                style={{ boxShadow: "var(--shadow-xs)" }}
-              >
-                <mod.icon className="h-5 w-5 text-primary" />
-                <span className="text-[11px] font-semibold text-foreground text-center leading-tight">
-                  {mod.label}
-                </span>
-              </button>
-            ))}
-          </div>
-        </section>
+        {/* ── Premium Navigation Cards ── */}
+        <PremiumNavCards />
       </main>
 
       <BottomNavigation />
