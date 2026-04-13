@@ -444,65 +444,15 @@ export default function JourneyStep() {
           </Card>
         )}
 
-        {/* ═══ SEÇÃO 4 — IA TERAPEUTA ═══ */}
+        {/* ═══ SEÇÃO 4 — CARTA DA ANA ═══ */}
         {currentSection >= 4 && (
-          <Card className="border-none shadow-lg overflow-hidden">
-            <CardHeader style={{ background: "linear-gradient(135deg, #1B4332, #2D6A4F)" }}>
-              <CardTitle className="text-base text-white flex items-center gap-2">
-                <Bot className="h-5 w-5" /> Lia — Terapeuta IA
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="p-0">
-              {/* Messages */}
-              <div className="max-h-[400px] overflow-y-auto p-4 space-y-4">
-                {conversation.map((msg, i) => (
-                  <div key={i} className={`flex gap-3 ${msg.role === "user" ? "justify-end" : ""}`}>
-                    {msg.role === "assistant" && (
-                      <div className="w-8 h-8 rounded-full flex items-center justify-center shrink-0"
-                        style={{ background: "linear-gradient(135deg, #1B4332, #2D6A4F)" }}>
-                        <Bot className="h-4 w-4 text-white" />
-                      </div>
-                    )}
-                    <div className={`max-w-[80%] rounded-2xl px-4 py-3 text-sm leading-relaxed ${
-                      msg.role === "user"
-                        ? "bg-primary text-primary-foreground"
-                        : "bg-muted"
-                    }`}>
-                      {msg.content}
-                    </div>
-                    {msg.role === "user" && (
-                      <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center shrink-0">
-                        <User className="h-4 w-4 text-primary-foreground" />
-                      </div>
-                    )}
-                  </div>
-                ))}
-                {aiLoading && (
-                  <div className="flex gap-3">
-                    <div className="w-8 h-8 rounded-full flex items-center justify-center shrink-0"
-                      style={{ background: "linear-gradient(135deg, #1B4332, #2D6A4F)" }}>
-                      <Bot className="h-4 w-4 text-white" />
-                    </div>
-                    <div className="bg-muted rounded-2xl px-4 py-3">
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {/* Input */}
-              <div className="border-t p-3 flex gap-2">
-                <Input
-                  value={chatInput}
-                  onChange={(e) => setChatInput(e.target.value)}
-                  placeholder="Responda à Lia..."
-                  onKeyDown={(e) => e.key === "Enter" && !aiLoading && chatInput.trim() && callAI()}
-                />
-                <Button size="icon" disabled={aiLoading || !chatInput.trim()} onClick={() => callAI()}
-                  style={{ background: "linear-gradient(135deg, #1B4332, #2D6A4F)" }}>
-                  <Send className="h-4 w-4" />
-                </Button>
-              </div>
+          <AnaLetter
+            letters={conversation}
+            isLoading={aiLoading}
+            onSendReply={(text) => callAI(false, text)}
+            maxExchanges={2}
+          />
+        )}
             </CardContent>
           </Card>
         )}
