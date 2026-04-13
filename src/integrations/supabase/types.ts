@@ -658,7 +658,10 @@ export type Database = {
           created_at: string
           description: string | null
           id: string
+          is_recurring: boolean
+          recurring_day: number | null
           transaction_date: string
+          type: string
           user_id: string
         }
         Insert: {
@@ -667,7 +670,10 @@ export type Database = {
           created_at?: string
           description?: string | null
           id?: string
+          is_recurring?: boolean
+          recurring_day?: number | null
           transaction_date?: string
+          type?: string
           user_id: string
         }
         Update: {
@@ -676,7 +682,10 @@ export type Database = {
           created_at?: string
           description?: string | null
           id?: string
+          is_recurring?: boolean
+          recurring_day?: number | null
           transaction_date?: string
+          type?: string
           user_id?: string
         }
         Relationships: []
