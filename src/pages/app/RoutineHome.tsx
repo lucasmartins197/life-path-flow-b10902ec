@@ -230,6 +230,67 @@ export default function RoutineHome() {
     setReflectionLoading(false);
   }
 
+  async function generateMeditationAudio() {
+    if (!activityData?.steps) return;
+    setMeditationAudioLoading(true);
+    try {
+      const meditationText = [
+        activityData.title || "Meditação guiada",
+        ...activityData.steps,
+        activityData.closingMessage || "",
+      ].filter(Boolean).join(". ");
+
+      const { data, error } = await supabase.functions.invoke("generate-meditation-audio", {
+        body: { text: meditationText },
+      });
+      if (error) throw error;
+      if (data?.audioBase64) {
+        const url = `data:audio/mpeg;base64,${data.audioBase64}`;
+        setMeditationAudioUrl(url);
+        const audio = new Audio(url);
+        meditationAudioRef.current = audio;
+        audio.addEventListener("loadedmetadata", () => setMeditationDuration(audio.duration));
+        audio.addEventListener("timeupdate", () => setMeditationProgress(audio.currentTime));
+        audio.addEventListener("ended", () => { setMeditationPlaying(false); setMeditationProgress(0); });
+      } else if (data?.audioUrl) {
+        setMeditationAudioUrl(data.audioUrl);
+        const audio = new Audio(data.audioUrl);
+        meditationAudioRef.current = audio;
+        audio.addEventListener("loadedmetadata", () => setMeditationDuration(audio.duration));
+        audio.addEventListener("timeupdate", () => setMeditationProgress(audio.currentTime));
+        audio.addEventListener("ended", () => { setMeditationPlaying(false); setMeditationProgress(0); });
+      }
+    } catch (e: any) {
+      toast({ variant: "destructive", title: "Erro ao gerar áudio", description: e?.message || "Tente novamente" });
+    }
+    setMeditationAudioLoading(false);
+  }
+
+  function toggleMeditationPlay() {
+    const audio = meditationAudioRef.current;
+    if (!audio) return;
+    if (meditationPlaying) { audio.pause(); } else { audio.play(); }
+    setMeditationPlaying(!meditationPlaying);
+  }
+
+  function seekMeditation(delta: number) {
+    const audio = meditationAudioRef.current;
+    if (!audio) return;
+    audio.currentTime = Math.max(0, Math.min(audio.duration, audio.currentTime + delta));
+  }
+
+  function changeMeditationSpeed() {
+    const speeds = [0.75, 1, 1.25];
+    const next = speeds[(speeds.indexOf(meditationSpeed) + 1) % speeds.length];
+    setMeditationSpeed(next);
+    if (meditationAudioRef.current) meditationAudioRef.current.playbackRate = next;
+  }
+
+  const fmtAudioTime = (s: number) => {
+    if (!s || isNaN(s)) return "00:00";
+    return `${String(Math.floor(s / 60)).padStart(2, "0")}:${String(Math.floor(s % 60)).padStart(2, "0")}`;
+  };
+
   const fmt = (s: number) => `${String(Math.floor(s / 60)).padStart(2, "0")}:${String(s % 60).padStart(2, "0")}`;
   const todayCount = activities.filter(a => new Date(a.completed_at).toDateString() === new Date().toDateString()).length;
 
