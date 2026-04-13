@@ -10,8 +10,9 @@ import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Progress } from "@/components/ui/progress";
 import { useToast } from "@/hooks/use-toast";
+import AnaLetter from "@/components/journey/AnaLetter";
 import {
-  Loader2, ArrowLeft, CheckCircle, Clock, Award, Send, Bot, User,
+  Loader2, ArrowLeft, CheckCircle, Clock, Award, Send,
 } from "lucide-react";
 
 /* ── Step metadata ── */
