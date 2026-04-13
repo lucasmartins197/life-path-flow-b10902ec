@@ -10,8 +10,9 @@ import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Progress } from "@/components/ui/progress";
 import { useToast } from "@/hooks/use-toast";
+import AnaLetter from "@/components/journey/AnaLetter";
 import {
-  Loader2, ArrowLeft, CheckCircle, Clock, Award, Send, Bot, User,
+  Loader2, ArrowLeft, CheckCircle, Clock, Award, Send,
 } from "lucide-react";
 
 /* ── Step metadata ── */
@@ -62,10 +63,11 @@ export default function JourneyStep() {
   const [checkedItems, setCheckedItems] = useState<boolean[]>(new Array(CHECKLIST_ITEMS.length).fill(false));
   const [answers, setAnswers] = useState({ feeling: "", hardest_moment: "", commitment: "" });
   const [conversation, setConversation] = useState<ConvoMsg[]>([]);
-  const [chatInput, setChatInput] = useState("");
+  const [chatInput] = useState(""); // kept for compat
   const [aiLoading, setAiLoading] = useState(false);
   const [startedAt, setStartedAt] = useState<string | null>(null);
   const [showCelebration, setShowCelebration] = useState(false);
+  const [userName, setUserName] = useState("");
 
   const allChecked = checkedItems.every(Boolean);
   const answersComplete = answers.feeling.trim() && answers.hardest_moment.trim() && answers.commitment.trim();
@@ -114,6 +116,15 @@ export default function JourneyStep() {
 
   async function loadProgress() {
     setLoading(true);
+
+    // Fetch user name
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("full_name")
+      .eq("user_id", user!.id)
+      .maybeSingle();
+    if (profile?.full_name) setUserName(profile.full_name.split(" ")[0]);
+
     const { data } = await supabase
       .from("journey_progress")
       .select("*")
@@ -140,7 +151,6 @@ export default function JourneyStep() {
       const conv = data.ai_conversation;
       if (Array.isArray(conv)) setConversation(conv as unknown as ConvoMsg[]);
     } else {
-      // Create initial record
       const { data: newData } = await supabase
         .from("journey_progress")
         .insert({ user_id: user!.id, step_number: stepNumber })
@@ -185,19 +195,24 @@ export default function JourneyStep() {
     setSaving(false);
   }
 
-  async function callAI(isInitial = false) {
+  async function callAI(isInitial = false, userReply?: string) {
     setAiLoading(true);
     try {
       let updatedConvo = isInitial ? [] : [...conversation];
-      const body: any = { answers, stepNumber, conversation: updatedConvo };
-      
-      if (!isInitial && chatInput.trim()) {
-        const userMsg: ConvoMsg = { role: "user", content: chatInput };
+
+      if (!isInitial && userReply) {
+        const userMsg: ConvoMsg = { role: "user", content: userReply };
         updatedConvo = [...updatedConvo, userMsg];
         setConversation(updatedConvo);
-        body.conversation = updatedConvo;
-        setChatInput("");
       }
+
+      const body: any = {
+        answers,
+        stepNumber,
+        conversation: updatedConvo,
+        userName: userName || undefined,
+        isReply: !isInitial,
+      };
 
       const { data, error } = await supabase.functions.invoke("journey-ai", { body });
 
@@ -429,67 +444,14 @@ export default function JourneyStep() {
           </Card>
         )}
 
-        {/* ═══ SEÇÃO 4 — IA TERAPEUTA ═══ */}
+        {/* ═══ SEÇÃO 4 — CARTA DA ANA ═══ */}
         {currentSection >= 4 && (
-          <Card className="border-none shadow-lg overflow-hidden">
-            <CardHeader style={{ background: "linear-gradient(135deg, #1B4332, #2D6A4F)" }}>
-              <CardTitle className="text-base text-white flex items-center gap-2">
-                <Bot className="h-5 w-5" /> Lia — Terapeuta IA
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="p-0">
-              {/* Messages */}
-              <div className="max-h-[400px] overflow-y-auto p-4 space-y-4">
-                {conversation.map((msg, i) => (
-                  <div key={i} className={`flex gap-3 ${msg.role === "user" ? "justify-end" : ""}`}>
-                    {msg.role === "assistant" && (
-                      <div className="w-8 h-8 rounded-full flex items-center justify-center shrink-0"
-                        style={{ background: "linear-gradient(135deg, #1B4332, #2D6A4F)" }}>
-                        <Bot className="h-4 w-4 text-white" />
-                      </div>
-                    )}
-                    <div className={`max-w-[80%] rounded-2xl px-4 py-3 text-sm leading-relaxed ${
-                      msg.role === "user"
-                        ? "bg-primary text-primary-foreground"
-                        : "bg-muted"
-                    }`}>
-                      {msg.content}
-                    </div>
-                    {msg.role === "user" && (
-                      <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center shrink-0">
-                        <User className="h-4 w-4 text-primary-foreground" />
-                      </div>
-                    )}
-                  </div>
-                ))}
-                {aiLoading && (
-                  <div className="flex gap-3">
-                    <div className="w-8 h-8 rounded-full flex items-center justify-center shrink-0"
-                      style={{ background: "linear-gradient(135deg, #1B4332, #2D6A4F)" }}>
-                      <Bot className="h-4 w-4 text-white" />
-                    </div>
-                    <div className="bg-muted rounded-2xl px-4 py-3">
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {/* Input */}
-              <div className="border-t p-3 flex gap-2">
-                <Input
-                  value={chatInput}
-                  onChange={(e) => setChatInput(e.target.value)}
-                  placeholder="Responda à Lia..."
-                  onKeyDown={(e) => e.key === "Enter" && !aiLoading && chatInput.trim() && callAI()}
-                />
-                <Button size="icon" disabled={aiLoading || !chatInput.trim()} onClick={() => callAI()}
-                  style={{ background: "linear-gradient(135deg, #1B4332, #2D6A4F)" }}>
-                  <Send className="h-4 w-4" />
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
+          <AnaLetter
+            letters={conversation}
+            isLoading={aiLoading}
+            onSendReply={(text) => callAI(false, text)}
+            maxExchanges={2}
+          />
         )}
 
         {/* ═══ SEÇÃO 5 — CONCLUSÃO ═══ */}
@@ -514,7 +476,7 @@ export default function JourneyStep() {
                 </div>
                 <div className="flex items-center gap-2">
                   {conversation.length > 0 ? <CheckCircle className="h-4 w-4 text-green-600" /> : <Clock className="h-4 w-4 text-muted-foreground" />}
-                  <span className={conversation.length > 0 ? "text-green-700" : "text-muted-foreground"}>Conversa com a Lia</span>
+                  <span className={conversation.length > 0 ? "text-green-700" : "text-muted-foreground"}>Carta da Ana recebida</span>
                 </div>
                 <div className="flex items-center gap-2">
                   {timeRemaining <= 0 ? <CheckCircle className="h-4 w-4 text-green-600" /> : <Clock className="h-4 w-4 text-muted-foreground" />}
