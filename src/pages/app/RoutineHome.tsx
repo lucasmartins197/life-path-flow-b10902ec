@@ -78,6 +78,14 @@ export default function RoutineHome() {
   const [breathPhase, setBreathPhase] = useState<"inspire" | "hold" | "expire">("inspire");
   const [breathTimer, setBreathTimer] = useState(0);
   const [breathActive, setBreathActive] = useState(false);
+  // Meditation audio
+  const [meditationAudioLoading, setMeditationAudioLoading] = useState(false);
+  const [meditationAudioUrl, setMeditationAudioUrl] = useState<string | null>(null);
+  const [meditationPlaying, setMeditationPlaying] = useState(false);
+  const [meditationAudioRef] = useState<{ current: HTMLAudioElement | null }>({ current: null });
+  const [meditationProgress, setMeditationProgress] = useState(0);
+  const [meditationDuration, setMeditationDuration] = useState(0);
+  const [meditationSpeed, setMeditationSpeed] = useState(1);
 
   const greeting = useMemo(() => {
     const h = new Date().getHours();
