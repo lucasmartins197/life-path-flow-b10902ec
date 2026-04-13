@@ -138,7 +138,7 @@ export default function JourneyStep() {
         });
       }
       const conv = data.ai_conversation;
-      if (Array.isArray(conv)) setConversation(conv as ConvoMsg[]);
+      if (Array.isArray(conv)) setConversation(conv as unknown as ConvoMsg[]);
     } else {
       // Create initial record
       const { data: newData } = await supabase
@@ -157,9 +157,9 @@ export default function JourneyStep() {
   async function saveProgress(updates: Record<string, any> = {}) {
     if (!user || !progressData) return;
     const payload = {
-      checklist_items: checkedItems,
-      answers,
-      ai_conversation: conversation,
+      checklist_items: checkedItems as unknown as any,
+      answers: answers as unknown as any,
+      ai_conversation: conversation as unknown as any,
       current_section: currentSection,
       ...updates,
     };
@@ -240,7 +240,7 @@ export default function JourneyStep() {
       .maybeSingle();
 
     if (stepData) {
-      await supabase.from("trail_progress").upsert({
+      await supabase.from("trail_progress").upsert([{
         user_id: user.id,
         step_id: stepData.id,
         is_completed: true,
@@ -248,7 +248,7 @@ export default function JourneyStep() {
         exercises_completed: answers,
         reflection_answers: conversation,
         video_watched: true,
-      }, { onConflict: "user_id,step_id" });
+      }], { onConflict: "user_id,step_id" });
     }
 
     await awardMedal(`journey-${stepNumber}`);
