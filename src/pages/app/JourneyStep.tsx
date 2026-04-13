@@ -195,19 +195,24 @@ export default function JourneyStep() {
     setSaving(false);
   }
 
-  async function callAI(isInitial = false) {
+  async function callAI(isInitial = false, userReply?: string) {
     setAiLoading(true);
     try {
       let updatedConvo = isInitial ? [] : [...conversation];
-      const body: any = { answers, stepNumber, conversation: updatedConvo };
-      
-      if (!isInitial && chatInput.trim()) {
-        const userMsg: ConvoMsg = { role: "user", content: chatInput };
+
+      if (!isInitial && userReply) {
+        const userMsg: ConvoMsg = { role: "user", content: userReply };
         updatedConvo = [...updatedConvo, userMsg];
         setConversation(updatedConvo);
-        body.conversation = updatedConvo;
-        setChatInput("");
       }
+
+      const body: any = {
+        answers,
+        stepNumber,
+        conversation: updatedConvo,
+        userName: userName || undefined,
+        isReply: !isInitial,
+      };
 
       const { data, error } = await supabase.functions.invoke("journey-ai", { body });
 
