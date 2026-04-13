@@ -55,8 +55,6 @@ export function FinanceDebtSimulator({ debts }: FinanceDebtSimulatorProps) {
 
   const savings = minSim.totalPaid - extraSim.totalPaid;
 
-  const savings = minSim.totalPaid - extraSim.totalPaid;
-
   return (
     <div className="space-y-4">
       {/* Debt Selector */}
