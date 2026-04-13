@@ -18,17 +18,17 @@ import {
 /* ── Step metadata ── */
 const STEP_META: Record<number, { name: string; subtitle: string; medal: string }> = {
   1: { name: "Reconhecimento", subtitle: "Admito que perdi o controle e que isso desorganizou minha vida", medal: "Coragem de Olhar" },
-  2: { name: "Esperança", subtitle: "Posso recuperar minha lucidez", medal: "Esperança" },
-  3: { name: "Entrega", subtitle: "Um propósito maior que meus impulsos", medal: "Entrega" },
-  4: { name: "Inventário", subtitle: "Honestidade sobre o impacto", medal: "Inventário" },
-  5: { name: "Verdade", subtitle: "Reconheço a dimensão real", medal: "Verdade" },
-  6: { name: "Disponibilidade", subtitle: "Pronto para abandonar padrões", medal: "Disponibilidade" },
-  7: { name: "Humildade", subtitle: "Peço força para transformar", medal: "Humildade" },
-  8: { name: "Responsabilidade", subtitle: "Listo quem prejudiquei", medal: "Responsabilidade" },
-  9: { name: "Reparação", subtitle: "Faço reparações possíveis", medal: "Reparação" },
-  10: { name: "Vigilância", subtitle: "Inventário diário", medal: "Vigilância" },
-  11: { name: "Conexão Real", subtitle: "Silêncio e direção", medal: "Conexão Real" },
-  12: { name: "Propósito", subtitle: "Vivo e compartilho", medal: "Propósito" },
+  2: { name: "Esperança", subtitle: "Posso recuperar minha lucidez", medal: "Primeiro Raio de Luz" },
+  3: { name: "Entrega", subtitle: "Um propósito maior que meus impulsos", medal: "Âncora Plantada" },
+  4: { name: "Inventário", subtitle: "Honestidade sobre o impacto", medal: "Espelho Honesto" },
+  5: { name: "Verdade", subtitle: "Reconheço a dimensão real", medal: "Voz que Liberta" },
+  6: { name: "Disponibilidade", subtitle: "Pronto para abandonar padrões", medal: "Porta Aberta" },
+  7: { name: "Humildade", subtitle: "Peço força para transformar", medal: "Força que Dobra" },
+  8: { name: "Responsabilidade", subtitle: "Listo quem prejudiquei", medal: "Peso nos Ombros" },
+  9: { name: "Reparação", subtitle: "Faço reparações possíveis", medal: "Ponte Reconstruída" },
+  10: { name: "Vigilância", subtitle: "Inventário diário", medal: "Guarda Fiel" },
+  11: { name: "Conexão Real", subtitle: "Silêncio e direção", medal: "Raízes Profundas" },
+  12: { name: "Propósito", subtitle: "Vivo e compartilho", medal: "Farol Aceso" },
 };
 
 const CHECKLIST_ITEMS = [

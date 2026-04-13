@@ -15,77 +15,54 @@ import { PortoSeguroButton } from "@/components/PortoSeguroButton";
 import { AIChatPanel } from "@/components/chat/AIChatPanel";
 
 /* ── Hardcoded 12-step names ── */
-const STEP_META: Record<number, { name: string; subtitle: string }> = {
-  1:  { name: "Reconhecimento",    subtitle: "Admito que perdi o controle" },
-  2:  { name: "Esperança",         subtitle: "Posso recuperar minha lucidez" },
-  3:  { name: "Entrega",           subtitle: "Um propósito maior que meus impulsos" },
-  4:  { name: "Inventário",        subtitle: "Honestidade sobre o impacto" },
-  5:  { name: "Verdade",           subtitle: "Reconheço a dimensão real" },
-  6:  { name: "Disponibilidade",   subtitle: "Pronto para abandonar padrões" },
-  7:  { name: "Humildade",         subtitle: "Peço força para transformar" },
-  8:  { name: "Responsabilidade",  subtitle: "Listo quem prejudiquei" },
-  9:  { name: "Reparação",         subtitle: "Faço reparações possíveis" },
-  10: { name: "Vigilância",        subtitle: "Inventário diário" },
-  11: { name: "Conexão Real",      subtitle: "Silêncio e direção" },
-  12: { name: "Propósito",         subtitle: "Vivo e compartilho" },
+const STEP_META: Record<number, { name: string; subtitle: string; medal: string }> = {
+  1:  { name: "Reconhecimento",    subtitle: "Admito que perdi o controle", medal: "Coragem de Olhar" },
+  2:  { name: "Esperança",         subtitle: "Posso recuperar minha lucidez", medal: "Primeiro Raio de Luz" },
+  3:  { name: "Entrega",           subtitle: "Um propósito maior que meus impulsos", medal: "Âncora Plantada" },
+  4:  { name: "Inventário",        subtitle: "Honestidade sobre o impacto", medal: "Espelho Honesto" },
+  5:  { name: "Verdade",           subtitle: "Reconheço a dimensão real", medal: "Voz que Liberta" },
+  6:  { name: "Disponibilidade",   subtitle: "Pronto para abandonar padrões", medal: "Porta Aberta" },
+  7:  { name: "Humildade",         subtitle: "Peço força para transformar", medal: "Força que Dobra" },
+  8:  { name: "Responsabilidade",  subtitle: "Listo quem prejudiquei", medal: "Peso nos Ombros" },
+  9:  { name: "Reparação",         subtitle: "Faço reparações possíveis", medal: "Ponte Reconstruída" },
+  10: { name: "Vigilância",        subtitle: "Inventário diário", medal: "Guarda Fiel" },
+  11: { name: "Conexão Real",      subtitle: "Silêncio e direção", medal: "Raízes Profundas" },
+  12: { name: "Propósito",         subtitle: "Vivo e compartilho", medal: "Farol Aceso" },
 };
 
-interface TrailProgress {
-  step_id: string;
-  is_completed: boolean;
-}
-
-interface JourneyStep {
-  id: string;
+interface JourneyProgressRow {
   step_number: number;
-  title: string;
-  description: string;
-  duration_minutes: number;
+  is_completed: boolean;
 }
 
 export default function JourneysHome() {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const [dbSteps, setDbSteps] = useState<JourneyStep[]>([]);
-  const [progress, setProgress] = useState<TrailProgress[]>([]);
+  const [progress, setProgress] = useState<JourneyProgressRow[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     if (!user) return;
     (async () => {
-      const [{ data: s }, { data: p }] = await Promise.all([
-        supabase.from("journey_steps").select("*").eq("is_published", true).order("step_number"),
-        supabase.from("trail_progress").select("step_id, is_completed").eq("user_id", user.id),
-      ]);
-      if (s) setDbSteps(s);
-      if (p) setProgress(p);
+      const { data: p } = await supabase
+        .from("journey_progress")
+        .select("step_number, is_completed")
+        .eq("user_id", user.id);
+      if (p) setProgress(p as JourneyProgressRow[]);
       setIsLoading(false);
     })();
   }, [user]);
 
-  // Build full 12-step list — use DB data when available, fallback to hardcoded
   const allSteps = Array.from({ length: 12 }, (_, i) => {
     const num = i + 1;
-    const db = dbSteps.find((s) => s.step_number === num);
     const meta = STEP_META[num];
-    return {
-      id: db?.id || `placeholder-${num}`,
-      step_number: num,
-      name: meta.name,
-      subtitle: meta.subtitle,
-      hasContent: !!db,
-    };
+    return { step_number: num, name: meta.name, subtitle: meta.subtitle, medal: meta.medal };
   });
 
-  const getStatus = (stepNum: number, stepId: string): "completed" | "available" | "locked" => {
-    if (progress.find((p) => p.step_id === stepId && p.is_completed)) return "completed";
+  const getStatus = (stepNum: number): "completed" | "available" | "locked" => {
+    if (progress.find((p) => p.step_number === stepNum && p.is_completed)) return "completed";
     if (stepNum === 1) return "available";
-    // Check if previous step is completed
-    const prevDb = dbSteps.find((s) => s.step_number === stepNum - 1);
-    if (prevDb && progress.find((p) => p.step_id === prevDb.id && p.is_completed)) return "available";
-    // Also available if all previous are completed
-    const prevAll = dbSteps.filter((s) => s.step_number < stepNum);
-    if (prevAll.length > 0 && prevAll.every((ps) => progress.some((p) => p.step_id === ps.id && p.is_completed))) return "available";
+    if (progress.find((p) => p.step_number === stepNum - 1 && p.is_completed)) return "available";
     return "locked";
   };
 
@@ -140,7 +117,7 @@ export default function JourneysHome() {
           </div>
         ) : (
           allSteps.map((step) => {
-            const status = getStatus(step.step_number, step.id);
+            const status = getStatus(step.step_number);
             const isDone = status === "completed";
             const isLocked = status === "locked";
             const isAvailable = status === "available";
@@ -150,7 +127,7 @@ export default function JourneysHome() {
                 key={step.step_number}
                 disabled={isLocked}
                 onClick={() =>
-                  !isLocked && step.hasContent && navigate(`/app/jornada/${step.step_number}`)
+                  !isLocked && navigate(`/app/jornada/${step.step_number}`)
                 }
                 className="w-full text-left transition-all duration-200 active:scale-[0.98]"
                 style={{
