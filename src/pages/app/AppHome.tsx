@@ -1,5 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import {
   Compass,
   Heart,
@@ -16,7 +18,7 @@ import { BottomNavigation } from "@/components/BottomNavigation";
 import { PortoSeguroButton } from "@/components/PortoSeguroButton";
 import { AIChatPanel } from "@/components/chat/AIChatPanel";
 
-/* ── Motivational quotes (rotate daily) ── */
+/* ── Motivational quotes ── */
 const quotes = [
   "Cada dia sóbrio é uma vitória silenciosa e poderosa.",
   "Você não está sozinho nessa jornada. Estamos juntos.",
@@ -41,12 +43,32 @@ function getGreeting() {
   return "Boa noite";
 }
 
+function calcStreak(dates: string[]): number {
+  if (!dates.length) return 0;
+  const sorted = [...dates].sort((a, b) => b.localeCompare(a));
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  let streak = 0;
+  for (let i = 0; i < sorted.length; i++) {
+    const d = new Date(sorted[i]);
+    d.setHours(0, 0, 0, 0);
+    const expected = new Date(today);
+    expected.setDate(expected.getDate() - i);
+    if (d.getTime() === expected.getTime()) {
+      streak++;
+    } else {
+      break;
+    }
+  }
+  return streak;
+}
+
 /* ── Module grid data ── */
 const primaryModules = [
-  { label: "A Jornada",   sub: "12 Passos",      icon: Compass,  path: "/app/jornada" },
-  { label: "Terapia",     sub: "Profissionais",   icon: Heart,    path: "/app/terapia" },
-  { label: "Rotina",      sub: "Painel do dia",   icon: Calendar, path: "/app/rotina" },
-  { label: "Histórias",   sub: "Comunidade",      icon: Users,    path: "/app/comunidade" },
+  { label: "A Jornada",   sub: "12 Passos",    icon: Compass, path: "/app/jornada" },
+  { label: "Terapia",     sub: "Profissionais", icon: Heart,   path: "/app/terapia" },
+  { label: "Rotina",      sub: "Painel do dia", icon: Calendar, path: "/app/rotina" },
+  { label: "Histórias",   sub: "Comunidade",   icon: Users,   path: "/app/comunidade" },
 ];
 
 const secondaryModules = [
@@ -58,11 +80,12 @@ const secondaryModules = [
 
 export default function AppHome() {
   const navigate = useNavigate();
-  const { profile } = useAuth();
-
-  const firstName = profile?.full_name?.split(" ")[0] || "bem-vindo";
+  const { user, profile } = useAuth();
   const greeting = getGreeting();
   const quote = getDailyQuote();
+
+  const firstName = profile?.full_name?.split(" ")[0];
+  const greetingText = firstName ? `${greeting}, ${firstName}!` : `${greeting}!`;
 
   const today = new Date().toLocaleDateString("pt-BR", {
     weekday: "long",
@@ -70,18 +93,45 @@ export default function AppHome() {
     month: "long",
   });
 
-  // TODO: replace with real data from hooks
-  const currentStep = 2;
-  const totalSteps = 12;
-  const streakDays = 5;
-  const progressPct = Math.round((currentStep / totalSteps) * 100);
+  // Journey progress from DB
+  const { data: journeyData } = useQuery({
+    queryKey: ["home-journey", user?.id],
+    enabled: !!user?.id,
+    queryFn: async () => {
+      const [{ data: steps }, { data: progress }] = await Promise.all([
+        supabase.from("journey_steps").select("id").eq("is_published", true),
+        supabase.from("trail_progress").select("step_id, is_completed").eq("user_id", user!.id),
+      ]);
+      const totalSteps = steps?.length || 12;
+      const completedSteps = progress?.filter((p) => p.is_completed).length || 0;
+      return { totalSteps, completedSteps, currentStep: completedSteps + 1 };
+    },
+  });
+
+  // Streak from routine_days
+  const { data: streakDays = 0 } = useQuery({
+    queryKey: ["home-streak", user?.id],
+    enabled: !!user?.id,
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("routine_days")
+        .select("date")
+        .eq("user_id", user!.id)
+        .order("date", { ascending: false })
+        .limit(60);
+      return calcStreak(data?.map((d) => d.date) || []);
+    },
+  });
+
+  const totalSteps = journeyData?.totalSteps || 12;
+  const currentStep = journeyData?.currentStep || 1;
+  const progressPct = Math.round(((currentStep - 1) / totalSteps) * 100);
 
   return (
     <div className="min-h-screen bg-background safe-top pb-28">
       {/* ── Header ── */}
       <header className="px-5 pt-8 pb-2">
         <div className="max-w-lg mx-auto flex items-center gap-3">
-          {/* Avatar / Logo */}
           <div className="w-12 h-12 rounded-2xl bg-primary flex items-center justify-center shadow-md shrink-0">
             <span className="text-primary-foreground text-sm font-extrabold tracking-tight">
               AV
@@ -89,16 +139,16 @@ export default function AppHome() {
           </div>
           <div className="flex-1 min-w-0">
             <h1 className="text-xl font-bold text-foreground truncate">
-              {greeting}, {firstName}!
+              {greetingText}
             </h1>
             <p className="text-xs text-muted-foreground capitalize">{today}</p>
           </div>
         </div>
       </header>
 
-      <main className="max-w-lg mx-auto px-5 pt-4 space-y-5">
+      <main className="max-w-lg mx-auto px-5 pt-4 space-y-4">
         {/* ── Motivational Quote ── */}
-        <section className="quote-card animate-fade-in">
+        <section className="quote-card">
           <p className="text-primary-foreground/90 text-sm font-medium leading-relaxed italic">
             "{quote}"
           </p>
@@ -106,10 +156,10 @@ export default function AppHome() {
 
         {/* ── Journey Progress Card ── */}
         <section
-          className="card-warm p-5 cursor-pointer active:scale-[0.98] transition-transform"
+          className="card-warm p-4 cursor-pointer active:scale-[0.98] transition-transform"
           onClick={() => navigate("/app/jornada")}
         >
-          <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center justify-between mb-2.5">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-2xl bg-primary/10 flex items-center justify-center">
                 <Compass className="h-5 w-5 text-primary" />
@@ -123,13 +173,29 @@ export default function AppHome() {
             </div>
             <ChevronRight className="h-5 w-5 text-muted-foreground" />
           </div>
-
           <div className="progress-bar">
             <div className="progress-fill" style={{ width: `${progressPct}%` }} />
           </div>
-          <div className="flex items-center justify-between mt-2">
+          <div className="flex items-center justify-between mt-1.5">
             <span className="text-[11px] text-muted-foreground">{progressPct}% completo</span>
             <span className="text-xs font-semibold text-primary">Continuar →</span>
+          </div>
+        </section>
+
+        {/* ── Streak Card ── */}
+        <section className="card-warm p-4 flex items-center gap-3">
+          <div className="w-10 h-10 rounded-2xl bg-accent/20 flex items-center justify-center shrink-0">
+            <Flame className="h-5 w-5 text-accent" />
+          </div>
+          <div className="flex-1">
+            <p className="text-sm font-bold text-foreground">
+              🔥 {streakDays} {streakDays === 1 ? "dia seguido" : "dias seguidos"}
+            </p>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              {streakDays > 0
+                ? "Continue assim! Cada dia conta."
+                : "Preencha a rotina de hoje para começar!"}
+            </p>
           </div>
         </section>
 
@@ -147,9 +213,7 @@ export default function AppHome() {
                   <mod.icon className="h-5 w-5 text-primary" />
                 </div>
                 <div>
-                  <h3 className="font-bold text-foreground text-sm leading-tight">
-                    {mod.label}
-                  </h3>
+                  <h3 className="font-bold text-foreground text-sm leading-tight">{mod.label}</h3>
                   <p className="text-muted-foreground text-xs mt-0.5">{mod.sub}</p>
                 </div>
               </button>
@@ -157,7 +221,7 @@ export default function AppHome() {
           </div>
         </section>
 
-        {/* ── Secondary Modules row ── */}
+        {/* ── Secondary Modules ── */}
         <section>
           <p className="section-title">Mais recursos</p>
           <div className="grid grid-cols-4 gap-2">
@@ -174,21 +238,6 @@ export default function AppHome() {
                 </span>
               </button>
             ))}
-          </div>
-        </section>
-
-        {/* ── Streak Card ── */}
-        <section className="card-warm p-5 flex items-center gap-4">
-          <div className="w-12 h-12 rounded-2xl bg-accent/20 flex items-center justify-center">
-            <Flame className="h-6 w-6 text-accent" />
-          </div>
-          <div className="flex-1">
-            <p className="text-sm font-bold text-foreground">
-              {streakDays} dias consecutivos 🔥
-            </p>
-            <p className="text-xs text-muted-foreground mt-0.5">
-              Continue assim! Cada dia conta na sua recuperação.
-            </p>
           </div>
         </section>
       </main>
