@@ -350,7 +350,8 @@ export function FinanceMonthly({
 
       {/* ── Floating Action Button ── */}
       <button onClick={() => setMenuOpen(!menuOpen)}
-        className="fixed bottom-24 right-5 z-40 w-14 h-14 rounded-full bg-primary text-primary-foreground shadow-lg flex items-center justify-center hover:scale-105 active:scale-95 transition-transform">
+        className="fixed z-[60] w-14 h-14 rounded-full bg-primary text-primary-foreground shadow-xl flex items-center justify-center hover:scale-105 active:scale-95 transition-transform"
+        style={{ bottom: "calc(10rem + env(safe-area-inset-bottom, 0px))", right: "1.25rem" }}>
         <Plus className={cn("h-6 w-6 transition-transform", menuOpen && "rotate-45")} />
       </button>
 
