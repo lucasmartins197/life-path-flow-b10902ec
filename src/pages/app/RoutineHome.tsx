@@ -137,7 +137,7 @@ export default function RoutineHome() {
     const cat = CATEGORIES.find(c => c.id === activeActivity)!;
     if (offlineMode) return (
       <div className="min-h-screen flex flex-col items-center justify-center px-6" style={{ background: "linear-gradient(135deg, #1B4332, #2D6A4F)" }}>
-        <SmartphoneOff className="h-16 w-16 text-white/60 mb-6" />
+        <Smartphone className="h-16 w-16 text-white/60 mb-6" />
         <h2 className="text-xl font-bold text-white mb-2">📵 Hora de largar o celular!</h2>
         <p className="text-white/70 text-center mb-8">Foque na sua atividade. Volte quando terminar.</p>
         <div className="text-5xl font-mono text-white mb-8">{fmt(timerSeconds)}</div>
@@ -176,7 +176,7 @@ export default function RoutineHome() {
               {activityData?.book && <Card><CardContent className="pt-5 space-y-3"><h3 className="font-bold">📖 {activityData.book.title}</h3><p className="text-sm text-muted-foreground">{activityData.book.author}</p><p className="text-sm">{activityData.book.reason}</p><div className="p-3 rounded-xl bg-muted/50 italic text-sm">"{activityData.book.excerpt}"</div>{activityData.dailyTip && <div className="p-3 rounded-xl" style={{ background: "#FEF3C7" }}><p className="text-xs font-medium" style={{ color: "#92400E" }}>💡 Dica do dia</p><p className="text-sm mt-1" style={{ color: "#78350F" }}>{activityData.dailyTip}</p></div>}</CardContent></Card>}
               {activityData?.steps && <Card><CardContent className="pt-5 space-y-3"><h3 className="font-bold">{activityData.title || "Sua prática"}</h3>{activityData.steps.map((step: string, i: number) => <div key={i} className="flex gap-3"><span className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold shrink-0" style={{ background: "#FDE68A", color: "#92400E" }}>{i + 1}</span><p className="text-sm leading-relaxed">{step}</p></div>)}{activityData.closingMessage && <p className="text-sm italic text-muted-foreground pt-2">{activityData.closingMessage}</p>}</CardContent></Card>}
               {activityData?.suggestion && <Card><CardContent className="pt-5 space-y-3"><p className="text-3xl text-center">{activityData.emoji || "👥"}</p><p className="text-sm text-center leading-relaxed">{activityData.suggestion}</p></CardContent></Card>}
-              <Button variant="outline" className="w-full" onClick={() => { setOfflineMode(true); setTimerRunning(true); }}><SmartphoneOff className="h-4 w-4 mr-2" /> Iniciar atividade offline</Button>
+              <Button variant="outline" className="w-full" onClick={() => { setOfflineMode(true); setTimerRunning(true); }}><Smartphone className="h-4 w-4 mr-2" /> Iniciar atividade offline</Button>
               <Card className="border-2" style={{ borderColor: "#2D6A4F" }}><CardContent className="pt-5 space-y-4">
                 <h3 className="font-bold text-center">Como foi? 💪</h3>
                 <div className="flex justify-center gap-1">{[1,2,3,4,5].map(s => <button key={s} onClick={() => setActivityRating(s)} className="p-1"><Star className={`h-7 w-7 ${activityRating >= s ? "fill-yellow-400 text-yellow-400" : "text-gray-300"}`} /></button>)}</div>
