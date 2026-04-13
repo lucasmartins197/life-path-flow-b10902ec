@@ -444,6 +444,82 @@ export default function RoutineHome() {
                 </CardContent></Card>
               )}
 
+              {/* Meditation audio player */}
+              {activeActivity === "espiritualidade" && (preferences.espiritualidade?.practice === "Meditação" || !preferences.espiritualidade?.practice) && activityData?.steps && (
+                <Card className="border-none shadow-lg overflow-hidden" style={{ background: "linear-gradient(135deg, #1B4332, #2D6A4F)" }}>
+                  <CardContent className="pt-5 pb-5 space-y-4">
+                    {!meditationAudioUrl ? (
+                      <div className="text-center space-y-3">
+                        <Button
+                          onClick={generateMeditationAudio}
+                          disabled={meditationAudioLoading}
+                          className="text-white border-white/30 hover:bg-white/10"
+                          variant="outline"
+                        >
+                          {meditationAudioLoading ? (
+                            <><Loader2 className="h-4 w-4 animate-spin mr-2" />Ana está preparando sua meditação...</>
+                          ) : (
+                            <>🎧 Ouvir meditação guiada</>
+                          )}
+                        </Button>
+                      </div>
+                    ) : (
+                      <div className="space-y-4">
+                        {/* Animated waves background */}
+                        <div className="relative h-32 rounded-2xl overflow-hidden" style={{ background: "linear-gradient(180deg, #0f3d2e, #1B4332)" }}>
+                          <div className="absolute inset-0 flex items-end justify-center gap-[3px] px-4 pb-2 opacity-60">
+                            {Array.from({ length: 40 }).map((_, i) => (
+                              <div key={i} className="w-1 rounded-full" style={{
+                                background: "linear-gradient(to top, #C9A84C, #E8D590)",
+                                height: `${meditationPlaying ? 10 + Math.sin(Date.now() / 300 + i * 0.5) * 30 + Math.random() * 15 : 8}px`,
+                                transition: "height 0.3s ease",
+                                animation: meditationPlaying ? `wave ${0.5 + i * 0.05}s ease-in-out infinite alternate` : "none",
+                              }} />
+                            ))}
+                          </div>
+                          <div className="absolute inset-0 flex flex-col items-center justify-center">
+                            <div className="w-16 h-16 rounded-full flex items-center justify-center" style={{ background: "linear-gradient(135deg, #C9A84C, #E8D590)" }}>
+                              <span className="text-2xl">🌱</span>
+                            </div>
+                            <p className="text-white/90 text-xs font-medium mt-2">Meditação guiada por Ana</p>
+                          </div>
+                        </div>
+
+                        {/* Progress bar */}
+                        <div className="space-y-1">
+                          <div className="w-full h-1.5 rounded-full overflow-hidden" style={{ background: "rgba(255,255,255,0.15)" }}>
+                            <div className="h-full rounded-full transition-all" style={{
+                              width: `${meditationDuration ? (meditationProgress / meditationDuration) * 100 : 0}%`,
+                              background: "linear-gradient(90deg, #C9A84C, #E8D590)",
+                            }} />
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-[10px] text-white/50">{fmtAudioTime(meditationProgress)}</span>
+                            <span className="text-[10px] text-white/50">{fmtAudioTime(meditationDuration)}</span>
+                          </div>
+                        </div>
+
+                        {/* Controls */}
+                        <div className="flex items-center justify-center gap-4">
+                          <button onClick={() => seekMeditation(-15)} className="text-white/60 hover:text-white text-xs font-medium">-15s</button>
+                          <button onClick={toggleMeditationPlay} className="w-14 h-14 rounded-full flex items-center justify-center" style={{ background: "linear-gradient(135deg, #C9A84C, #E8D590)" }}>
+                            {meditationPlaying ? <Pause className="h-6 w-6 text-[#1B4332]" /> : <Play className="h-6 w-6 text-[#1B4332] ml-0.5" />}
+                          </button>
+                          <button onClick={() => seekMeditation(15)} className="text-white/60 hover:text-white text-xs font-medium">+15s</button>
+                        </div>
+
+                        {/* Speed control */}
+                        <div className="flex justify-center">
+                          <button onClick={changeMeditationSpeed} className="px-3 py-1 rounded-full text-xs font-medium text-white/70 hover:text-white border border-white/20">
+                            {meditationSpeed}x
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              )}
+
               {/* Social suggestion */}
               {activityData?.suggestion && (
                 <Card><CardContent className="pt-5 space-y-3">
