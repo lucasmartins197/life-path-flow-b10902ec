@@ -61,202 +61,34 @@ const App = () => (
             <Route path="/auth/professional-register" element={<ProfessionalRegister />} />
             
             {/* Protected APP routes (USER role) */}
-            <Route
-              path="/app"
-              element={
-                <ProtectedRoute allowedRoles={["user", "admin"]} requireSubscription>
-                  <AppHome />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/app/jornada"
-              element={
-                <ProtectedRoute allowedRoles={["user", "admin"]} requireSubscription>
-                  <JourneysHome />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/app/jornada/:stepNumber"
-              element={
-                <ProtectedRoute allowedRoles={["user", "admin"]} requireSubscription>
-                  <JourneyStep />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/app/terapia"
-              element={
-                <ProtectedRoute allowedRoles={["user", "admin"]} requireSubscription>
-                  <TherapyHome />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/app/rotina"
-              element={
-                <ProtectedRoute allowedRoles={["user", "admin"]} requireSubscription>
-                  <RoutineHome />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/app/nutricao"
-              element={
-                <ProtectedRoute allowedRoles={["user", "admin"]} requireSubscription>
-                  <NutritionHome />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/app/exercicios"
-              element={
-                <ProtectedRoute allowedRoles={["user", "admin"]} requireSubscription>
-                  <ExerciseHome />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/app/agenda"
-              element={
-                <ProtectedRoute allowedRoles={["user", "admin"]} requireSubscription>
-                  <CalendarHome />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/app/ancora"
-              element={
-                <ProtectedRoute allowedRoles={["user", "admin"]} requireSubscription>
-                  <AnchorHome />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/app/configuracoes"
-              element={
-                <ProtectedRoute allowedRoles={["user", "admin"]} requireSubscription>
-                  <SettingsHome />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/app/onboarding"
-              element={
-                <ProtectedRoute allowedRoles={["user", "admin"]} requireSubscription>
-                  <OnboardingProfile />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/app/saude"
-              element={
-                <ProtectedRoute allowedRoles={["user", "admin"]} requireSubscription>
-                  <HealthHome />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/app/financas"
-              element={
-                <ProtectedRoute allowedRoles={["user", "admin"]} requireSubscription>
-                  <FinanceHome />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/app/perfil"
-              element={
-                <ProtectedRoute allowedRoles={["user", "admin"]} requireSubscription>
-                  <ProfileHome />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/app/evolucao"
-              element={
-                <ProtectedRoute allowedRoles={["user", "admin"]} requireSubscription>
-                  <EvolutionHome />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/app/prontuario"
-              element={
-                <ProtectedRoute allowedRoles={["user", "admin"]} requireSubscription>
-                  <ProntuarioHome />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/app/juridico"
-              element={
-                <ProtectedRoute allowedRoles={["user", "admin"]} requireSubscription>
-                  <LegalHome />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/app/apoio-financeiro"
-              element={
-                <ProtectedRoute allowedRoles={["user", "admin"]} requireSubscription>
-                  <FinancialSupportHome />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/app/indice"
-              element={
-                <ProtectedRoute allowedRoles={["user", "admin"]} requireSubscription>
-                  <RecoveryIndexPage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/app/comunidade"
-              element={
-                <ProtectedRoute allowedRoles={["user", "admin"]} requireSubscription>
-                  <CommunityHome />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/app/aulao"
-              element={
-                <ProtectedRoute allowedRoles={["user", "admin"]} requireSubscription>
-                  <AulaoSemanal />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/app/assinatura"
-              element={
-                <ProtectedRoute allowedRoles={["user", "admin"]}>
-                  <SubscriptionHome />
-                </ProtectedRoute>
-              }
-            />
+            <Route path="/app" element={<ProtectedRoute allowedRoles={["user", "admin"]}><AppHome /></ProtectedRoute>} />
+            <Route path="/app/jornada" element={<ProtectedRoute allowedRoles={["user", "admin"]}><JourneysHome /></ProtectedRoute>} />
+            <Route path="/app/jornada/:stepNumber" element={<ProtectedRoute allowedRoles={["user", "admin"]}><JourneyStep /></ProtectedRoute>} />
+            <Route path="/app/terapia" element={<ProtectedRoute allowedRoles={["user", "admin"]}><TherapyHome /></ProtectedRoute>} />
+            <Route path="/app/rotina" element={<ProtectedRoute allowedRoles={["user", "admin"]}><RoutineHome /></ProtectedRoute>} />
+            <Route path="/app/nutricao" element={<ProtectedRoute allowedRoles={["user", "admin"]}><NutritionHome /></ProtectedRoute>} />
+            <Route path="/app/exercicios" element={<ProtectedRoute allowedRoles={["user", "admin"]}><ExerciseHome /></ProtectedRoute>} />
+            <Route path="/app/agenda" element={<ProtectedRoute allowedRoles={["user", "admin"]}><CalendarHome /></ProtectedRoute>} />
+            <Route path="/app/ancora" element={<ProtectedRoute allowedRoles={["user", "admin"]}><AnchorHome /></ProtectedRoute>} />
+            <Route path="/app/configuracoes" element={<ProtectedRoute allowedRoles={["user", "admin"]}><SettingsHome /></ProtectedRoute>} />
+            <Route path="/app/onboarding" element={<ProtectedRoute allowedRoles={["user", "admin"]}><OnboardingProfile /></ProtectedRoute>} />
+            <Route path="/app/saude" element={<ProtectedRoute allowedRoles={["user", "admin"]}><HealthHome /></ProtectedRoute>} />
+            <Route path="/app/financas" element={<ProtectedRoute allowedRoles={["user", "admin"]}><FinanceHome /></ProtectedRoute>} />
+            <Route path="/app/perfil" element={<ProtectedRoute allowedRoles={["user", "admin"]}><ProfileHome /></ProtectedRoute>} />
+            <Route path="/app/evolucao" element={<ProtectedRoute allowedRoles={["user", "admin"]}><EvolutionHome /></ProtectedRoute>} />
+            <Route path="/app/prontuario" element={<ProtectedRoute allowedRoles={["user", "admin"]}><ProntuarioHome /></ProtectedRoute>} />
+            <Route path="/app/juridico" element={<ProtectedRoute allowedRoles={["user", "admin"]}><LegalHome /></ProtectedRoute>} />
+            <Route path="/app/apoio-financeiro" element={<ProtectedRoute allowedRoles={["user", "admin"]}><FinancialSupportHome /></ProtectedRoute>} />
+            <Route path="/app/indice" element={<ProtectedRoute allowedRoles={["user", "admin"]}><RecoveryIndexPage /></ProtectedRoute>} />
+            <Route path="/app/comunidade" element={<ProtectedRoute allowedRoles={["user", "admin"]}><CommunityHome /></ProtectedRoute>} />
+            <Route path="/app/aulao" element={<ProtectedRoute allowedRoles={["user", "admin"]}><AulaoSemanal /></ProtectedRoute>} />
+            <Route path="/app/assinatura" element={<ProtectedRoute allowedRoles={["user", "admin"]}><SubscriptionHome /></ProtectedRoute>} />
             
             {/* Protected PRO routes (PROFESSIONAL role) */}
-            <Route
-              path="/pro"
-              element={
-                <ProtectedRoute allowedRoles={["professional", "admin"]}>
-                  <ProHome />
-                </ProtectedRoute>
-              }
-            />
+            <Route path="/pro" element={<ProtectedRoute allowedRoles={["professional", "admin"]}><ProHome /></ProtectedRoute>} />
             
             {/* Protected ADMIN routes (ADMIN role) */}
-            <Route
-              path="/admin"
-              element={
-                <ProtectedRoute allowedRoles={["admin"]}>
-                  <AdminHome />
-                </ProtectedRoute>
-              }
-            />
+            <Route path="/admin" element={<ProtectedRoute allowedRoles={["admin"]}><AdminHome /></ProtectedRoute>} />
             
             {/* Catch-all */}
             <Route path="*" element={<NotFound />} />
