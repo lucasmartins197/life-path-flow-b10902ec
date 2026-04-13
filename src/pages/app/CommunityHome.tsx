@@ -1,9 +1,10 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { BottomNavigation } from "@/components/BottomNavigation";
 import { FloatingAIButton } from "@/components/FloatingAIButton";
 import { useCommunity, CommunityStory } from "@/hooks/useCommunity";
 import { useAuth } from "@/contexts/AuthContext";
-import { Heart, MessageCircle, Bookmark, Plus, Users, Clock, Sparkles, Award, Compass, Shield } from "lucide-react";
+import { Heart, MessageCircle, Bookmark, Plus, Users, Clock, Sparkles, Award, Compass, Shield, ChevronLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -210,6 +211,7 @@ function EmptyState({ onCreateStory }: { onCreateStory: () => void }) {
 }
 
 export default function CommunityHome() {
+  const navigate = useNavigate();
   const { stories, loading, hasAcceptedRules, acceptRules, createStory, toggleSupport } = useCommunity();
   const [showCreate, setShowCreate] = useState(false);
 
@@ -222,6 +224,13 @@ export default function CommunityHome() {
       {/* Header */}
       <header className="sticky top-0 z-30 bg-background/95 backdrop-blur border-b border-border/40">
         <div className="max-w-lg mx-auto px-4 py-4">
+          <button
+            onClick={() => navigate("/app")}
+            className="flex items-center gap-1 text-muted-foreground hover:text-foreground transition-colors text-sm mb-2"
+          >
+            <ChevronLeft className="h-4 w-4" />
+            Home
+          </button>
           <h1 className="text-xl font-bold text-foreground tracking-tight">Histórias que Conectam</h1>
           <p className="text-xs text-muted-foreground mt-0.5">
             Cada história compartilhada pode ajudar alguém a continuar.

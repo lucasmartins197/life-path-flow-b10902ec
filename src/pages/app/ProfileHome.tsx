@@ -6,6 +6,7 @@ import {
   Shield,
   LogOut,
   ChevronRight,
+  ChevronLeft,
   Bell,
   HelpCircle,
   Heart,
@@ -50,6 +51,13 @@ export default function ProfileHome() {
       {/* Header */}
       <header className="bg-primary text-primary-foreground">
         <div className="container px-4 py-8">
+          <button
+            onClick={() => navigate("/app")}
+            className="flex items-center gap-1 text-primary-foreground/70 hover:text-primary-foreground transition-colors text-sm mb-3"
+          >
+            <ChevronLeft className="h-4 w-4" />
+            Home
+          </button>
           <div className="flex items-center gap-4">
             <Avatar className="h-16 w-16 border-2 border-white/30">
               <AvatarImage src={profile?.avatar_url || undefined} />
