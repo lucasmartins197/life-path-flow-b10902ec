@@ -453,9 +453,6 @@ export default function JourneyStep() {
             maxExchanges={2}
           />
         )}
-            </CardContent>
-          </Card>
-        )}
 
         {/* ═══ SEÇÃO 5 — CONCLUSÃO ═══ */}
         {currentSection >= 4 && conversation.length > 0 && (
