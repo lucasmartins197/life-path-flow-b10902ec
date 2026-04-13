@@ -4,15 +4,36 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import {
   ChevronLeft,
-  CheckCircle2,
   Lock,
   Play,
-  Trophy,
+  Award,
   Clock,
+  CheckCircle2,
 } from "lucide-react";
 import { BottomNavigation } from "@/components/BottomNavigation";
 import { PortoSeguroButton } from "@/components/PortoSeguroButton";
 import { AIChatPanel } from "@/components/chat/AIChatPanel";
+
+/* ── Hardcoded 12-step names ── */
+const STEP_META: Record<number, { name: string; subtitle: string }> = {
+  1:  { name: "Reconhecimento",    subtitle: "Admito que perdi o controle" },
+  2:  { name: "Esperança",         subtitle: "Posso recuperar minha lucidez" },
+  3:  { name: "Entrega",           subtitle: "Um propósito maior que meus impulsos" },
+  4:  { name: "Inventário",        subtitle: "Honestidade sobre o impacto" },
+  5:  { name: "Verdade",           subtitle: "Reconheço a dimensão real" },
+  6:  { name: "Disponibilidade",   subtitle: "Pronto para abandonar padrões" },
+  7:  { name: "Humildade",         subtitle: "Peço força para transformar" },
+  8:  { name: "Responsabilidade",  subtitle: "Listo quem prejudiquei" },
+  9:  { name: "Reparação",         subtitle: "Faço reparações possíveis" },
+  10: { name: "Vigilância",        subtitle: "Inventário diário" },
+  11: { name: "Conexão Real",      subtitle: "Silêncio e direção" },
+  12: { name: "Propósito",         subtitle: "Vivo e compartilho" },
+};
+
+interface TrailProgress {
+  step_id: string;
+  is_completed: boolean;
+}
 
 interface JourneyStep {
   id: string;
@@ -21,15 +42,11 @@ interface JourneyStep {
   description: string;
   duration_minutes: number;
 }
-interface TrailProgress {
-  step_id: string;
-  is_completed: boolean;
-}
 
 export default function JourneysHome() {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const [steps, setSteps] = useState<JourneyStep[]>([]);
+  const [dbSteps, setDbSteps] = useState<JourneyStep[]>([]);
   const [progress, setProgress] = useState<TrailProgress[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -40,142 +57,228 @@ export default function JourneysHome() {
         supabase.from("journey_steps").select("*").eq("is_published", true).order("step_number"),
         supabase.from("trail_progress").select("step_id, is_completed").eq("user_id", user.id),
       ]);
-      if (s) setSteps(s);
+      if (s) setDbSteps(s);
       if (p) setProgress(p);
       setIsLoading(false);
     })();
   }, [user]);
 
-  const getStatus = (step: JourneyStep) => {
-    if (progress.find((p) => p.step_id === step.id && p.is_completed)) return "completed";
-    const prev = steps.filter((s) => s.step_number < step.step_number);
-    const allDone = prev.every((ps) => progress.some((p) => p.step_id === ps.id && p.is_completed));
-    return allDone || step.step_number === 1 ? "available" : "locked";
+  // Build full 12-step list — use DB data when available, fallback to hardcoded
+  const allSteps = Array.from({ length: 12 }, (_, i) => {
+    const num = i + 1;
+    const db = dbSteps.find((s) => s.step_number === num);
+    const meta = STEP_META[num];
+    return {
+      id: db?.id || `placeholder-${num}`,
+      step_number: num,
+      name: meta.name,
+      subtitle: meta.subtitle,
+      hasContent: !!db,
+    };
+  });
+
+  const getStatus = (stepNum: number, stepId: string): "completed" | "available" | "locked" => {
+    if (progress.find((p) => p.step_id === stepId && p.is_completed)) return "completed";
+    if (stepNum === 1) return "available";
+    // Check if previous step is completed
+    const prevDb = dbSteps.find((s) => s.step_number === stepNum - 1);
+    if (prevDb && progress.find((p) => p.step_id === prevDb.id && p.is_completed)) return "available";
+    // Also available if all previous are completed
+    const prevAll = dbSteps.filter((s) => s.step_number < stepNum);
+    if (prevAll.length > 0 && prevAll.every((ps) => progress.some((p) => p.step_id === ps.id && p.is_completed))) return "available";
+    return "locked";
   };
 
   const completedCount = progress.filter((p) => p.is_completed).length;
-  const pct = steps.length > 0 ? Math.round((completedCount / steps.length) * 100) : 0;
+  const pct = Math.round((completedCount / 12) * 100);
 
   return (
     <div className="min-h-screen bg-background safe-top pb-28">
-
-      {/* ── Header ──────────────────────────────── */}
-      <header className="bg-card border-b border-border/60 px-5 pt-8 pb-5">
+      {/* ── Premium Header Banner ── */}
+      <header
+        className="px-5 pt-8 pb-5"
+        style={{ background: "linear-gradient(135deg, #1B4332, #2D6A4F)" }}
+      >
         <div className="max-w-lg mx-auto">
           <button
             onClick={() => navigate("/app")}
-            className="flex items-center gap-1.5 text-muted-foreground hover:text-foreground transition-colors mb-5 text-sm"
+            className="flex items-center gap-1.5 text-white/70 hover:text-white transition-colors mb-4 text-sm"
           >
             <ChevronLeft className="h-4 w-4" />
             Home
           </button>
-          <h1 className="text-2xl font-bold text-foreground">A Jornada</h1>
-          <p className="text-sm text-muted-foreground mt-0.5">Trilha de 12 passos</p>
+          <h1 className="text-2xl font-bold text-white">A Jornada</h1>
+          <p className="text-sm text-white/70 mt-1">
+            Sua transformação, um passo de cada vez
+          </p>
+
+          {/* Progress bar */}
+          <div className="mt-4 flex items-center gap-3">
+            <div className="flex-1 h-2.5 rounded-full bg-white/20 overflow-hidden">
+              <div
+                className="h-full rounded-full transition-all duration-500"
+                style={{
+                  width: `${pct}%`,
+                  background: "linear-gradient(90deg, #C9A84C, #E8D590)",
+                }}
+              />
+            </div>
+            <span className="text-white font-bold text-sm shrink-0">{pct}%</span>
+          </div>
+          <p className="text-white/60 text-xs mt-1.5">
+            {completedCount} de 12 passos concluídos
+          </p>
         </div>
       </header>
 
-      <main className="max-w-lg mx-auto px-5 pt-6 space-y-6">
-
-        {/* ── Progress card ─────────────────────── */}
-        <div className="card-premium p-5">
-          <div className="flex items-center gap-4 mb-4">
-            <div className="w-12 h-12 rounded-xl bg-secondary flex items-center justify-center shrink-0">
-              <Trophy className="h-6 w-6 text-foreground" />
-            </div>
-            <div className="flex-1">
-              <p className="font-semibold text-foreground">{completedCount} / {steps.length || 12} passos concluídos</p>
-              <p className="text-xs text-muted-foreground mt-0.5">Trilha dos 12 Passos</p>
-            </div>
-            <span className="text-2xl font-bold text-foreground">{pct}%</span>
+      <main className="max-w-lg mx-auto px-5 pt-5 space-y-3">
+        {isLoading ? (
+          <div className="space-y-3">
+            {[1, 2, 3, 4].map((i) => (
+              <div key={i} className="h-24 rounded-2xl bg-muted animate-pulse" />
+            ))}
           </div>
-          <div className="progress-bar">
-            <div className="progress-fill" style={{ width: `${pct}%` }} />
-          </div>
-        </div>
+        ) : (
+          allSteps.map((step) => {
+            const status = getStatus(step.step_number, step.id);
+            const isDone = status === "completed";
+            const isLocked = status === "locked";
+            const isAvailable = status === "available";
 
-        {/* ── Steps list ────────────────────────── */}
-        <section>
-          <p className="section-title">Seus passos</p>
-
-          {isLoading ? (
-            <div className="space-y-3">
-              {[1, 2, 3, 4].map((i) => <div key={i} className="skeleton h-20 rounded-2xl" />)}
-            </div>
-          ) : steps.length === 0 ? (
-            <div className="card-premium p-10 text-center">
-              <p className="text-muted-foreground text-sm">
-                Nenhum passo disponível. O administrador ainda não publicou o conteúdo.
-              </p>
-            </div>
-          ) : (
-            <div className="space-y-2">
-              {steps.map((step) => {
-                const status = getStatus(step);
-                const isLocked = status === "locked";
-                const isDone = status === "completed";
-                return (
-                  <button
-                    key={step.id}
-                    disabled={isLocked}
-                    onClick={() => !isLocked && navigate(`/app/jornada/${step.step_number}`)}
-                    className={`w-full card-premium p-4 flex items-center gap-4 text-left transition-all ${
-                      isLocked ? "opacity-50 cursor-not-allowed" : "hover:scale-[1.01] active:scale-[0.99]"
-                    }`}
-                  >
-                    {/* Step indicator */}
-                    <div className={`w-11 h-11 rounded-xl flex items-center justify-center shrink-0 ${
-                      isDone
-                        ? "bg-primary text-primary-foreground"
-                        : isLocked
-                        ? "bg-secondary text-muted-foreground"
-                        : "bg-secondary text-foreground"
-                    }`}>
-                      {isDone
-                        ? <CheckCircle2 className="h-5 w-5" />
-                        : isLocked
-                        ? <Lock className="h-4 w-4" />
-                        : <span className="text-sm font-bold">{step.step_number}</span>
+            return (
+              <button
+                key={step.step_number}
+                disabled={isLocked}
+                onClick={() =>
+                  !isLocked && step.hasContent && navigate(`/app/jornada/${step.step_number}`)
+                }
+                className="w-full text-left transition-all duration-200 active:scale-[0.98]"
+                style={{
+                  borderRadius: 16,
+                  overflow: "hidden",
+                  ...(isDone
+                    ? {
+                        background: "linear-gradient(135deg, #1B4332, #2D6A4F)",
+                        boxShadow: "0 4px 16px rgba(27,67,50,0.3)",
                       }
-                    </div>
-
-                    {/* Content */}
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-0.5">
-                        <span className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
-                          Passo {step.step_number}
-                        </span>
-                        {status === "available" && (
-                          <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-accent text-accent-foreground uppercase tracking-wide">
-                            Disponível
-                          </span>
-                        )}
-                        {isDone && (
-                          <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-primary/10 text-primary uppercase tracking-wide">
-                            Concluído
-                          </span>
-                        )}
-                      </div>
-                      <p className="font-semibold text-foreground text-sm truncate">{step.title}</p>
-                      <div className="flex items-center gap-1 mt-1">
-                        <Clock className="h-3 w-3 text-muted-foreground" />
-                        <span className="text-xs text-muted-foreground">{step.duration_minutes} min</span>
-                      </div>
-                    </div>
-
-                    {!isLocked && (
-                      <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${
-                        isDone ? "bg-primary/10 text-primary" : "bg-secondary text-foreground"
-                      }`}>
-                        <Play className="h-4 w-4" />
-                      </div>
+                    : isAvailable
+                    ? {
+                        background: "#fff",
+                        border: "2px solid #2D6A4F",
+                        boxShadow: "0 4px 16px rgba(0,0,0,0.08)",
+                      }
+                    : {
+                        background: "#F3F4F6",
+                        opacity: 0.7,
+                      }),
+                }}
+              >
+                <div className="p-4 flex items-center gap-4">
+                  {/* Step indicator */}
+                  <div
+                    className="w-12 h-12 rounded-2xl flex items-center justify-center shrink-0"
+                    style={{
+                      background: isDone
+                        ? "linear-gradient(135deg, #C9A84C, #E8D590)"
+                        : isAvailable
+                        ? "#E8F5E9"
+                        : "#E5E7EB",
+                    }}
+                  >
+                    {isDone ? (
+                      <Award className="h-6 w-6 text-white" />
+                    ) : isLocked ? (
+                      <Lock className="h-5 w-5 text-gray-400" />
+                    ) : (
+                      <span className="text-sm font-bold" style={{ color: "#1B4332" }}>
+                        {step.step_number}
+                      </span>
                     )}
-                  </button>
-                );
-              })}
-            </div>
-          )}
-        </section>
+                  </div>
 
+                  {/* Content */}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-0.5">
+                      <span
+                        className="text-[10px] font-semibold uppercase tracking-widest"
+                        style={{ color: isDone ? "rgba(255,255,255,0.6)" : "#9CA3AF" }}
+                      >
+                        Passo {step.step_number}
+                      </span>
+                      {isDone && (
+                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-white/20 text-white uppercase tracking-wide flex items-center gap-1">
+                          <CheckCircle2 className="h-3 w-3" /> Concluído
+                        </span>
+                      )}
+                      {isAvailable && (
+                        <span
+                          className="text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wide"
+                          style={{ background: "#D1FAE5", color: "#065F46" }}
+                        >
+                          Disponível
+                        </span>
+                      )}
+                    </div>
+                    <p
+                      className="font-bold text-sm truncate"
+                      style={{ color: isDone ? "#fff" : isLocked ? "#9CA3AF" : "#1F2937" }}
+                    >
+                      {step.name}
+                    </p>
+                    <p
+                      className="text-xs mt-0.5 truncate"
+                      style={{
+                        color: isDone ? "rgba(255,255,255,0.7)" : isLocked ? "#D1D5DB" : "#6B7280",
+                      }}
+                    >
+                      "{step.subtitle}"
+                    </p>
+                    <div className="flex items-center gap-1 mt-1.5">
+                      <Clock
+                        className="h-3 w-3"
+                        style={{
+                          color: isDone ? "rgba(255,255,255,0.5)" : "#9CA3AF",
+                        }}
+                      />
+                      <span
+                        className="text-[11px]"
+                        style={{
+                          color: isDone ? "rgba(255,255,255,0.5)" : "#9CA3AF",
+                        }}
+                      >
+                        ⏱ Mínimo 12h de comprometimento
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Action */}
+                  {isAvailable && (
+                    <div
+                      className="shrink-0 px-3 py-1.5 rounded-xl flex items-center gap-1.5"
+                      style={{ background: "#1B4332" }}
+                    >
+                      <span className="text-white text-xs font-semibold">Iniciar</span>
+                      <Play className="h-3.5 w-3.5 text-white" />
+                    </div>
+                  )}
+                  {isDone && (
+                    <div
+                      className="shrink-0 w-9 h-9 rounded-xl flex items-center justify-center"
+                      style={{ background: "rgba(255,255,255,0.15)" }}
+                    >
+                      <Play className="h-4 w-4 text-white" />
+                    </div>
+                  )}
+                  {isLocked && (
+                    <span className="text-[10px] text-gray-400 shrink-0 max-w-[70px] text-right leading-tight">
+                      Conclua o passo anterior
+                    </span>
+                  )}
+                </div>
+              </button>
+            );
+          })
+        )}
       </main>
 
       <BottomNavigation />
