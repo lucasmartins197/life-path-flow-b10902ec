@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { useMedals } from "@/hooks/useMedals";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
@@ -36,6 +37,7 @@ export default function JourneyStep() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { toast } = useToast();
+  const { awardMedal } = useMedals();
 
   const [step, setStep] = useState<JourneyStepData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -135,6 +137,9 @@ export default function JourneyStep() {
         .from("patient_profiles")
         .update({ current_step: step.step_number + 1 })
         .eq("user_id", user.id);
+
+      // Award medal for this step
+      await awardMedal(`journey-${step.step_number}`);
 
       // Show celebration
       setShowCelebration(true);
