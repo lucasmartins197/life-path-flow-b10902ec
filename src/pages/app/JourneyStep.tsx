@@ -245,8 +245,8 @@ export default function JourneyStep() {
         step_id: stepData.id,
         is_completed: true,
         completed_at: new Date().toISOString(),
-        exercises_completed: answers,
-        reflection_answers: conversation,
+        exercises_completed: answers as unknown as any,
+        reflection_answers: conversation as unknown as any,
         video_watched: true,
       }], { onConflict: "user_id,step_id" });
     }
