@@ -116,6 +116,15 @@ export default function JourneyStep() {
 
   async function loadProgress() {
     setLoading(true);
+
+    // Fetch user name
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("full_name")
+      .eq("user_id", user!.id)
+      .maybeSingle();
+    if (profile?.full_name) setUserName(profile.full_name.split(" ")[0]);
+
     const { data } = await supabase
       .from("journey_progress")
       .select("*")
@@ -142,7 +151,6 @@ export default function JourneyStep() {
       const conv = data.ai_conversation;
       if (Array.isArray(conv)) setConversation(conv as unknown as ConvoMsg[]);
     } else {
-      // Create initial record
       const { data: newData } = await supabase
         .from("journey_progress")
         .insert({ user_id: user!.id, step_number: stepNumber })
