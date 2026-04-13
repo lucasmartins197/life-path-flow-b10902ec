@@ -222,6 +222,13 @@ export default function CommunityHome() {
       {/* Header */}
       <header className="sticky top-0 z-30 bg-background/95 backdrop-blur border-b border-border/40">
         <div className="max-w-lg mx-auto px-4 py-4">
+          <button
+            onClick={() => navigate("/app")}
+            className="flex items-center gap-1 text-muted-foreground hover:text-foreground transition-colors text-sm mb-2"
+          >
+            <ChevronLeft className="h-4 w-4" />
+            Home
+          </button>
           <h1 className="text-xl font-bold text-foreground tracking-tight">Histórias que Conectam</h1>
           <p className="text-xs text-muted-foreground mt-0.5">
             Cada história compartilhada pode ajudar alguém a continuar.

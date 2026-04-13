@@ -164,6 +164,13 @@ export default function EvolutionHome() {
       {/* Header */}
       <header className="bg-gradient-to-br from-primary to-primary/80 text-primary-foreground">
         <div className="container px-4 py-6">
+          <button
+            onClick={() => navigate("/app")}
+            className="flex items-center gap-1 text-primary-foreground/70 hover:text-primary-foreground transition-colors text-sm mb-3"
+          >
+            <ChevronLeft className="h-4 w-4" />
+            Home
+          </button>
           <div className="flex items-center gap-3 mb-2">
             <TrendingUp className="h-6 w-6" />
             <h1 className="text-2xl font-display font-bold">Minha Evolução</h1>
