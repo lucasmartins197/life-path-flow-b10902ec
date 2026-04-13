@@ -8,11 +8,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Progress } from "@/components/ui/progress";
 import { useToast } from "@/hooks/use-toast";
 import AnaLetter from "@/components/journey/AnaLetter";
 import {
-  Loader2, ArrowLeft, CheckCircle, Clock, Award, Send,
+  Loader2, ArrowLeft, CheckCircle, Clock, Award, Send, Play,
 } from "lucide-react";
 
 /* ── Step metadata ── */
@@ -37,7 +36,22 @@ const CHECKLIST_ITEMS = [
   "Desligar todas as notificações de plataformas de apostas por 24 horas",
 ];
 
+const MOOD_OPTIONS = [
+  { emoji: "😔", label: "Mal" },
+  { emoji: "😐", label: "Regular" },
+  { emoji: "🙂", label: "Ok" },
+  { emoji: "💪", label: "Motivado" },
+];
+
+const TIME_OPTIONS = [
+  "Menos de 1 ano",
+  "1-3 anos",
+  "3-5 anos",
+  "Mais de 5 anos",
+];
+
 const MIN_HOURS = 12;
+const TOTAL_SECTIONS = 6;
 
 interface ConvoMsg {
   role: "user" | "assistant";
@@ -58,17 +72,27 @@ export default function JourneyStep() {
   const [saving, setSaving] = useState(false);
   const [progressData, setProgressData] = useState<any>(null);
 
-  // Sections
+  // Sections: 1=intake, 2=video, 3=checklist, 4=questions, 5=AI, 6=conclusion
   const [currentSection, setCurrentSection] = useState(1);
   const [checkedItems, setCheckedItems] = useState<boolean[]>(new Array(CHECKLIST_ITEMS.length).fill(false));
   const [answers, setAnswers] = useState({ feeling: "", hardest_moment: "", commitment: "" });
   const [conversation, setConversation] = useState<ConvoMsg[]>([]);
-  const [chatInput] = useState(""); // kept for compat
   const [aiLoading, setAiLoading] = useState(false);
   const [startedAt, setStartedAt] = useState<string | null>(null);
   const [showCelebration, setShowCelebration] = useState(false);
   const [userName, setUserName] = useState("");
 
+  // Intake form (Etapa 1)
+  const [intakeMood, setIntakeMood] = useState("");
+  const [intakeReason, setIntakeReason] = useState("");
+  const [intakeTime, setIntakeTime] = useState("");
+
+  // Video (Etapa 2)
+  const [videoWatched, setVideoWatched] = useState(false);
+  const [videoTimer, setVideoTimer] = useState(0);
+  const [videoUrl, setVideoUrl] = useState<string | null>(null);
+
+  const intakeComplete = intakeMood && intakeReason.trim() && intakeTime;
   const allChecked = checkedItems.every(Boolean);
   const answersComplete = answers.feeling.trim() && answers.hardest_moment.trim() && answers.commitment.trim();
 
@@ -87,17 +111,6 @@ export default function JourneyStep() {
     return `${h}h ${m}min`;
   };
 
-  /* Progress bar */
-  const sectionProgress = useMemo(() => {
-    let pct = 0;
-    if (currentSection >= 2) pct += 20;
-    if (allChecked) pct += 25;
-    if (answersComplete) pct += 25;
-    if (conversation.length > 0) pct += 20;
-    if (progressData?.is_completed) pct = 100;
-    return Math.min(pct, 100);
-  }, [currentSection, allChecked, answersComplete, conversation, progressData]);
-
   /* ── Load ── */
   useEffect(() => {
     if (!user) return;
@@ -108,22 +121,44 @@ export default function JourneyStep() {
   useEffect(() => {
     if (!startedAt || timeRemaining <= 0) return;
     const interval = setInterval(() => {
-      // Force re-render for timer
       setStartedAt((prev) => prev);
     }, 60000);
     return () => clearInterval(interval);
   }, [startedAt, timeRemaining]);
 
+  // Video 10s timer
+  useEffect(() => {
+    if (currentSection !== 2 || videoWatched) return;
+    const interval = setInterval(() => {
+      setVideoTimer((t) => {
+        if (t >= 10) {
+          setVideoWatched(true);
+          clearInterval(interval);
+          return t;
+        }
+        return t + 1;
+      });
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [currentSection, videoWatched]);
+
   async function loadProgress() {
     setLoading(true);
 
-    // Fetch user name
     const { data: profile } = await supabase
       .from("profiles")
       .select("full_name")
       .eq("user_id", user!.id)
       .maybeSingle();
     if (profile?.full_name) setUserName(profile.full_name.split(" ")[0]);
+
+    // Load video_url from journey_steps if exists
+    const { data: stepData } = await supabase
+      .from("journey_steps")
+      .select("video_url")
+      .eq("step_number", stepNumber)
+      .maybeSingle();
+    if (stepData?.video_url) setVideoUrl(stepData.video_url);
 
     const { data } = await supabase
       .from("journey_progress")
@@ -147,6 +182,10 @@ export default function JourneyStep() {
           hardest_moment: a.hardest_moment || "",
           commitment: a.commitment || "",
         });
+        if (a.intake_mood) setIntakeMood(a.intake_mood);
+        if (a.intake_reason) setIntakeReason(a.intake_reason);
+        if (a.intake_time) setIntakeTime(a.intake_time);
+        if (a.video_watched) setVideoWatched(true);
       }
       const conv = data.ai_conversation;
       if (Array.isArray(conv)) setConversation(conv as unknown as ConvoMsg[]);
@@ -166,9 +205,16 @@ export default function JourneyStep() {
 
   async function saveProgress(updates: Record<string, any> = {}) {
     if (!user || !progressData) return;
+    const allAnswers = {
+      ...answers,
+      intake_mood: intakeMood,
+      intake_reason: intakeReason,
+      intake_time: intakeTime,
+      video_watched: videoWatched,
+    };
     const payload = {
       checklist_items: checkedItems as unknown as any,
-      answers: answers as unknown as any,
+      answers: allAnswers as unknown as any,
       ai_conversation: conversation as unknown as any,
       current_section: currentSection,
       ...updates,
@@ -188,9 +234,8 @@ export default function JourneyStep() {
 
   async function submitAnswers() {
     setSaving(true);
-    await saveProgress({ current_section: 4 });
-    setCurrentSection(4);
-    // Call AI
+    await saveProgress({ current_section: 5 });
+    setCurrentSection(5);
     await callAI(true);
     setSaving(false);
   }
@@ -207,7 +252,12 @@ export default function JourneyStep() {
       }
 
       const body: any = {
-        answers,
+        answers: {
+          ...answers,
+          intake_mood: intakeMood,
+          intake_reason: intakeReason,
+          intake_time: intakeTime,
+        },
         stepNumber,
         conversation: updatedConvo,
         userName: userName || undefined,
@@ -226,10 +276,10 @@ export default function JourneyStep() {
       const finalConvo = [...updatedConvo, aiMsg];
       setConversation(finalConvo);
       await saveProgress({
-        current_section: 4,
+        current_section: 5,
         ai_conversation: finalConvo as unknown as any,
       });
-    } catch (e: any) {
+    } catch {
       toast({ variant: "destructive", title: "Erro", description: "Não foi possível obter resposta da IA." });
     } finally {
       setAiLoading(false);
@@ -242,16 +292,14 @@ export default function JourneyStep() {
     await saveProgress({
       is_completed: true,
       completed_at: new Date().toISOString(),
-      current_section: 5,
+      current_section: 6,
     });
 
-    // Update patient_profiles current_step
     await supabase
       .from("patient_profiles")
       .update({ current_step: stepNumber + 1 })
       .eq("user_id", user.id);
 
-    // Also update trail_progress if step exists
     const { data: stepData } = await supabase
       .from("journey_steps")
       .select("id")
@@ -275,6 +323,40 @@ export default function JourneyStep() {
     setTimeout(() => navigate("/app/jornada"), 3000);
     setSaving(false);
   }
+
+  /* ── Step indicator ── */
+  const StepIndicator = () => (
+    <div className="flex items-center justify-center gap-1 py-3">
+      {Array.from({ length: TOTAL_SECTIONS }, (_, i) => {
+        const n = i + 1;
+        const isActive = n === currentSection;
+        const isDone = n < currentSection;
+        return (
+          <div key={n} className="flex items-center">
+            <div
+              className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-all"
+              style={{
+                background: isDone
+                  ? "#2D6A4F"
+                  : isActive
+                  ? "linear-gradient(135deg, #C9A84C, #E8D590)"
+                  : "#E5E7EB",
+                color: isDone || isActive ? "#fff" : "#9CA3AF",
+              }}
+            >
+              {isDone ? "✓" : n}
+            </div>
+            {n < TOTAL_SECTIONS && (
+              <div
+                className="w-4 h-0.5 mx-0.5"
+                style={{ background: isDone ? "#2D6A4F" : "#E5E7EB" }}
+              />
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
 
   /* ── Celebration ── */
   if (showCelebration) {
@@ -307,7 +389,7 @@ export default function JourneyStep() {
       {/* ── Header ── */}
       <div style={{ background: "linear-gradient(135deg, #1B4332, #2D6A4F)" }}>
         <div className="max-w-2xl mx-auto px-5 py-4">
-          <div className="flex items-center gap-3 mb-3">
+          <div className="flex items-center gap-3 mb-2">
             <Button variant="ghost" size="icon" onClick={() => navigate("/app/jornada")} className="text-white hover:bg-white/20 shrink-0">
               <ArrowLeft className="h-5 w-5" />
             </Button>
@@ -317,41 +399,153 @@ export default function JourneyStep() {
             </div>
             <span className="text-sm" style={{ color: "#E8D590" }}>🏅 {meta.medal}</span>
           </div>
-          <p className="text-sm text-white/70 mb-3">{meta.subtitle}</p>
-          <Progress value={sectionProgress} className="h-2 bg-white/20" />
-          <div className="flex items-center justify-between mt-2 text-xs text-white/50">
-            <span>{sectionProgress}% completo</span>
-            <span className="flex items-center gap-1">
-              <Clock className="h-3 w-3" />
-              {timeRemaining > 0 ? `Disponível em: ${formatTime(timeRemaining)}` : "✅ Tempo cumprido"}
-            </span>
+          <p className="text-sm text-white/70 mb-2">{meta.subtitle}</p>
+          <div className="flex items-center gap-2 text-xs text-white/50">
+            <Clock className="h-3 w-3" />
+            {timeRemaining > 0 ? `Disponível em: ${formatTime(timeRemaining)}` : "✅ Tempo cumprido"}
           </div>
         </div>
       </div>
 
-      <div className="max-w-2xl mx-auto px-5 py-5 space-y-5">
+      {/* Step indicator */}
+      <StepIndicator />
 
-        {/* ═══ SEÇÃO 1 — REFLEXÃO INICIAL ═══ */}
+      <div className="max-w-2xl mx-auto px-5 pb-5 space-y-5">
+
+        {/* ═══ ETAPA 1 — FORMULÁRIO DE ENTRADA ═══ */}
         {currentSection === 1 && (
           <Card className="border-none shadow-lg">
             <CardContent className="pt-6 space-y-5">
-              <div className="text-4xl text-center mb-2">🌱</div>
-              <p className="text-base leading-relaxed text-foreground">
-                Você abriu esse aplicativo. Isso já foi uma escolha corajosa. Ninguém chega aqui por acidente — você chegou porque uma parte de você sabe que algo precisa mudar.
-              </p>
-              <p className="text-base leading-relaxed text-foreground">
-                O Passo 1 não é sobre fraqueza. <strong>É sobre coragem de olhar para o que realmente está acontecendo.</strong>
-              </p>
-              <Button className="w-full" style={{ background: "linear-gradient(135deg, #1B4332, #2D6A4F)" }} onClick={() => goToSection(2)}>
-                Entendi, quero continuar →
+              <div className="text-center mb-2">
+                <div className="text-3xl mb-2">🌱</div>
+                <h2 className="text-lg font-bold text-foreground">Antes de começar, me conta...</h2>
+              </div>
+
+              {/* Mood */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Como você está se sentindo agora?</label>
+                <div className="grid grid-cols-4 gap-2">
+                  {MOOD_OPTIONS.map((m) => (
+                    <button
+                      key={m.label}
+                      type="button"
+                      onClick={() => setIntakeMood(m.label)}
+                      className="flex flex-col items-center gap-1 p-3 rounded-xl border-2 transition-all"
+                      style={{
+                        borderColor: intakeMood === m.label ? "#2D6A4F" : "#E5E7EB",
+                        background: intakeMood === m.label ? "#E8F5E9" : "transparent",
+                      }}
+                    >
+                      <span className="text-2xl">{m.emoji}</span>
+                      <span className="text-xs font-medium" style={{ color: intakeMood === m.label ? "#1B4332" : "#6B7280" }}>
+                        {m.label}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Reason */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium">O que te trouxe até aqui hoje?</label>
+                <Textarea
+                  value={intakeReason}
+                  onChange={(e) => setIntakeReason(e.target.value)}
+                  placeholder="Conte com suas palavras..."
+                  rows={3}
+                  className="resize-none"
+                />
+              </div>
+
+              {/* Time */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Há quanto tempo as apostas fazem parte da sua vida?</label>
+                <div className="grid grid-cols-2 gap-2">
+                  {TIME_OPTIONS.map((t) => (
+                    <button
+                      key={t}
+                      type="button"
+                      onClick={() => setIntakeTime(t)}
+                      className="p-3 rounded-xl border-2 text-sm font-medium transition-all"
+                      style={{
+                        borderColor: intakeTime === t ? "#2D6A4F" : "#E5E7EB",
+                        background: intakeTime === t ? "#E8F5E9" : "transparent",
+                        color: intakeTime === t ? "#1B4332" : "#6B7280",
+                      }}
+                    >
+                      {t}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <Button
+                className="w-full text-white"
+                disabled={!intakeComplete}
+                style={intakeComplete ? { background: "linear-gradient(135deg, #1B4332, #2D6A4F)" } : {}}
+                onClick={() => goToSection(2)}
+              >
+                Começar minha jornada →
               </Button>
             </CardContent>
           </Card>
         )}
 
-        {/* ═══ SEÇÃO 2 — ATIVIDADES EXTERNAS ═══ */}
-        {currentSection >= 2 && (
-          <Card className={currentSection > 2 && allChecked ? "border-green-500/50 bg-green-50/30 dark:bg-green-950/20" : ""}>
+        {/* ═══ ETAPA 2 — VÍDEO ═══ */}
+        {currentSection === 2 && (
+          <Card className="border-none shadow-lg overflow-hidden">
+            <CardContent className="p-0">
+              {/* Video player / placeholder */}
+              {videoUrl ? (
+                <div className="aspect-video">
+                  <iframe
+                    src={videoUrl}
+                    className="w-full h-full"
+                    allow="autoplay; fullscreen"
+                    allowFullScreen
+                  />
+                </div>
+              ) : (
+                <div
+                  className="aspect-video flex flex-col items-center justify-center cursor-pointer"
+                  style={{ background: "linear-gradient(135deg, #1B4332, #2D6A4F)" }}
+                >
+                  <div className="w-16 h-16 rounded-full flex items-center justify-center bg-white/20 mb-3">
+                    <Play className="h-8 w-8 text-white ml-1" />
+                  </div>
+                  <p className="text-white/70 text-sm">Vídeo em breve</p>
+                </div>
+              )}
+
+              <div className="p-5 space-y-4">
+                <div>
+                  <h3 className="font-bold text-foreground">Passo {stepNumber} — {meta.name}</h3>
+                  <p className="text-sm text-muted-foreground mt-0.5">🎬 3 min</p>
+                </div>
+
+                {!videoWatched && (
+                  <p className="text-xs text-muted-foreground text-center">
+                    Aguarde {Math.max(0, 10 - videoTimer)}s para continuar...
+                  </p>
+                )}
+
+                {videoWatched && (
+                  <Button
+                    className="w-full text-white"
+                    style={{ background: "linear-gradient(135deg, #1B4332, #2D6A4F)" }}
+                    onClick={() => goToSection(3)}
+                  >
+                    Já assisti, continuar →
+                  </Button>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* ═══ ETAPA 3 — ATIVIDADES EXTERNAS (checklist) ═══ */}
+        {currentSection === 3 && (
+          <Card>
             <CardHeader>
               <CardTitle className="text-base flex items-center gap-2">
                 📋 O que você vai fazer FORA do app
@@ -368,7 +562,6 @@ export default function JourneyStep() {
                       const next = [...checkedItems];
                       next[i] = !!checked;
                       setCheckedItems(next);
-                      // Auto-save
                       supabase.from("journey_progress").update({ checklist_items: next }).eq("id", progressData?.id);
                     }}
                     className="mt-1"
@@ -379,24 +572,24 @@ export default function JourneyStep() {
                 </div>
               ))}
 
-              {currentSection === 2 && (
-                <Button className="w-full mt-2" disabled={!allChecked}
-                  style={allChecked ? { background: "linear-gradient(135deg, #1B4332, #2D6A4F)" } : {}}
-                  onClick={() => goToSection(3)}>
-                  {allChecked ? "Continuar para reflexões →" : "Complete todas as atividades"}
-                </Button>
-              )}
+              <Button
+                className="w-full mt-2 text-white"
+                disabled={!allChecked}
+                style={allChecked ? { background: "linear-gradient(135deg, #1B4332, #2D6A4F)" } : {}}
+                onClick={() => goToSection(4)}
+              >
+                {allChecked ? "Continuar para reflexões →" : "Complete todas as atividades"}
+              </Button>
             </CardContent>
           </Card>
         )}
 
-        {/* ═══ SEÇÃO 3 — QUESTÕES INTERNAS ═══ */}
-        {currentSection >= 3 && (
-          <Card className={currentSection > 3 && answersComplete ? "border-green-500/50 bg-green-50/30 dark:bg-green-950/20" : ""}>
+        {/* ═══ ETAPA 4 — QUESTÕES INTERNAS ═══ */}
+        {currentSection === 4 && (
+          <Card>
             <CardHeader>
               <CardTitle className="text-base flex items-center gap-2">
                 💭 Responda com honestidade
-                {answersComplete && currentSection > 3 && <CheckCircle className="h-4 w-4 text-green-600" />}
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-5">
@@ -432,20 +625,21 @@ export default function JourneyStep() {
                 />
               </div>
 
-              {currentSection === 3 && (
-                <Button className="w-full" disabled={!answersComplete || saving}
-                  style={answersComplete ? { background: "linear-gradient(135deg, #1B4332, #2D6A4F)" } : {}}
-                  onClick={submitAnswers}>
-                  {saving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Send className="h-4 w-4 mr-2" />}
-                  Enviar respostas
-                </Button>
-              )}
+              <Button
+                className="w-full text-white"
+                disabled={!answersComplete || saving}
+                style={answersComplete ? { background: "linear-gradient(135deg, #1B4332, #2D6A4F)" } : {}}
+                onClick={submitAnswers}
+              >
+                {saving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Send className="h-4 w-4 mr-2" />}
+                Enviar respostas
+              </Button>
             </CardContent>
           </Card>
         )}
 
-        {/* ═══ SEÇÃO 4 — CARTA DA ANA ═══ */}
-        {currentSection >= 4 && (
+        {/* ═══ ETAPA 5 — CARTA DA ANA ═══ */}
+        {currentSection === 5 && (
           <AnaLetter
             letters={conversation}
             isLoading={aiLoading}
@@ -454,8 +648,8 @@ export default function JourneyStep() {
           />
         )}
 
-        {/* ═══ SEÇÃO 5 — CONCLUSÃO ═══ */}
-        {currentSection >= 4 && conversation.length > 0 && (
+        {/* ═══ ETAPA 6 — CONCLUSÃO ═══ */}
+        {currentSection >= 5 && conversation.length > 0 && (
           <Card className="border-2" style={{ borderColor: canComplete ? "#2D6A4F" : undefined }}>
             <CardContent className="pt-6 space-y-4">
               <div className="text-center">
@@ -464,7 +658,6 @@ export default function JourneyStep() {
                 <p className="text-sm text-muted-foreground mt-1">Medalha: {meta.medal}</p>
               </div>
 
-              {/* Requirements */}
               <div className="space-y-2 text-sm">
                 <div className="flex items-center gap-2">
                   {allChecked ? <CheckCircle className="h-4 w-4 text-green-600" /> : <Clock className="h-4 w-4 text-muted-foreground" />}
@@ -481,7 +674,7 @@ export default function JourneyStep() {
                 <div className="flex items-center gap-2">
                   {timeRemaining <= 0 ? <CheckCircle className="h-4 w-4 text-green-600" /> : <Clock className="h-4 w-4 text-muted-foreground" />}
                   <span className={timeRemaining <= 0 ? "text-green-700" : "text-muted-foreground"}>
-                    {timeRemaining > 0 ? `⏱ Disponível em: ${formatTime(timeRemaining)}` : "⏱ Tempo de comprometimento cumprido"}
+                    {timeRemaining > 0 ? `⏱ Disponível em: ${formatTime(timeRemaining)}` : "⏱ Tempo cumprido"}
                   </span>
                 </div>
               </div>
