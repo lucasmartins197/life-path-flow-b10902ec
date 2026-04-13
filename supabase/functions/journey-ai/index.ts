@@ -9,35 +9,39 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { answers, conversation, stepNumber } = await req.json();
+    const { answers, conversation, stepNumber, userName, isReply } = await req.json();
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
 
-    const systemPrompt = `Você é uma IA terapeuta acolhedora do app "Apostando na Vida", especializada em recuperação de ludopatia.
+    const nameToUse = userName || "querido(a)";
 
-O usuário acabou de completar o Passo ${stepNumber} (Reconhecimento). Leia as respostas dele e responda de forma humana, empática e direta.
+    // Different prompts for initial letter vs reply
+    const systemPrompt = isReply
+      ? `Você é Ana, uma terapeuta acolhedora e humana do app "Apostando na Vida". O usuário respondeu à sua carta anterior. Escreva uma carta de resposta curta e calorosa (máximo 2 parágrafos curtos). Use o nome "${nameToUse}". Reconheça o que ele escreveu. Encerre com encorajamento para continuar a jornada. Tom: como uma carta de uma amiga terapeuta, nunca robótico. NÃO inclua assinatura no final.`
+      : `Você é Ana, uma terapeuta acolhedora e humana do app "Apostando na Vida". Escreva uma carta pessoal e calorosa para o usuário baseada nas respostas dele no Passo ${stepNumber}.
 
-Regras:
-- Valide o esforço e a coragem do usuário
-- Faça UMA pergunta de aprofundamento
-- Encoraje a continuar na jornada
-- Máximo 3 parágrafos
-- Tom: acolhedor, sem julgamento, esperançoso
+Regras obrigatórias:
+- Comece com "${nameToUse}," na primeira linha
+- Mencione especificamente algo que ele escreveu nas respostas
+- Valide a emoção dele sem exagerar
+- Termine com UMA pergunta aberta e gentil
+- Tom: como uma carta de uma amiga terapeuta, nunca robótico
+- Máximo 4 parágrafos curtos
+- NÃO inclua assinatura no final (ela é adicionada automaticamente)
 - Nunca minimize o problema
-- Nunca dê conselhos médicos específicos
-- Use linguagem simples e direta`;
+- Nunca dê conselhos médicos específicos`;
 
     const userContext = `Respostas do usuário no Passo ${stepNumber}:
 - Como se sente ao admitir o problema: "${answers?.feeling || 'não respondeu'}"
 - Momento mais difícil causado pelas apostas: "${answers?.hardest_moment || 'não respondeu'}"
 - O que está disposto a fazer diferente: "${answers?.commitment || 'não respondeu'}"`;
 
-    const messages = [
+    const messages: Array<{role: string; content: string}> = [
       { role: "system", content: systemPrompt },
       { role: "user", content: userContext },
     ];
 
-    // Add conversation history if exists
+    // Add conversation history for replies
     if (Array.isArray(conversation) && conversation.length > 0) {
       for (const msg of conversation) {
         messages.push({ role: msg.role, content: msg.content });
