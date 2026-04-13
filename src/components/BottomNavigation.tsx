@@ -28,7 +28,7 @@ const drawerItems = [
   { label: "Histórias",       icon: Users,      path: "/app/comunidade" },
   { label: "Aulão Semanal",   icon: PlayCircle, path: "/app/aulao" },
   { label: "🏅 Medalhas",    icon: Award,      path: "/app/medalhas" },
-  { label: "Finanças",        icon: Wallet,     path: "/app/financas" },
+  { label: "Minhas Finanças", icon: Wallet,     path: "/app/financas" },
   { label: "Apoio Jurídico",  icon: Scale,      path: "/app/juridico" },
   { label: "Contato Âncora",  icon: Anchor,     path: "/app/ancora" },
   { label: "Perfil",          icon: User,       path: "/app/perfil" },
