@@ -211,6 +211,7 @@ function EmptyState({ onCreateStory }: { onCreateStory: () => void }) {
 }
 
 export default function CommunityHome() {
+  const navigate = useNavigate();
   const { stories, loading, hasAcceptedRules, acceptRules, createStory, toggleSupport } = useCommunity();
   const [showCreate, setShowCreate] = useState(false);
 
