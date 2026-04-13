@@ -53,11 +53,7 @@ export function FinanceDebtSimulator({ debts }: FinanceDebtSimulatorProps) {
     );
   }
 
-  const debt = debts[selectedIdx] || debts[0];
-  const minPayment = debt.monthly_payment || 100;
-
-  const minSim = useMemo(() => simulateDebt(debt.total, debt.interest_rate, minPayment), [debt, minPayment]);
-  const extraSim = useMemo(() => simulateDebt(debt.total, debt.interest_rate, minPayment + extra), [debt, minPayment, extra]);
+  const savings = minSim.totalPaid - extraSim.totalPaid;
 
   const savings = minSim.totalPaid - extraSim.totalPaid;
 
