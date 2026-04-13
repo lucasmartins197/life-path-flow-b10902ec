@@ -25,8 +25,8 @@ export default function FinanceHome() {
   const [plan, setPlan] = useState<any>(null);
   const [planLoading, setPlanLoading] = useState(false);
   const [transactions, setTransactions] = useState<any[]>([]);
+  const [chatOpen, setChatOpen] = useState(false);
 
-  // Load financial profile
   useEffect(() => {
     if (!user) return;
     const load = async () => {
@@ -42,7 +42,6 @@ export default function FinanceHome() {
         setShowOnboarding(true);
       }
 
-      // Load transactions
       const { data: txs } = await supabase
         .from("financial_transactions")
         .select("*")
@@ -50,13 +49,11 @@ export default function FinanceHome() {
         .order("transaction_date", { ascending: false })
         .limit(50);
       setTransactions(txs || []);
-
       setLoading(false);
     };
     load();
   }, [user]);
 
-  // Generate plan from AI
   const generatePlan = useCallback(async () => {
     if (!profile) return;
     setPlanLoading(true);
@@ -79,12 +76,10 @@ export default function FinanceHome() {
     }
   }, [profile, toast]);
 
-  // Auto-generate plan on profile load
   useEffect(() => {
     if (profile && !plan) generatePlan();
   }, [profile, plan, generatePlan]);
 
-  // Save onboarding
   const handleOnboardingComplete = async (data: any) => {
     if (!user) return;
     try {
@@ -105,8 +100,11 @@ export default function FinanceHome() {
     }
   };
 
-  // Add transaction
-  const handleAddTransaction = async (tx: { category: string; amount: number; description: string }) => {
+  const handleAddTransaction = async (tx: {
+    category: string; amount: number; description: string;
+    type: string; transaction_date: string;
+    is_recurring: boolean; recurring_day: number | null;
+  }) => {
     if (!user) return;
     try {
       const { data, error } = await supabase.from("financial_transactions").insert({
@@ -114,16 +112,44 @@ export default function FinanceHome() {
         category: tx.category,
         amount: tx.amount,
         description: tx.description || null,
+        type: tx.type,
+        transaction_date: tx.transaction_date,
+        is_recurring: tx.is_recurring,
+        recurring_day: tx.recurring_day,
       }).select().single();
       if (error) throw error;
       setTransactions([data, ...transactions]);
-      toast({ title: "Gasto registrado!" });
+      toast({ title: tx.type === "income" ? "Entrada registrada!" : tx.type === "debt_payment" ? "Pagamento registrado!" : "Gasto registrado!" });
     } catch (e: any) {
       toast({ title: "Erro", description: e.message, variant: "destructive" });
     }
   };
 
-  // Computed values from real profile data
+  const handleDeleteTransaction = async (id: string) => {
+    try {
+      const { error } = await supabase.from("financial_transactions").delete().eq("id", id);
+      if (error) throw error;
+      setTransactions(transactions.filter(t => t.id !== id));
+      toast({ title: "Lançamento removido" });
+    } catch (e: any) {
+      toast({ title: "Erro", description: e.message, variant: "destructive" });
+    }
+  };
+
+  const handleUpdateDebts = async (newDebts: any[]) => {
+    if (!user || !profile) return;
+    try {
+      const { error } = await supabase.from("financial_profile")
+        .update({ debts: newDebts })
+        .eq("user_id", user.id);
+      if (error) throw error;
+      setProfile({ ...profile, debts: newDebts });
+      toast({ title: "Dívidas atualizadas!" });
+    } catch (e: any) {
+      toast({ title: "Erro", description: e.message, variant: "destructive" });
+    }
+  };
+
   const totalIncome = profile?.income?.monthly || 0;
   const totalExpenses = Array.isArray(profile?.fixed_expenses)
     ? profile.fixed_expenses.reduce((s: number, e: any) => s + (e.amount || 0), 0)
@@ -133,7 +159,6 @@ export default function FinanceHome() {
     : 0;
   const debtsArray = Array.isArray(profile?.debts) ? profile.debts : [];
 
-  // Build monthly history from real transactions (grouped by month)
   const buildMonthlyHistory = () => {
     if (transactions.length === 0 && !profile) return [];
     const now = new Date();
@@ -143,7 +168,7 @@ export default function FinanceHome() {
       const monthKey = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
       const monthLabel = d.toLocaleDateString("pt-BR", { month: "short" }).replace(".", "");
       const monthTxs = transactions.filter(t => t.transaction_date?.startsWith(monthKey));
-      const spent = monthTxs.reduce((s: number, t: any) => s + (t.amount || 0), 0);
+      const spent = monthTxs.filter((t: any) => t.type === "expense").reduce((s: number, t: any) => s + (t.amount || 0), 0);
       months.push({
         month: monthLabel.charAt(0).toUpperCase() + monthLabel.slice(1),
         debts: totalDebts,
@@ -167,7 +192,6 @@ export default function FinanceHome() {
     <div className="min-h-screen bg-background safe-top pb-28">
       {showOnboarding && <FinanceOnboarding onComplete={handleOnboardingComplete} />}
 
-      {/* Header */}
       <header className="bg-card border-b border-border/60 px-5 pt-8 pb-4">
         <div className="max-w-lg mx-auto">
           <div className="flex items-center justify-between mb-3">
@@ -192,9 +216,7 @@ export default function FinanceHome() {
           <Wallet className="h-12 w-12 mx-auto text-muted-foreground/30 mb-4" />
           <p className="text-foreground font-semibold mb-2">Configure seu perfil financeiro</p>
           <p className="text-sm text-muted-foreground mb-4">Clique abaixo para começar</p>
-          <button onClick={() => setShowOnboarding(true)} className="btn-cta px-6 py-3">
-            Começar
-          </button>
+          <button onClick={() => setShowOnboarding(true)} className="btn-cta px-6 py-3">Começar</button>
         </div>
       ) : (
         <main className="max-w-lg mx-auto px-5 pt-4">
@@ -234,9 +256,11 @@ export default function FinanceHome() {
             <TabsContent value="monthly">
               <FinanceMonthly
                 transactions={transactions}
+                debts={debtsArray}
                 onAddTransaction={handleAddTransaction}
-                monthlyGoalTarget={plan?.monthly_goal?.amount || 0}
-                monthlyGoalCurrent={0}
+                onDeleteTransaction={handleDeleteTransaction}
+                onUpdateDebts={handleUpdateDebts}
+                onOpenChat={() => setChatOpen(true)}
               />
             </TabsContent>
 
