@@ -231,7 +231,7 @@ function CommentsDrawer({
     setSending(true);
     const ok = await onAddComment(postId, text.trim());
     if (ok) {
-      const updated = await fetchComments(postId);
+      const updated = await onFetchComments(postId);
       setComments(updated);
       setText("");
     }
@@ -569,6 +569,7 @@ export default function CommunityHome() {
           onClose={() => setCommentsPostId(null)}
           postId={commentsPostId}
           onAddComment={addComment}
+          onFetchComments={fetchComments}
         />
       )}
 
