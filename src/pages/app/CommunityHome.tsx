@@ -209,17 +209,17 @@ function CommentsDrawer({
   onClose: () => void;
   postId: string;
   onAddComment: (postId: string, content: string) => Promise<boolean | undefined>;
+  onFetchComments: (postId: string) => Promise<PostComment[]>;
 }) {
   const [comments, setComments] = useState<PostComment[]>([]);
   const [loading, setLoading] = useState(true);
   const [text, setText] = useState("");
   const [sending, setSending] = useState(false);
-  const { fetchComments } = useCommunityFeed();
 
   useEffect(() => {
     if (open && postId) {
       setLoading(true);
-      fetchComments(postId).then((data) => {
+      onFetchComments(postId).then((data) => {
         setComments(data);
         setLoading(false);
       });
