@@ -35,23 +35,36 @@ const CATEGORIES: CategoryConfig[] = [
 type StepOption = { label: string; value: string };
 type FlowStep = { question: string; options: StepOption[]; key: string };
 
+const NON_AI_SPORTS = ["Futebol", "Beach Tennis", "Vôlei", "Futebol Society"];
+const NON_AI_SPORT_MESSAGES: Record<string, string> = {
+  "Futebol": "Para jogar futebol, busque quadras para alugar na sua cidade. Recomendamos verificar apps como GetNinjas, ou pesquisar 'aluguel de quadra' no Google.",
+  "Beach Tennis": "Para jogar beach tennis, busque arenas e espaços na sua cidade. Pesquise 'beach tennis' para encontrar locais próximos.",
+  "Vôlei": "Para jogar vôlei, busque quadras e grupos na sua cidade. Pesquise 'vôlei amador' para encontrar locais e grupos.",
+  "Futebol Society": "Para jogar futebol society, busque quadras para alugar na sua cidade. Pesquise 'quadra society' no Google.",
+};
+
 function getFlowSteps(categoryId: string, answers: Record<string, string>): FlowStep[] {
   if (categoryId === "esporte") {
     const steps: FlowStep[] = [
       { question: "Qual modalidade?", key: "type", options: [
         { label: "Caminhada", value: "Caminhada" }, { label: "Corrida", value: "Corrida" },
-        { label: "Futebol", value: "Futebol" }, { label: "Vôlei", value: "Vôlei" },
-        { label: "Natação", value: "Natação" }, { label: "Beach Tennis", value: "Beach Tennis" },
-        { label: "Academia", value: "Academia" }, { label: "Outro", value: "Outro" },
-      ]},
-      { question: "Qual seu nível atual?", key: "level", options: [
-        { label: "Iniciante", value: "Iniciante" }, { label: "Intermediário", value: "Intermediário" }, { label: "Avançado", value: "Avançado" },
-      ]},
-      { question: "Quanto tempo você tem disponível?", key: "duration", options: [
-        { label: "20 min", value: "20" }, { label: "30 min", value: "30" },
-        { label: "45 min", value: "45" }, { label: "60 min", value: "60" }, { label: "90 min", value: "90" },
+        { label: "Natação", value: "Natação" }, { label: "Futebol", value: "Futebol" },
+        { label: "Vôlei", value: "Vôlei" }, { label: "Beach Tennis", value: "Beach Tennis" },
+        { label: "Futebol Society", value: "Futebol Society" },
       ]},
     ];
+    // Only add level/duration for AI-supported sports
+    if (answers.type && !NON_AI_SPORTS.includes(answers.type)) {
+      steps.push(
+        { question: "Qual seu nível atual?", key: "level", options: [
+          { label: "Iniciante", value: "Iniciante" }, { label: "Intermediário", value: "Intermediário" }, { label: "Avançado", value: "Avançado" },
+        ]},
+        { question: "Quanto tempo você tem disponível?", key: "duration", options: [
+          { label: "20 min", value: "20" }, { label: "30 min", value: "30" },
+          { label: "45 min", value: "45" }, { label: "60 min", value: "60" }, { label: "90 min", value: "90" },
+        ]},
+      );
+    }
     return steps;
   }
   if (categoryId === "academia") {
@@ -60,7 +73,7 @@ function getFlowSteps(categoryId: string, answers: Record<string, string>): Flow
         { label: "Iniciante", value: "Iniciante" }, { label: "Intermediário", value: "Intermediário" }, { label: "Avançado", value: "Avançado" },
       ]},
       { question: "Quanto tempo você tem disponível?", key: "duration", options: [
-        { label: "30 min", value: "30" }, { label: "45 min", value: "45" },
+        { label: "15 min", value: "15" }, { label: "30 min", value: "30" }, { label: "45 min", value: "45" },
         { label: "60 min", value: "60" }, { label: "90 min", value: "90" },
       ]},
       { question: "Qual o foco de hoje?", key: "foco", options: [
