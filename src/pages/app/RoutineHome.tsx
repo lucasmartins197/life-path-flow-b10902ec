@@ -522,6 +522,42 @@ export default function RoutineHome() {
   if (activityData) {
     const cat = CATEGORIES.find(c => c.id === activityData._category) || CATEGORIES[0];
 
+    // Non-AI sport card
+    if (activityData._nonAiSport) {
+      return (
+        <div className="min-h-screen bg-[#F8F6F2] safe-top pb-8 animate-fade-in">
+          <div className="px-5 pt-5 pb-4">
+            <button onClick={resetActivity} className="w-10 h-10 rounded-full bg-white flex items-center justify-center shadow-sm active:scale-95 transition-transform mb-4">
+              <ChevronLeft className="h-5 w-5 text-foreground" />
+            </button>
+          </div>
+          <div className="mx-5 rounded-2xl p-5 mb-4" style={{ background: "linear-gradient(135deg, #1B4332, #2D6A4F)" }}>
+            <p className="text-white/60 text-xs font-medium uppercase tracking-widest mb-1">Esporte</p>
+            <h2 className="text-xl font-bold text-white" style={{ letterSpacing: "-0.5px" }}>{activityData._sportName}</h2>
+          </div>
+          <div className="px-5 space-y-4">
+            <Card className="border-none shadow-sm">
+              <CardContent className="p-5">
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold text-white" style={{ background: "linear-gradient(135deg, #1B4332, #2D6A4F)" }}>A</div>
+                  <span className="text-sm font-semibold">Dica da Ana</span>
+                </div>
+                <p className="text-sm leading-relaxed text-muted-foreground">{activityData._message}</p>
+              </CardContent>
+            </Card>
+            <a href={activityData._searchUrl} target="_blank" rel="noopener noreferrer" className="block">
+              <Button className="w-full h-[52px] text-base font-bold rounded-2xl text-white" style={{ background: "linear-gradient(135deg, #1B4332, #2D6A4F)" }}>
+                Pesquisar no Google
+              </Button>
+            </a>
+            <Button variant="outline" className="w-full h-[52px] text-base font-bold rounded-2xl" onClick={resetActivity}>
+              Voltar à rotina
+            </Button>
+          </div>
+        </div>
+      );
+    }
+
     // Plan steps for structured workouts
     const planSteps: any[] = [];
     if (activityData.warmup) activityData.warmup.forEach((ex: any) => planSteps.push({ ...ex, phase: "Aquecimento" }));
@@ -529,6 +565,8 @@ export default function RoutineHome() {
     if (activityData.finisher) activityData.finisher.forEach((ex: any) => planSteps.push({ ...ex, phase: "Finalizador" }));
     if (activityData.cooldown) activityData.cooldown.forEach((ex: any) => planSteps.push({ ...ex, phase: "Alongamento" }));
     if (activityData.steps) activityData.steps.forEach((s: string, i: number) => planSteps.push({ name: `Passo ${i + 1}`, description: s, phase: "Prática" }));
+    // Meditation sections
+    if (activityData.sections) activityData.sections.forEach((s: any) => planSteps.push({ name: s.name, description: s.instructions, phase: s.duration }));
 
     const hasStructuredPlan = planSteps.length > 0;
 
@@ -539,7 +577,6 @@ export default function RoutineHome() {
       const totalSteps = planSteps.length;
       const stepProgress = ((currentPlanStep + 1) / totalSteps) * 100;
 
-      // Timer circle
       const radius = 100;
       const circumference = 2 * Math.PI * radius;
       const elapsed = timerSeconds;
@@ -548,7 +585,6 @@ export default function RoutineHome() {
 
       return (
         <div className="min-h-screen flex flex-col items-center justify-center px-6 safe-top" style={{ background: "linear-gradient(180deg, #1B4332, #0f2b20)" }}>
-          {/* Progress */}
           <div className="w-full mb-8">
             <div className="flex justify-between items-center mb-2">
               <span className="text-white/60 text-xs font-medium">Etapa {currentPlanStep + 1} de {totalSteps}</span>
@@ -559,7 +595,6 @@ export default function RoutineHome() {
             </div>
           </div>
 
-          {/* Timer circle */}
           <div className="relative mb-6">
             <svg width="240" height="240" viewBox="0 0 240 240">
               <circle cx="120" cy="120" r={radius} fill="none" stroke="rgba(255,255,255,0.1)" strokeWidth="6" />
@@ -572,12 +607,10 @@ export default function RoutineHome() {
             </div>
           </div>
 
-          {/* Current step */}
           <h3 className="text-lg font-bold text-white text-center mb-1">{step?.name || "Em progresso"}</h3>
-          {step?.description && <p className="text-white/60 text-sm text-center mb-6 max-w-xs">{typeof step.description === 'string' ? step.description.slice(0, 80) : ''}</p>}
+          {step?.description && <p className="text-white/60 text-sm text-center mb-6 max-w-xs">{typeof step.description === 'string' ? step.description.slice(0, 120) : ''}</p>}
           {nextStep && <p className="text-white/40 text-xs mb-8">Próxima: {nextStep.name}</p>}
 
-          {/* Controls */}
           <div className="flex items-center gap-6">
             <button onClick={() => setTimerRunning(false)}
               className="w-14 h-14 rounded-full bg-white/10 flex items-center justify-center active:scale-95 transition-transform">
@@ -605,14 +638,12 @@ export default function RoutineHome() {
     // Plan view (paused or not started)
     return (
       <div className="min-h-screen bg-[#F8F6F2] safe-top pb-8 animate-fade-in">
-        {/* Header */}
         <div className="px-5 pt-5 pb-4">
           <button onClick={resetActivity} className="w-10 h-10 rounded-full bg-white flex items-center justify-center shadow-sm active:scale-95 transition-transform mb-4">
             <ChevronLeft className="h-5 w-5 text-foreground" />
           </button>
         </div>
 
-        {/* Plan header card */}
         <div className="mx-5 rounded-2xl p-5 mb-4" style={{ background: "linear-gradient(135deg, #1B4332, #2D6A4F)" }}>
           <p className="text-white/60 text-xs font-medium uppercase tracking-widest mb-1">{cat.label}</p>
           <h2 className="text-xl font-bold text-white mb-1" style={{ letterSpacing: "-0.5px" }}>
@@ -663,15 +694,37 @@ export default function RoutineHome() {
             );
           })}
 
-          {/* Books */}
+          {/* Closing message for meditation */}
+          {activityData.closingMessage && (
+            <Card className="border-none shadow-sm bg-accent/10"><CardContent className="p-4">
+              <p className="text-xs font-semibold text-accent-foreground mb-1">Mensagem de encerramento</p>
+              <p className="text-sm italic">{activityData.closingMessage}</p>
+            </CardContent></Card>
+          )}
+
+          {/* Books with links */}
           {activityData.books && activityData.books.map((book: any, i: number) => (
             <Card key={i} className="border-none shadow-sm">
               <CardContent className="p-5">
                 <h3 className="font-bold text-sm">{book.title}</h3>
                 <p className="text-xs text-muted-foreground">{book.author}</p>
                 <p className="text-sm mt-2">{book.summary}</p>
-                {book.recoveryBenefit && <p className="text-xs italic text-muted-foreground mt-1">{book.recoveryBenefit}</p>}
-                {book.freeLink && <a href={book.freeLink} target="_blank" rel="noopener noreferrer" className="text-xs font-medium text-primary mt-2 inline-block">Ler gratuitamente</a>}
+                {book.recoveryBenefit && <p className="text-xs italic text-muted-foreground mt-2">{book.recoveryBenefit}</p>}
+                {book.isFree && <span className="inline-block mt-2 text-[10px] font-bold px-2 py-0.5 rounded-full" style={{ background: "#D1FAE5", color: "#065F46" }}>Disponível gratuitamente</span>}
+                <div className="flex gap-2 mt-3">
+                  <a href={book.googleBooksLink || book.freeLink || `https://books.google.com/books?q=${encodeURIComponent(book.title + " " + book.author)}`}
+                    target="_blank" rel="noopener noreferrer"
+                    className="flex-1 py-2 px-3 rounded-xl text-xs font-semibold text-center transition-all active:scale-95"
+                    style={{ background: "#1B4332", color: "#fff" }}>
+                    Ver no Google Books
+                  </a>
+                  <a href={book.amazonLink || `https://www.amazon.com.br/s?k=${encodeURIComponent(book.title + " " + book.author)}`}
+                    target="_blank" rel="noopener noreferrer"
+                    className="flex-1 py-2 px-3 rounded-xl text-xs font-semibold text-center border transition-all active:scale-95"
+                    style={{ borderColor: "#E5E7EB" }}>
+                    Comprar na Amazon
+                  </a>
+                </div>
               </CardContent>
             </Card>
           ))}
