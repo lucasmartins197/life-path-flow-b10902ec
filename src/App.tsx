@@ -37,6 +37,7 @@ import CommunityHome from "./pages/app/CommunityHome";
 import AulaoSemanal from "./pages/app/AulaoSemanal";
 import SubscriptionHome from "./pages/app/SubscriptionHome";
 import MedalsHome from "./pages/app/MedalsHome";
+import MessagesHome from "./pages/app/MessagesHome";
 
 // Pro pages (PROFESSIONAL role)
 import ProHome from "./pages/pro/ProHome";
@@ -85,6 +86,7 @@ const App = () => (
             <Route path="/app/aulao" element={<ProtectedRoute allowedRoles={["user", "admin"]}><AulaoSemanal /></ProtectedRoute>} />
             <Route path="/app/assinatura" element={<ProtectedRoute allowedRoles={["user", "admin"]}><SubscriptionHome /></ProtectedRoute>} />
             <Route path="/app/medalhas" element={<ProtectedRoute allowedRoles={["user", "admin"]}><MedalsHome /></ProtectedRoute>} />
+            <Route path="/app/mensagens" element={<ProtectedRoute allowedRoles={["user", "admin"]}><MessagesHome /></ProtectedRoute>} />
             
             {/* Protected PRO routes (PROFESSIONAL role) */}
             <Route path="/pro" element={<ProtectedRoute allowedRoles={["professional", "admin"]}><ProHome /></ProtectedRoute>} />

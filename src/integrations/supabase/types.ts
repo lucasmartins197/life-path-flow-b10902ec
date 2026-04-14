@@ -295,6 +295,48 @@ export type Database = {
         }
         Relationships: []
       }
+      community_posts: {
+        Row: {
+          anonymous: boolean
+          comments_count: number
+          content: string
+          created_at: string
+          id: string
+          image_url: string | null
+          is_hidden: boolean
+          likes_count: number
+          mood: string | null
+          report_count: number
+          user_id: string
+        }
+        Insert: {
+          anonymous?: boolean
+          comments_count?: number
+          content: string
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          is_hidden?: boolean
+          likes_count?: number
+          mood?: string | null
+          report_count?: number
+          user_id: string
+        }
+        Update: {
+          anonymous?: boolean
+          comments_count?: number
+          content?: string
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          is_hidden?: boolean
+          likes_count?: number
+          mood?: string | null
+          report_count?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
       community_rules_acceptance: {
         Row: {
           accepted_at: string
@@ -460,6 +502,33 @@ export type Database = {
           interest_rate?: number
           monthly_income?: number
           user_id?: string
+        }
+        Relationships: []
+      }
+      direct_messages: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          read_at: string | null
+          receiver_id: string
+          sender_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          read_at?: string | null
+          receiver_id: string
+          sender_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          read_at?: string | null
+          receiver_id?: string
+          sender_id?: string
         }
         Relationships: []
       }
@@ -1216,6 +1285,67 @@ export type Database = {
           },
         ]
       }
+      post_comments: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          post_id: string
+          user_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          post_id: string
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          post_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "post_comments_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "community_posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      post_likes: {
+        Row: {
+          created_at: string
+          id: string
+          post_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          post_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          post_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "post_likes_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "community_posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       professional_profiles: {
         Row: {
           bio: string | null
@@ -1392,6 +1522,38 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      reported_content: {
+        Row: {
+          created_at: string
+          id: string
+          post_id: string
+          reason: string | null
+          reporter_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          post_id: string
+          reason?: string | null
+          reporter_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          post_id?: string
+          reason?: string | null
+          reporter_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reported_content_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "community_posts"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       risk_signals: {
         Row: {
@@ -1808,6 +1970,60 @@ export type Database = {
           peso_kg?: number | null
           restricoes?: string | null
           tempo_disponivel?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_follows: {
+        Row: {
+          created_at: string
+          follower_id: string
+          following_id: string
+          id: string
+        }
+        Insert: {
+          created_at?: string
+          follower_id: string
+          following_id: string
+          id?: string
+        }
+        Update: {
+          created_at?: string
+          follower_id?: string
+          following_id?: string
+          id?: string
+        }
+        Relationships: []
+      }
+      user_public_profiles: {
+        Row: {
+          avatar_url: string | null
+          bio: string | null
+          created_at: string
+          display_name: string | null
+          id: string
+          is_anonymous: boolean
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          bio?: string | null
+          created_at?: string
+          display_name?: string | null
+          id?: string
+          is_anonymous?: boolean
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          avatar_url?: string | null
+          bio?: string | null
+          created_at?: string
+          display_name?: string | null
+          id?: string
+          is_anonymous?: boolean
           updated_at?: string
           user_id?: string
         }
