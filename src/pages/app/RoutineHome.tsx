@@ -627,6 +627,148 @@ export default function RoutineHome() {
     </div>
   );
 
+  // ─── Social Interaction Flow ───
+  if (socialState) {
+    const DURATION_OPTIONS = [
+      { label: "15 min", value: "15" },
+      { label: "30 min", value: "30" },
+      { label: "1 hora", value: "60" },
+      { label: "2h+", value: "120" },
+    ];
+
+    return (
+      <div className="min-h-screen bg-[#F8F6F2] safe-top flex flex-col animate-fade-in">
+        <div className="px-5 pt-5 pb-4">
+          <button onClick={resetSocial}
+            className="w-10 h-10 rounded-full bg-white flex items-center justify-center shadow-sm active:scale-95 transition-transform">
+            <ChevronLeft className="h-5 w-5 text-foreground" />
+          </button>
+        </div>
+
+        <div className="flex-1 px-6 space-y-5">
+          {/* Ana's avatar + message */}
+          <div className="flex gap-3 items-start">
+            <div className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold text-white shrink-0"
+              style={{ background: "linear-gradient(135deg, #1B4332, #2D6A4F)" }}>A</div>
+            <div className="flex-1">
+              <p className="text-xs font-semibold text-muted-foreground mb-1">Ana</p>
+
+              {/* State: ana_question — show Ana's warm message + duration/time inputs */}
+              {socialState === "ana_question" && (
+                <div className="space-y-5">
+                  <Card className="border-none shadow-sm"><CardContent className="p-4">
+                    <p className="text-sm leading-relaxed">{ANA_SOCIAL_MESSAGES[socialWith] || `Que legal! Quanto tempo você vai dedicar e quando?`}</p>
+                  </CardContent></Card>
+
+                  <div className="space-y-3">
+                    <label className="text-xs font-semibold text-muted-foreground">Duração</label>
+                    <div className="grid grid-cols-4 gap-2">
+                      {DURATION_OPTIONS.map(opt => (
+                        <button key={opt.value} onClick={() => setSocialDuration(opt.value)}
+                          className="py-3 rounded-xl border-[1.5px] text-xs font-semibold text-center transition-all active:scale-[0.98]"
+                          style={{
+                            borderColor: socialDuration === opt.value ? "#1B4332" : "#E5E7EB",
+                            background: socialDuration === opt.value ? "hsl(153 40% 15% / 0.05)" : "#fff",
+                            color: socialDuration === opt.value ? "#1B4332" : "#6B7280",
+                          }}>
+                          {opt.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-xs font-semibold text-muted-foreground">Horário</label>
+                    <Input type="time" value={socialTime} onChange={e => setSocialTime(e.target.value)}
+                      className="rounded-xl h-12" />
+                  </div>
+
+                  <Button className="w-full h-[52px] text-base font-bold rounded-2xl text-white"
+                    style={{ background: socialDuration ? "linear-gradient(135deg, #1B4332, #2D6A4F)" : "#D1D5DB" }}
+                    disabled={!socialDuration || socialSaving}
+                    onClick={registerSocialCommitment}>
+                    {socialSaving ? <Loader2 className="h-5 w-5 animate-spin" /> : "Registrar compromisso"}
+                  </Button>
+                </div>
+              )}
+
+              {/* State: confirmed — Ana's confirmation */}
+              {socialState === "confirmed" && (
+                <div className="space-y-5">
+                  <Card className="border-none shadow-sm"><CardContent className="p-4">
+                    <p className="text-sm leading-relaxed">
+                      Registrado! {socialTime ? `${socialTime}` : "Logo mais"} está marcado para você e {socialWith.toLowerCase()}. Volte aqui depois e me conta como foi. Estou curiosa.
+                    </p>
+                  </CardContent></Card>
+
+                  <div className="flex gap-3">
+                    <Button className="flex-1 h-[48px] text-sm font-bold rounded-2xl text-white"
+                      style={{ background: "linear-gradient(135deg, #1B4332, #2D6A4F)" }}
+                      onClick={() => setSocialState("followup")}>
+                      Contar como foi
+                    </Button>
+                    <Button variant="outline" className="flex-1 h-[48px] text-sm font-bold rounded-2xl"
+                      onClick={resetSocial}>
+                      Voltar à rotina
+                    </Button>
+                  </div>
+                </div>
+              )}
+
+              {/* State: followup — ask how it went */}
+              {socialState === "followup" && (
+                <div className="space-y-5">
+                  <Card className="border-none shadow-sm"><CardContent className="p-4">
+                    <p className="text-sm leading-relaxed">
+                      E aí, como foi o tempo com {socialWith.toLowerCase()}?
+                    </p>
+                  </CardContent></Card>
+
+                  <Textarea value={socialReport} onChange={e => setSocialReport(e.target.value)}
+                    placeholder="Me conta um pouco se quiser..." rows={3} className="resize-none rounded-xl" />
+
+                  <div className="flex gap-3">
+                    <Button className="flex-1 h-[48px] text-sm font-bold rounded-2xl text-white"
+                      style={{ background: "linear-gradient(135deg, #1B4332, #2D6A4F)" }}
+                      disabled={socialSaving}
+                      onClick={() => submitSocialFollowup(socialReport)}>
+                      {socialSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : "Registrar"}
+                    </Button>
+                    <Button variant="outline" className="h-[48px] text-sm font-bold rounded-2xl px-6"
+                      disabled={socialSaving}
+                      onClick={() => submitSocialFollowup("")}>
+                      Foi bem, obrigado
+                    </Button>
+                  </div>
+                </div>
+              )}
+
+              {/* State: done — Ana's validation */}
+              {socialState === "done" && (
+                <div className="space-y-5">
+                  {socialReport && (
+                    <Card className="border-none shadow-sm bg-accent/5"><CardContent className="p-4">
+                      <p className="text-sm italic text-muted-foreground">"{socialReport}"</p>
+                    </CardContent></Card>
+                  )}
+                  <Card className="border-none shadow-sm"><CardContent className="p-4">
+                    <p className="text-sm leading-relaxed">{socialFeedback}</p>
+                  </CardContent></Card>
+
+                  <Button className="w-full h-[52px] text-base font-bold rounded-2xl text-white"
+                    style={{ background: "linear-gradient(135deg, #1B4332, #2D6A4F)" }}
+                    onClick={resetSocial}>
+                    Voltar à rotina
+                  </Button>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   // ─── Fitness Profile Setup Modal ───
   if (showFitnessSetup) {
     return <FitnessProfileSetup
