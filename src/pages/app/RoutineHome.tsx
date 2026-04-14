@@ -14,14 +14,13 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sh
 import { Progress } from "@/components/ui/progress";
 import {
   ChevronLeft, ChevronRight, Settings2, Loader2, Play, Pause,
-  CheckCircle, Smartphone, Send, Timer, Trash2,
+  CheckCircle, Send, Timer, Pencil,
   Activity, BookOpen, Leaf, Users, Dumbbell, X,
 } from "lucide-react";
 import { AreaChart, Area, XAxis, YAxis, ResponsiveContainer, Tooltip } from "recharts";
 
 /* ─── Types & constants ─── */
 interface CategoryConfig { id: string; label: string; icon: React.ReactNode; color: string; }
-
 const CAT_ICON_SIZE = "h-5 w-5";
 const CATEGORIES: CategoryConfig[] = [
   { id: "esporte", label: "Esporte", icon: <Activity className={CAT_ICON_SIZE} />, color: "#059669" },
@@ -31,7 +30,6 @@ const CATEGORIES: CategoryConfig[] = [
   { id: "social", label: "Interação Social", icon: <Users className={CAT_ICON_SIZE} />, color: "#2563EB" },
 ];
 
-/* ─── Step flow definitions ─── */
 type StepOption = { label: string; value: string };
 type FlowStep = { question: string; options: StepOption[]; key: string };
 
@@ -43,6 +41,9 @@ const NON_AI_SPORT_MESSAGES: Record<string, string> = {
   "Futebol Society": "Para jogar futebol society, busque quadras para alugar na sua cidade. Pesquise 'quadra society' no Google.",
 };
 
+const DAY_MAP: Record<string, number> = { dom: 0, seg: 1, ter: 2, qua: 3, qui: 4, sex: 5, sab: 6 };
+const DAY_LABELS: Record<string, string> = { seg: "Seg", ter: "Ter", qua: "Qua", qui: "Qui", sex: "Sex", sab: "Sáb", dom: "Dom" };
+
 function getFlowSteps(categoryId: string, answers: Record<string, string>): FlowStep[] {
   if (categoryId === "esporte") {
     const steps: FlowStep[] = [
@@ -53,7 +54,6 @@ function getFlowSteps(categoryId: string, answers: Record<string, string>): Flow
         { label: "Futebol Society", value: "Futebol Society" },
       ]},
     ];
-    // Only add level/duration for AI-supported sports
     if (answers.type && !NON_AI_SPORTS.includes(answers.type)) {
       steps.push(
         { question: "Qual seu nível atual?", key: "level", options: [
@@ -65,27 +65,6 @@ function getFlowSteps(categoryId: string, answers: Record<string, string>): Flow
         ]},
       );
     }
-    return steps;
-  }
-  if (categoryId === "academia") {
-    const steps: FlowStep[] = [
-      { question: "Qual seu nível atual?", key: "nivel", options: [
-        { label: "Iniciante", value: "Iniciante" }, { label: "Intermediário", value: "Intermediário" }, { label: "Avançado", value: "Avançado" },
-      ]},
-      { question: "Quanto tempo você tem disponível?", key: "duration", options: [
-        { label: "15 min", value: "15" }, { label: "30 min", value: "30" }, { label: "45 min", value: "45" },
-        { label: "60 min", value: "60" }, { label: "90 min", value: "90" },
-      ]},
-      { question: "Qual o foco de hoje?", key: "foco", options: [
-        { label: "Peito/Tríceps", value: "Peito e Tríceps" }, { label: "Costas/Bíceps", value: "Costas e Bíceps" },
-        { label: "Pernas", value: "Pernas" }, { label: "Ombros", value: "Ombro" },
-        { label: "Full Body", value: "Full Body" }, { label: "Cardio", value: "Cardio" },
-      ]},
-      { question: "Qual seu objetivo?", key: "objetivo", options: [
-        { label: "Emagrecer", value: "Emagrecimento" }, { label: "Hipertrofia", value: "Hipertrofia" },
-        { label: "Condicionamento", value: "Condicionamento" }, { label: "Saúde", value: "Saúde geral" },
-      ]},
-    ];
     return steps;
   }
   if (categoryId === "leitura") {
@@ -133,6 +112,36 @@ function getAiType(categoryId: string): string {
 
 const fmt = (s: number) => `${String(Math.floor(s / 60)).padStart(2, "0")}:${String(s % 60).padStart(2, "0")}`;
 
+function getWeekNumber(): number {
+  const now = new Date();
+  const start = new Date(now.getFullYear(), 0, 1);
+  return Math.ceil(((now.getTime() - start.getTime()) / 86400000 + start.getDay() + 1) / 7);
+}
+
+function getTodayDayLetter(diasSemana: string[]): string | null {
+  const todayIndex = new Date().getDay(); // 0=dom
+  const todayDias = diasSemana.filter(d => DAY_MAP[d] !== undefined);
+  const sorted = todayDias.sort((a, b) => DAY_MAP[a] - DAY_MAP[b]);
+  const todayIdx = sorted.findIndex(d => DAY_MAP[d] === todayIndex);
+  if (todayIdx === -1) return null;
+  return String.fromCharCode(65 + todayIdx); // A, B, C...
+}
+
+/* ─── Fitness Profile types ─── */
+interface FitnessProfile {
+  id: string;
+  user_id: string;
+  modalidade: string;
+  nivel: string;
+  objetivo: string;
+  dias_semana: string[];
+  tempo_disponivel: number;
+  equipamento: string;
+  peso_kg: number | null;
+  altura_cm: number | null;
+  restricoes: string | null;
+}
+
 /* ─── Main component ─── */
 export default function RoutineHome() {
   const navigate = useNavigate();
@@ -145,6 +154,12 @@ export default function RoutineHome() {
   const [preferences, setPreferences] = useState<Record<string, any>>({});
   const [activities, setActivities] = useState<any[]>([]);
   const [userName, setUserName] = useState("");
+
+  // Fitness profile state
+  const [fitnessProfile, setFitnessProfile] = useState<FitnessProfile | null>(null);
+  const [showFitnessSetup, setShowFitnessSetup] = useState(false);
+  const [todayWorkout, setTodayWorkout] = useState<any>(null);
+  const [workoutLoading, setWorkoutLoading] = useState(false);
 
   // UI state
   const [showSetup, setShowSetup] = useState(false);
@@ -210,10 +225,11 @@ export default function RoutineHome() {
 
   async function loadData() {
     setLoading(true);
-    const [{ data: profile }, { data: routine }, { data: acts }] = await Promise.all([
+    const [{ data: profile }, { data: routine }, { data: acts }, { data: fp }] = await Promise.all([
       supabase.from("profiles").select("full_name").eq("user_id", user!.id).maybeSingle(),
       supabase.from("user_routine").select("*").eq("user_id", user!.id).maybeSingle(),
       supabase.from("routine_activities").select("*").eq("user_id", user!.id).order("completed_at", { ascending: false }).limit(50),
+      supabase.from("user_fitness_profile" as any).select("*").eq("user_id", user!.id).maybeSingle(),
     ]);
     if (profile?.full_name) setUserName(profile.full_name.split(" ")[0]);
     if (routine) {
@@ -224,7 +240,108 @@ export default function RoutineHome() {
       if (cats.length > 0) fetchSuggestionAuto(cats, (routine.preferences as Record<string, any>) || {}, profile?.full_name?.split(" ")[0] || "");
     }
     if (acts) setActivities(acts);
+    if (fp) {
+      const fpData = fp as any;
+      setFitnessProfile({
+        id: fpData.id,
+        user_id: fpData.user_id,
+        modalidade: fpData.modalidade,
+        nivel: fpData.nivel,
+        objetivo: fpData.objetivo,
+        dias_semana: Array.isArray(fpData.dias_semana) ? fpData.dias_semana : [],
+        tempo_disponivel: fpData.tempo_disponivel,
+        equipamento: fpData.equipamento,
+        peso_kg: fpData.peso_kg,
+        altura_cm: fpData.altura_cm,
+        restricoes: fpData.restricoes,
+      });
+      // Load today's workout
+      await loadTodayWorkout(fpData as any);
+    }
     setLoading(false);
+  }
+
+  async function loadTodayWorkout(fp: FitnessProfile) {
+    const weekNum = getWeekNumber();
+    const dayLetter = getTodayDayLetter(fp.dias_semana);
+    if (!dayLetter) {
+      setTodayWorkout(null);
+      return;
+    }
+
+    // Check if plan exists for this week
+    const { data: existingPlan } = await supabase
+      .from("weekly_workout_plan" as any)
+      .select("*")
+      .eq("user_id", user!.id)
+      .eq("modalidade", fp.modalidade)
+      .eq("week_number", weekNum)
+      .eq("day_letter", dayLetter)
+      .maybeSingle();
+
+    if (existingPlan) {
+      setTodayWorkout(existingPlan);
+    } else {
+      // Generate new weekly plan
+      await generateWeeklyPlan(fp, weekNum);
+    }
+  }
+
+  async function generateWeeklyPlan(fp: FitnessProfile, weekNum: number) {
+    setWorkoutLoading(true);
+    try {
+      const { data } = await supabase.functions.invoke("routine-ai", {
+        body: {
+          type: "weekly_plan",
+          preferences: {
+            ...fp,
+            week_number: weekNum,
+          },
+          userName,
+        },
+      });
+
+      if (data?.message) {
+        let parsed: any;
+        try { parsed = JSON.parse(data.message); } catch { setWorkoutLoading(false); return; }
+
+        if (parsed.days && Array.isArray(parsed.days)) {
+          // Save all days to Supabase
+          for (const day of parsed.days) {
+            await supabase.from("weekly_workout_plan" as any).upsert({
+              user_id: user!.id,
+              modalidade: fp.modalidade,
+              week_number: weekNum,
+              day_letter: day.day_letter,
+              muscle_groups: day.muscle_groups || [],
+              exercises: day.exercises || [],
+            } as any, { onConflict: "user_id,modalidade,week_number,day_letter" });
+          }
+
+          // Set today's workout
+          const dayLetter = getTodayDayLetter(fp.dias_semana);
+          if (dayLetter) {
+            const todayPlan = parsed.days.find((d: any) => d.day_letter === dayLetter);
+            if (todayPlan) {
+              // Refetch from DB to get the saved version
+              const { data: saved } = await supabase
+                .from("weekly_workout_plan" as any)
+                .select("*")
+                .eq("user_id", user!.id)
+                .eq("modalidade", fp.modalidade)
+                .eq("week_number", weekNum)
+                .eq("day_letter", dayLetter)
+                .maybeSingle();
+              if (saved) setTodayWorkout(saved);
+            }
+          }
+        }
+      }
+    } catch (e) {
+      console.error("Failed to generate weekly plan:", e);
+      toast.error("Erro ao gerar plano semanal");
+    }
+    setWorkoutLoading(false);
   }
 
   async function fetchSuggestionAuto(cats: string[], prefs: Record<string, any>, name: string) {
@@ -246,12 +363,59 @@ export default function RoutineHome() {
     toast.success("Rotina salva"); loadData();
   }
 
-  // Start step flow
+  async function saveFitnessProfile(fp: Omit<FitnessProfile, "id" | "user_id">) {
+    if (!user) return;
+    const payload = { ...fp, user_id: user.id } as any;
+    if (fitnessProfile) {
+      await supabase.from("user_fitness_profile" as any).update(payload).eq("id", fitnessProfile.id);
+    } else {
+      await supabase.from("user_fitness_profile" as any).insert(payload);
+    }
+    setShowFitnessSetup(false);
+    toast.success("Perfil de treino salvo");
+    loadData();
+  }
+
+  // Start step flow for category
   function startFlow(categoryId: string) {
+    if (categoryId === "academia") {
+      if (!fitnessProfile) {
+        setShowFitnessSetup(true);
+        return;
+      }
+      // Has profile — show today's workout directly
+      if (todayWorkout) {
+        startWorkoutFromPlan(todayWorkout);
+        return;
+      }
+      // No workout for today (rest day)
+      toast("Hoje é dia de descanso. Aproveite para recuperar!");
+      return;
+    }
     setFlowCategory(categoryId);
     setFlowStep(0);
     setFlowAnswers({});
     setFlowSelected(null);
+  }
+
+  function startWorkoutFromPlan(plan: any) {
+    const exercises = Array.isArray(plan.exercises) ? plan.exercises : [];
+    const muscleGroups = Array.isArray(plan.muscle_groups) ? plan.muscle_groups : [];
+    setActivityData({
+      _category: "academia",
+      _answers: { duration: String(fitnessProfile?.tempo_disponivel || 45) },
+      _fromPlan: true,
+      trainingName: `${muscleGroups.join(" + ")}`,
+      exercises,
+      muscle_groups: muscleGroups,
+    });
+    setTimerTotal((fitnessProfile?.tempo_disponivel || 45) * 60);
+    setTimerSeconds(0);
+    setCurrentPlanStep(0);
+    setActivityDone(false);
+    setActivityReport("");
+    setActivityRating(0);
+    setAiFeedback("");
   }
 
   function handleFlowNext() {
@@ -262,25 +426,17 @@ export default function RoutineHome() {
     setFlowAnswers(newAnswers);
     setFlowSelected(null);
 
-    // Check if this is a non-AI sport after selecting modality
     if (flowCategory === "esporte" && currentStep.key === "type" && NON_AI_SPORTS.includes(flowSelected)) {
-      // Show info card directly, no AI needed
       setFlowCategory(null);
       const msg = NON_AI_SPORT_MESSAGES[flowSelected] || `Busque locais para jogar ${flowSelected} na sua cidade.`;
-      const city = "sua cidade";
-      const searchQuery = encodeURIComponent(`${flowSelected} ${city}`);
+      const searchQuery = encodeURIComponent(`${flowSelected} sua cidade`);
       setActivityData({
-        _category: "esporte",
-        _answers: newAnswers,
-        _nonAiSport: true,
-        _sportName: flowSelected,
-        _message: msg,
-        _searchUrl: `https://www.google.com/search?q=${searchQuery}`,
+        _category: "esporte", _answers: newAnswers, _nonAiSport: true, _sportName: flowSelected,
+        _message: msg, _searchUrl: `https://www.google.com/search?q=${searchQuery}`,
       });
       return;
     }
 
-    // Recalculate steps with new answers (steps may change based on answers)
     const updatedSteps = getFlowSteps(flowCategory, newAnswers);
     if (flowStep + 1 < updatedSteps.length) {
       setFlowStep(flowStep + 1);
@@ -315,7 +471,6 @@ export default function RoutineHome() {
       setActivityData({ text: "Prepare-se para sua atividade!", _category: categoryId, _answers: answers });
     }
     setActivityLoading(false);
-
     const dur = parseInt(answers.duration || "30");
     setTimerTotal(dur * 60);
   }
@@ -328,7 +483,6 @@ export default function RoutineHome() {
       duration_minutes: Math.ceil(timerSeconds / 60), rating: activityRating || null
     } as any);
 
-    // Get feedback
     if (activityReport.trim() || activityRating) {
       try {
         const { data } = await supabase.functions.invoke("routine-ai", {
@@ -369,7 +523,6 @@ export default function RoutineHome() {
 
   const todayCount = activities.filter(a => new Date(a.completed_at).toDateString() === new Date().toDateString()).length;
 
-  // History chart data
   const weeklyData = useMemo(() => {
     const days: Record<string, number> = {};
     const now = new Date();
@@ -399,16 +552,23 @@ export default function RoutineHome() {
     </div>
   );
 
+  // ─── Fitness Profile Setup Modal ───
+  if (showFitnessSetup) {
+    return <FitnessProfileSetup
+      existing={fitnessProfile}
+      onSave={saveFitnessProfile}
+      onClose={() => setShowFitnessSetup(false)}
+    />;
+  }
+
   // ─── Step Flow ───
   if (flowCategory) {
     const steps = getFlowSteps(flowCategory, flowAnswers);
     const current = steps[flowStep];
-    const cat = CATEGORIES.find(c => c.id === flowCategory)!;
     const progress = ((flowStep + 1) / steps.length) * 100;
 
     return (
       <div className="min-h-screen bg-[#F8F6F2] safe-top flex flex-col animate-fade-in">
-        {/* Header */}
         <div className="px-5 pt-5 pb-4">
           <div className="flex items-center justify-between mb-4">
             <button onClick={() => { if (flowStep > 0) { setFlowStep(flowStep - 1); setFlowSelected(null); } else setFlowCategory(null); }}
@@ -422,38 +582,27 @@ export default function RoutineHome() {
           </div>
           <Progress value={progress} className="h-1.5" />
         </div>
-
-        {/* Question */}
         <div className="flex-1 px-6 pt-8">
           <h2 className="text-2xl font-bold tracking-tight text-center mb-8" style={{ letterSpacing: "-0.5px" }}>
             {current.question}
           </h2>
-
           <div className={`grid gap-3 ${current.options.length <= 3 ? "grid-cols-1" : "grid-cols-2"}`}>
             {current.options.map(opt => (
-              <button
-                key={opt.value}
-                onClick={() => setFlowSelected(opt.value)}
+              <button key={opt.value} onClick={() => setFlowSelected(opt.value)}
                 className="p-4 rounded-2xl border-[1.5px] text-left transition-all duration-200 active:scale-[0.98]"
                 style={{
                   borderColor: flowSelected === opt.value ? "#1B4332" : "#E5E7EB",
                   background: flowSelected === opt.value ? "hsl(153 40% 15% / 0.05)" : "#fff",
-                }}
-              >
+                }}>
                 <span className="font-semibold text-sm" style={{ color: flowSelected === opt.value ? "#1B4332" : "#374151" }}>{opt.label}</span>
               </button>
             ))}
           </div>
         </div>
-
-        {/* Continue button */}
         <div className="px-6 pb-8 pt-4">
-          <Button
-            className="w-full h-[52px] text-base font-bold rounded-2xl text-white transition-all duration-200"
+          <Button className="w-full h-[52px] text-base font-bold rounded-2xl text-white transition-all duration-200"
             style={{ background: flowSelected ? "linear-gradient(135deg, #1B4332, #2D6A4F)" : "#D1D5DB" }}
-            disabled={!flowSelected}
-            onClick={handleFlowNext}
-          >
+            disabled={!flowSelected} onClick={handleFlowNext}>
             {flowStep + 1 === steps.length ? "Gerar plano" : "Continuar"}
           </Button>
         </div>
@@ -462,7 +611,7 @@ export default function RoutineHome() {
   }
 
   // ─── Activity Loading ───
-  if (activityLoading) {
+  if (activityLoading || workoutLoading) {
     return (
       <div className="min-h-screen bg-[#F8F6F2] safe-top flex flex-col items-center justify-center gap-4 animate-fade-in">
         <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
@@ -496,7 +645,6 @@ export default function RoutineHome() {
           </Card>
         )}
 
-        {/* Rating circles */}
         <div className="flex gap-3 mb-8">
           {[1,2,3,4,5].map(s => (
             <button key={s} onClick={() => setActivityRating(s)}
@@ -536,15 +684,13 @@ export default function RoutineHome() {
             <h2 className="text-xl font-bold text-white" style={{ letterSpacing: "-0.5px" }}>{activityData._sportName}</h2>
           </div>
           <div className="px-5 space-y-4">
-            <Card className="border-none shadow-sm">
-              <CardContent className="p-5">
-                <div className="flex items-center gap-3 mb-3">
-                  <div className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold text-white" style={{ background: "linear-gradient(135deg, #1B4332, #2D6A4F)" }}>A</div>
-                  <span className="text-sm font-semibold">Dica da Ana</span>
-                </div>
-                <p className="text-sm leading-relaxed text-muted-foreground">{activityData._message}</p>
-              </CardContent>
-            </Card>
+            <Card className="border-none shadow-sm"><CardContent className="p-5">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold text-white" style={{ background: "linear-gradient(135deg, #1B4332, #2D6A4F)" }}>A</div>
+                <span className="text-sm font-semibold">Dica da Ana</span>
+              </div>
+              <p className="text-sm leading-relaxed text-muted-foreground">{activityData._message}</p>
+            </CardContent></Card>
             <a href={activityData._searchUrl} target="_blank" rel="noopener noreferrer" className="block">
               <Button className="w-full h-[52px] text-base font-bold rounded-2xl text-white" style={{ background: "linear-gradient(135deg, #1B4332, #2D6A4F)" }}>
                 Pesquisar no Google
@@ -558,15 +704,26 @@ export default function RoutineHome() {
       );
     }
 
-    // Plan steps for structured workouts
+    // Build plan steps
     const planSteps: any[] = [];
-    if (activityData.warmup) activityData.warmup.forEach((ex: any) => planSteps.push({ ...ex, phase: "Aquecimento" }));
-    if (activityData.main) activityData.main.forEach((ex: any) => planSteps.push({ ...ex, phase: "Treino" }));
-    if (activityData.finisher) activityData.finisher.forEach((ex: any) => planSteps.push({ ...ex, phase: "Finalizador" }));
-    if (activityData.cooldown) activityData.cooldown.forEach((ex: any) => planSteps.push({ ...ex, phase: "Alongamento" }));
-    if (activityData.steps) activityData.steps.forEach((s: string, i: number) => planSteps.push({ name: `Passo ${i + 1}`, description: s, phase: "Prática" }));
-    // Meditation sections
-    if (activityData.sections) activityData.sections.forEach((s: any) => planSteps.push({ name: s.name, description: s.instructions, phase: s.duration }));
+    // From weekly plan (exercises array directly)
+    if (activityData._fromPlan && activityData.exercises) {
+      activityData.exercises.forEach((ex: any) => planSteps.push({
+        name: ex.name,
+        sets: ex.sets,
+        reps: ex.reps,
+        rest: ex.rest,
+        description: ex.notes || "",
+        phase: "Treino",
+      }));
+    } else {
+      if (activityData.warmup) activityData.warmup.forEach((ex: any) => planSteps.push({ ...ex, phase: "Aquecimento" }));
+      if (activityData.main) activityData.main.forEach((ex: any) => planSteps.push({ ...ex, phase: "Treino" }));
+      if (activityData.finisher) activityData.finisher.forEach((ex: any) => planSteps.push({ ...ex, phase: "Finalizador" }));
+      if (activityData.cooldown) activityData.cooldown.forEach((ex: any) => planSteps.push({ ...ex, phase: "Alongamento" }));
+      if (activityData.steps) activityData.steps.forEach((s: string, i: number) => planSteps.push({ name: `Passo ${i + 1}`, description: s, phase: "Prática" }));
+      if (activityData.sections) activityData.sections.forEach((s: any) => planSteps.push({ name: s.name, description: s.instructions, phase: s.duration }));
+    }
 
     const hasStructuredPlan = planSteps.length > 0;
 
@@ -576,12 +733,9 @@ export default function RoutineHome() {
       const nextStep = planSteps[currentPlanStep + 1];
       const totalSteps = planSteps.length;
       const stepProgress = ((currentPlanStep + 1) / totalSteps) * 100;
-
       const radius = 100;
       const circumference = 2 * Math.PI * radius;
-      const elapsed = timerSeconds;
-      const totalSec = timerTotal || 1800;
-      const dashOffset = circumference * (1 - Math.min(elapsed / totalSec, 1));
+      const dashOffset = circumference * (1 - Math.min(timerSeconds / (timerTotal || 1800), 1));
 
       return (
         <div className="min-h-screen flex flex-col items-center justify-center px-6 safe-top" style={{ background: "linear-gradient(180deg, #1B4332, #0f2b20)" }}>
@@ -594,7 +748,6 @@ export default function RoutineHome() {
               <div className="h-full rounded-full bg-white/40 transition-all duration-500" style={{ width: `${stepProgress}%` }} />
             </div>
           </div>
-
           <div className="relative mb-6">
             <svg width="240" height="240" viewBox="0 0 240 240">
               <circle cx="120" cy="120" r={radius} fill="none" stroke="rgba(255,255,255,0.1)" strokeWidth="6" />
@@ -606,24 +759,22 @@ export default function RoutineHome() {
               <span className="text-5xl font-bold text-white font-mono tracking-wider">{fmt(timerSeconds)}</span>
             </div>
           </div>
-
           <h3 className="text-lg font-bold text-white text-center mb-1">{step?.name || "Em progresso"}</h3>
+          {step?.sets && <p className="text-white/70 text-sm">{step.sets}x{step.reps} — {step.rest}</p>}
           {step?.description && <p className="text-white/60 text-sm text-center mb-6 max-w-xs">{typeof step.description === 'string' ? step.description.slice(0, 120) : ''}</p>}
           {nextStep && <p className="text-white/40 text-xs mb-8">Próxima: {nextStep.name}</p>}
-
           <div className="flex items-center gap-6">
             <button onClick={() => setTimerRunning(false)}
               className="w-14 h-14 rounded-full bg-white/10 flex items-center justify-center active:scale-95 transition-transform">
               <Pause className="h-6 w-6 text-white" />
             </button>
-            {currentPlanStep < totalSteps - 1 && (
+            {currentPlanStep < planSteps.length - 1 ? (
               <button onClick={() => { setCurrentPlanStep(p => p + 1); if (navigator.vibrate) navigator.vibrate(100); }}
                 className="px-6 h-12 rounded-full bg-white/10 flex items-center gap-2 active:scale-95 transition-transform">
                 <span className="text-white text-sm font-medium">Próxima</span>
                 <ChevronRight className="h-4 w-4 text-white" />
               </button>
-            )}
-            {currentPlanStep === totalSteps - 1 && (
+            ) : (
               <button onClick={finishActivity}
                 className="px-6 h-12 rounded-full flex items-center gap-2 active:scale-95 transition-transform"
                 style={{ background: "linear-gradient(135deg, #C9A84C, #E8D590)" }}>
@@ -650,16 +801,15 @@ export default function RoutineHome() {
             {activityData.trainingName || activityData.title || "Seu plano personalizado"}
           </h2>
           {activityData._answers?.duration && <p className="text-white/60 text-sm">{activityData._answers.duration} minutos</p>}
+          {activityData.muscle_groups && <p className="text-white/70 text-sm mt-1">{activityData.muscle_groups.join(" + ")}</p>}
           {timerSeconds > 0 && <p className="text-white/70 text-sm mt-2 font-mono">{fmt(timerSeconds)} decorridos</p>}
         </div>
 
         <div className="px-5 space-y-3">
-          {/* Generic text */}
           {activityData.text && !hasStructuredPlan && (
             <Card className="border-none shadow-sm"><CardContent className="p-5 whitespace-pre-wrap text-sm leading-relaxed">{activityData.text}</CardContent></Card>
           )}
 
-          {/* Structured plan steps */}
           {hasStructuredPlan && planSteps.map((step, i) => {
             const isActive = i === currentPlanStep;
             const isDone = i < currentPlanStep;
@@ -678,23 +828,18 @@ export default function RoutineHome() {
                 <Card className={`flex-1 border-none shadow-sm transition-all ${isActive ? "ring-1 ring-primary/20" : ""}`}>
                   <CardContent className="p-4">
                     <div className="flex justify-between items-start">
-                      <div className="flex-1">
-                        <p className="font-semibold text-sm">{step.name}</p>
-                        {step.phase && <span className="text-[10px] text-muted-foreground font-medium uppercase tracking-wide">{step.phase}</span>}
-                      </div>
+                      <p className="font-semibold text-sm flex-1">{step.name}</p>
                       {step.sets && <span className="text-xs text-muted-foreground shrink-0 ml-2">{step.sets}x{step.reps}</span>}
                     </div>
-                    {step.description && <p className="text-xs text-muted-foreground mt-1 leading-relaxed">{typeof step.description === 'string' ? step.description : ''}</p>}
-                    {step.suggestedLoad && <p className="text-xs font-medium mt-1 text-primary">Carga: {step.suggestedLoad}</p>}
+                    {step.phase && <span className="text-[10px] text-muted-foreground font-medium uppercase tracking-wide">{step.phase}</span>}
                     {step.rest && <p className="text-xs text-muted-foreground">Descanso: {step.rest}</p>}
-                    {step.tip && <p className="text-xs mt-1 text-primary/80">{step.tip}</p>}
+                    {step.description && <p className="text-xs text-muted-foreground mt-1 leading-relaxed">{typeof step.description === 'string' ? step.description : ''}</p>}
                   </CardContent>
                 </Card>
               </div>
             );
           })}
 
-          {/* Closing message for meditation */}
           {activityData.closingMessage && (
             <Card className="border-none shadow-sm bg-accent/10"><CardContent className="p-4">
               <p className="text-xs font-semibold text-accent-foreground mb-1">Mensagem de encerramento</p>
@@ -702,115 +847,84 @@ export default function RoutineHome() {
             </CardContent></Card>
           )}
 
-          {/* Books with links */}
           {activityData.books && activityData.books.map((book: any, i: number) => (
-            <Card key={i} className="border-none shadow-sm">
-              <CardContent className="p-5">
-                <h3 className="font-bold text-sm">{book.title}</h3>
-                <p className="text-xs text-muted-foreground">{book.author}</p>
-                <p className="text-sm mt-2">{book.summary}</p>
-                {book.recoveryBenefit && <p className="text-xs italic text-muted-foreground mt-2">{book.recoveryBenefit}</p>}
-                {book.isFree && <span className="inline-block mt-2 text-[10px] font-bold px-2 py-0.5 rounded-full" style={{ background: "#D1FAE5", color: "#065F46" }}>Disponível gratuitamente</span>}
-                <div className="flex gap-2 mt-3">
-                  <a href={book.googleBooksLink || book.freeLink || `https://books.google.com/books?q=${encodeURIComponent(book.title + " " + book.author)}`}
-                    target="_blank" rel="noopener noreferrer"
-                    className="flex-1 py-2 px-3 rounded-xl text-xs font-semibold text-center transition-all active:scale-95"
-                    style={{ background: "#1B4332", color: "#fff" }}>
-                    Ver no Google Books
-                  </a>
-                  <a href={book.amazonLink || `https://www.amazon.com.br/s?k=${encodeURIComponent(book.title + " " + book.author)}`}
-                    target="_blank" rel="noopener noreferrer"
-                    className="flex-1 py-2 px-3 rounded-xl text-xs font-semibold text-center border transition-all active:scale-95"
-                    style={{ borderColor: "#E5E7EB" }}>
-                    Comprar na Amazon
-                  </a>
-                </div>
-              </CardContent>
-            </Card>
+            <Card key={i} className="border-none shadow-sm"><CardContent className="p-5">
+              <h3 className="font-bold text-sm">{book.title}</h3>
+              <p className="text-xs text-muted-foreground">{book.author}</p>
+              <p className="text-sm mt-2">{book.summary}</p>
+              {book.recoveryBenefit && <p className="text-xs italic text-muted-foreground mt-2">{book.recoveryBenefit}</p>}
+              {book.isFree && <span className="inline-block mt-2 text-[10px] font-bold px-2 py-0.5 rounded-full" style={{ background: "#D1FAE5", color: "#065F46" }}>Disponível gratuitamente</span>}
+              <div className="flex gap-2 mt-3">
+                <a href={book.googleBooksLink || `https://books.google.com/books?q=${encodeURIComponent(book.title + " " + book.author)}`}
+                  target="_blank" rel="noopener noreferrer"
+                  className="flex-1 py-2 px-3 rounded-xl text-xs font-semibold text-center transition-all active:scale-95"
+                  style={{ background: "#1B4332", color: "#fff" }}>Ver no Google Books</a>
+                <a href={book.amazonLink || `https://www.amazon.com.br/s?k=${encodeURIComponent(book.title + " " + book.author)}`}
+                  target="_blank" rel="noopener noreferrer"
+                  className="flex-1 py-2 px-3 rounded-xl text-xs font-semibold text-center border transition-all active:scale-95"
+                  style={{ borderColor: "#E5E7EB" }}>Comprar na Amazon</a>
+              </div>
+            </CardContent></Card>
           ))}
 
-          {/* Social suggestion */}
+          {activityData.dailyTip && (
+            <Card className="border-none shadow-sm"><CardContent className="p-4">
+              <p className="text-xs font-semibold mb-1">Dica do dia</p>
+              <p className="text-sm text-muted-foreground">{activityData.dailyTip}</p>
+            </CardContent></Card>
+          )}
+
           {activityData.suggestion && (
             <Card className="border-none shadow-sm"><CardContent className="p-5">
               <p className="text-sm leading-relaxed">{activityData.suggestion}</p>
-              {activityData.whyItHelps && <p className="text-xs text-muted-foreground mt-3 italic">{activityData.whyItHelps}</p>}
+              {activityData.whyItHelps && <p className="text-xs text-muted-foreground mt-2 italic">{activityData.whyItHelps}</p>}
             </CardContent></Card>
           )}
 
-          {activityData.nutritionTip && (
-            <Card className="border-none shadow-sm bg-accent/10"><CardContent className="p-4">
-              <p className="text-xs font-semibold text-accent-foreground mb-1">Dica nutricional pós-treino</p>
-              <p className="text-sm">{activityData.nutritionTip}</p>
-            </CardContent></Card>
-          )}
+          {/* Report textarea */}
+          <div className="pt-2 space-y-2">
+            <Textarea value={activityReport} onChange={e => setActivityReport(e.target.value)} placeholder="Como foi? (opcional)" rows={2} className="resize-none" />
+          </div>
 
-          {activityData.dailyTip && (
-            <Card className="border-none shadow-sm bg-accent/10"><CardContent className="p-4">
-              <p className="text-xs font-semibold text-accent-foreground mb-1">Dica do dia</p>
-              <p className="text-sm">{activityData.dailyTip}</p>
-            </CardContent></Card>
-          )}
-
-          {/* Completion section */}
-          <Card className="border-none shadow-sm"><CardContent className="p-5 space-y-4">
-            <h3 className="font-bold text-sm text-center">Como foi?</h3>
-            <div className="flex justify-center gap-2">
-              {[1,2,3,4,5].map(s => (
-                <button key={s} onClick={() => setActivityRating(s)}
-                  className="w-9 h-9 rounded-full border-2 flex items-center justify-center text-xs font-bold transition-all duration-200 active:scale-95"
-                  style={{
-                    borderColor: activityRating >= s ? "#1B4332" : "#D1D5DB",
-                    background: activityRating >= s ? "#1B4332" : "transparent",
-                    color: activityRating >= s ? "#fff" : "#9CA3AF",
-                  }}>
-                  {s}
-                </button>
-              ))}
-            </div>
-            <Textarea value={activityReport} onChange={e => setActivityReport(e.target.value)} placeholder="Conte como foi..." rows={2} className="resize-none border-border/50" />
-            <Button className="w-full h-[52px] text-base font-bold rounded-2xl text-white" style={{ background: "linear-gradient(135deg, #1B4332, #2D6A4F)" }} onClick={finishActivity}>
-              Concluir atividade
+          <div className="flex gap-3 pt-2">
+            <Button className="flex-1 h-[52px] text-base font-bold rounded-2xl text-white gap-2"
+              style={{ background: "linear-gradient(135deg, #1B4332, #2D6A4F)" }}
+              onClick={() => { setTimerRunning(true); }}>
+              {timerSeconds > 0 ? <><Play className="h-5 w-5" /> Continuar</> : <><Play className="h-5 w-5" /> Iniciar plano</>}
             </Button>
-          </CardContent></Card>
-
-          {/* Start timer button */}
-          {hasStructuredPlan && (
-            <Button className="w-full h-[52px] text-base font-bold rounded-2xl text-white" style={{ background: "linear-gradient(135deg, #1B4332, #2D6A4F)" }}
-              onClick={() => setTimerRunning(true)}>
-              <Play className="h-5 w-5 mr-2" /> Iniciar plano
-            </Button>
-          )}
+            {timerSeconds > 0 && (
+              <Button variant="outline" className="h-[52px] rounded-2xl font-bold" onClick={finishActivity}>
+                Concluir
+              </Button>
+            )}
+          </div>
         </div>
       </div>
     );
   }
 
-  // ─── Main screen ───
+  // ─── Main Screen ───
   return (
-    <div className="min-h-screen bg-[#F8F6F2] safe-top pb-28">
-      {/* Header with blur */}
-      <header className="sticky top-0 z-30 backdrop-blur-xl px-5 pt-6 pb-4" style={{ background: "rgba(27, 67, 50, 0.95)" }}>
-        <div className="max-w-lg mx-auto">
-          <div className="flex items-center justify-between mb-1">
-            <button onClick={() => navigate("/app")} className="w-9 h-9 rounded-full bg-white/10 flex items-center justify-center active:scale-95 transition-transform">
-              <ChevronLeft className="h-5 w-5 text-white" />
-            </button>
-            <button onClick={() => setShowSetup(true)} className="w-9 h-9 rounded-full bg-white/10 flex items-center justify-center active:scale-95 transition-transform">
-              <Settings2 className="h-4 w-4 text-white" />
-            </button>
-          </div>
-          <h1 className="text-2xl font-bold text-white" style={{ letterSpacing: "-0.5px" }}>Rotina</h1>
-          <p className="text-sm text-white/60 mt-0.5">{greeting}, {userName || "amigo"}. {greetingSub}</p>
-          {todayCount > 0 && (
-            <div className="mt-2 flex items-center gap-2">
-              <CheckCircle className="h-4 w-4" style={{ color: "#C9A84C" }} />
-              <span className="text-sm font-medium" style={{ color: "#C9A84C" }}>{todayCount} atividade{todayCount > 1 ? "s" : ""} hoje</span>
-            </div>
-          )}
+    <div className="min-h-screen bg-[#F8F6F2] safe-top pb-24">
+      <header className="px-5 pt-5 pb-4" style={{ background: "linear-gradient(135deg, #1B4332, #2D6A4F)" }}>
+        <div className="flex items-center justify-between mb-3">
+          <button onClick={() => navigate("/app")} className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center active:scale-95 transition-transform">
+            <ChevronLeft className="h-5 w-5 text-white" />
+          </button>
+          <button onClick={() => setShowSetup(true)} className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center active:scale-95 transition-transform">
+            <Settings2 className="h-5 w-5 text-white" />
+          </button>
         </div>
+        <h1 className="text-2xl font-bold text-white" style={{ letterSpacing: "-0.5px" }}>Rotina</h1>
+        <p className="text-sm text-white/60 mt-0.5">{greeting}, {userName || "amigo"}. {greetingSub}</p>
+        {todayCount > 0 && (
+          <div className="mt-2 flex items-center gap-2">
+            <CheckCircle className="h-4 w-4" style={{ color: "#C9A84C" }} />
+            <span className="text-sm font-medium" style={{ color: "#C9A84C" }}>{todayCount} atividade{todayCount > 1 ? "s" : ""} hoje</span>
+          </div>
+        )}
       </header>
 
-      {/* Tabs */}
       <div className="max-w-lg mx-auto px-5 pt-4 flex gap-2">
         {(["hoje", "historico"] as const).map(t => (
           <button key={t} className="flex-1 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200"
@@ -823,7 +937,6 @@ export default function RoutineHome() {
 
       <main className="max-w-lg mx-auto px-5 pt-4 space-y-3">
         {tab === "hoje" ? (<>
-          {/* Empty state */}
           {activeCategories.length === 0 && (
             <Card className="border-dashed border-2 border-border/50 bg-white/50">
               <CardContent className="py-10 text-center space-y-3">
@@ -839,7 +952,6 @@ export default function RoutineHome() {
             </Card>
           )}
 
-          {/* Ana suggestion card */}
           {activeCategories.length > 0 && (
             <div className="rounded-2xl p-5 space-y-3" style={{ background: "linear-gradient(135deg, #1B4332, #2D6A4F)" }}>
               <div className="flex items-center gap-3">
@@ -847,22 +959,85 @@ export default function RoutineHome() {
                 <p className="text-white/90 font-semibold text-sm">Sugestão da Ana</p>
               </div>
               {aiLoading ? (
-                <div className="flex items-center gap-2 py-1">
-                  <div className="h-3 w-3/4 bg-white/10 rounded-full animate-pulse" />
-                </div>
+                <div className="flex items-center gap-2 py-1"><div className="h-3 w-3/4 bg-white/10 rounded-full animate-pulse" /></div>
               ) : aiSuggestion ? (
                 <p className="text-white/80 text-sm leading-relaxed font-light">{aiSuggestion}</p>
               ) : (
                 <button onClick={() => fetchSuggestionAuto(activeCategories, preferences, userName)}
-                  className="text-white/50 text-sm font-medium hover:text-white/70 transition-colors">
-                  Ver sugestão
-                </button>
+                  className="text-white/50 text-sm font-medium hover:text-white/70 transition-colors">Ver sugestão</button>
               )}
             </div>
           )}
 
+          {/* Today's workout card (from fitness profile) */}
+          {activeCategories.includes("academia") && fitnessProfile && todayWorkout && (
+            <div className="rounded-2xl overflow-hidden shadow-sm bg-white">
+              <div className="p-4 flex items-center justify-between" style={{ background: "linear-gradient(135deg, #DC2626, #EF4444)" }}>
+                <div>
+                  <p className="text-white/70 text-xs font-medium uppercase tracking-widest">Treino de hoje</p>
+                  <h3 className="text-lg font-bold text-white mt-0.5">
+                    {Array.isArray((todayWorkout as any).muscle_groups) ? (todayWorkout as any).muscle_groups.join(" + ") : "Treino"}
+                  </h3>
+                  <p className="text-white/70 text-xs mt-1">{fitnessProfile.tempo_disponivel} min · {fitnessProfile.nivel} · Semana {getWeekNumber()}</p>
+                </div>
+                <button onClick={() => setShowFitnessSetup(true)} className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center active:scale-95">
+                  <Pencil className="h-3.5 w-3.5 text-white" />
+                </button>
+              </div>
+              <div className="p-4 space-y-2">
+                {Array.isArray((todayWorkout as any).exercises) && (todayWorkout as any).exercises.slice(0, 4).map((ex: any, i: number) => (
+                  <div key={i} className="flex items-center justify-between py-1.5 border-b border-border/30 last:border-0">
+                    <span className="text-sm font-medium">{ex.name}</span>
+                    <span className="text-xs text-muted-foreground">{ex.sets}x{ex.reps}</span>
+                  </div>
+                ))}
+                {Array.isArray((todayWorkout as any).exercises) && (todayWorkout as any).exercises.length > 4 && (
+                  <p className="text-xs text-muted-foreground text-center">+{(todayWorkout as any).exercises.length - 4} exercícios</p>
+                )}
+              </div>
+              <div className="px-4 pb-4">
+                <Button className="w-full h-[48px] text-sm font-bold rounded-2xl text-white gap-2"
+                  style={{ background: "linear-gradient(135deg, #DC2626, #B91C1C)" }}
+                  onClick={() => startWorkoutFromPlan(todayWorkout)}>
+                  <Play className="h-4 w-4" /> Iniciar treino
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {/* Rest day message */}
+          {activeCategories.includes("academia") && fitnessProfile && !todayWorkout && !workoutLoading && (
+            <Card className="border-none shadow-sm"><CardContent className="p-5 text-center">
+              <Dumbbell className="h-8 w-8 mx-auto text-muted-foreground/30 mb-2" />
+              <p className="text-sm font-semibold">Dia de descanso</p>
+              <p className="text-xs text-muted-foreground mt-1">Aproveite para se recuperar. Seus treinos estão programados para: {fitnessProfile.dias_semana.map(d => DAY_LABELS[d] || d).join(", ")}</p>
+              <button onClick={() => setShowFitnessSetup(true)} className="text-xs text-primary font-medium mt-3 inline-block">Editar perfil</button>
+            </CardContent></Card>
+          )}
+
           {/* Category cards */}
           {activeCategories.map(catId => {
+            // Skip academia here — it's handled above with the fitness profile card
+            if (catId === "academia") {
+              if (!fitnessProfile) {
+                // Show setup prompt
+                return (
+                  <button key={catId} onClick={() => setShowFitnessSetup(true)}
+                    className="w-full flex items-center gap-4 p-4 bg-white rounded-2xl shadow-sm active:scale-[0.98] transition-all duration-200" style={{ height: "72px" }}>
+                    <div className="w-11 h-11 rounded-full flex items-center justify-center shrink-0" style={{ background: "#DC262612" }}>
+                      <Dumbbell className="h-5 w-5" style={{ color: "#DC2626" }} />
+                    </div>
+                    <div className="flex-1 min-w-0 text-left">
+                      <p className="font-bold text-sm">Academia</p>
+                      <p className="text-xs text-muted-foreground">Configure seu perfil de treino</p>
+                    </div>
+                    <ChevronRight className="h-4 w-4 text-muted-foreground/50" />
+                  </button>
+                );
+              }
+              return null; // Already rendered above
+            }
+
             const cat = CATEGORIES.find(c => c.id === catId);
             if (!cat) return null;
             const todayDone = activities.some(a => a.category === catId && new Date(a.completed_at).toDateString() === new Date().toDateString());
@@ -870,12 +1045,8 @@ export default function RoutineHome() {
             const streak = activities.filter(a => a.category === catId).length;
 
             return (
-              <button
-                key={catId}
-                onClick={() => startFlow(catId)}
-                className="w-full flex items-center gap-4 p-4 bg-white rounded-2xl shadow-sm active:scale-[0.98] transition-all duration-200"
-                style={{ height: "72px" }}
-              >
+              <button key={catId} onClick={() => startFlow(catId)}
+                className="w-full flex items-center gap-4 p-4 bg-white rounded-2xl shadow-sm active:scale-[0.98] transition-all duration-200" style={{ height: "72px" }}>
                 <div className="w-11 h-11 rounded-full flex items-center justify-center shrink-0" style={{ background: `${cat.color}12` }}>
                   <span style={{ color: cat.color }}>{cat.icon}</span>
                 </div>
@@ -890,16 +1061,13 @@ export default function RoutineHome() {
                   </p>
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
-                  {streak > 0 && (
-                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full" style={{ background: "#D1FAE5", color: "#065F46" }}>{streak}</span>
-                  )}
+                  {streak > 0 && <span className="text-[10px] font-bold px-2 py-0.5 rounded-full" style={{ background: "#D1FAE5", color: "#065F46" }}>{streak}</span>}
                   <ChevronRight className="h-4 w-4 text-muted-foreground/50" />
                 </div>
               </button>
             );
           })}
 
-          {/* Evening reflection */}
           {isEvening && activeCategories.length > 0 && (
             <Card className="border-none shadow-sm bg-white"><CardContent className="p-5 space-y-3">
               <div className="flex items-center gap-2">
@@ -924,42 +1092,33 @@ export default function RoutineHome() {
             </CardContent></Card>
           )}
         </>) : (
-          /* ─── History tab ─── */
           <div className="space-y-4">
-            {/* Weekly chart */}
-            <Card className="border-none shadow-sm bg-white">
-              <CardContent className="p-5">
-                <h3 className="font-bold text-sm mb-3" style={{ letterSpacing: "-0.3px" }}>Consistência semanal</h3>
-                <div className="h-32">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <AreaChart data={weeklyData}>
-                      <defs>
-                        <linearGradient id="routineGrad" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor="#1B4332" stopOpacity={0.2} />
-                          <stop offset="95%" stopColor="#1B4332" stopOpacity={0} />
-                        </linearGradient>
-                      </defs>
-                      <XAxis dataKey="name" tick={{ fontSize: 11, fill: "#9CA3AF" }} axisLine={false} tickLine={false} />
-                      <YAxis hide allowDecimals={false} />
-                      <Tooltip contentStyle={{ borderRadius: 12, border: "none", boxShadow: "0 4px 12px rgba(0,0,0,0.08)", fontSize: 12 }} />
-                      <Area type="monotone" dataKey="count" stroke="#1B4332" strokeWidth={2} fill="url(#routineGrad)" />
-                    </AreaChart>
-                  </ResponsiveContainer>
-                </div>
-              </CardContent>
-            </Card>
+            <Card className="border-none shadow-sm bg-white"><CardContent className="p-5">
+              <h3 className="font-bold text-sm mb-3" style={{ letterSpacing: "-0.3px" }}>Consistência semanal</h3>
+              <div className="h-32">
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart data={weeklyData}>
+                    <defs><linearGradient id="routineGrad" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#1B4332" stopOpacity={0.2} /><stop offset="95%" stopColor="#1B4332" stopOpacity={0} />
+                    </linearGradient></defs>
+                    <XAxis dataKey="name" tick={{ fontSize: 11, fill: "#9CA3AF" }} axisLine={false} tickLine={false} />
+                    <YAxis hide allowDecimals={false} />
+                    <Tooltip contentStyle={{ borderRadius: 12, border: "none", boxShadow: "0 4px 12px rgba(0,0,0,0.08)", fontSize: 12 }} />
+                    <Area type="monotone" dataKey="count" stroke="#1B4332" strokeWidth={2} fill="url(#routineGrad)" />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </div>
+            </CardContent></Card>
 
-            <Card className="border-none shadow-sm bg-white">
-              <CardContent className="py-4 px-5 flex items-center gap-4">
-                <div className="w-12 h-12 rounded-full flex items-center justify-center" style={{ background: "linear-gradient(135deg, #C9A84C, #E8D590)" }}>
-                  <Activity className="h-5 w-5" style={{ color: "#1B4332" }} />
-                </div>
-                <div>
-                  <p className="font-bold text-lg" style={{ letterSpacing: "-0.5px" }}>{activities.length}</p>
-                  <p className="text-xs text-muted-foreground">Total de atividades</p>
-                </div>
-              </CardContent>
-            </Card>
+            <Card className="border-none shadow-sm bg-white"><CardContent className="py-4 px-5 flex items-center gap-4">
+              <div className="w-12 h-12 rounded-full flex items-center justify-center" style={{ background: "linear-gradient(135deg, #C9A84C, #E8D590)" }}>
+                <Activity className="h-5 w-5" style={{ color: "#1B4332" }} />
+              </div>
+              <div>
+                <p className="font-bold text-lg" style={{ letterSpacing: "-0.5px" }}>{activities.length}</p>
+                <p className="text-xs text-muted-foreground">Total de atividades</p>
+              </div>
+            </CardContent></Card>
 
             <h3 className="font-bold text-xs text-muted-foreground uppercase tracking-widest">Últimas atividades</h3>
             {activities.length === 0 ? (
@@ -995,15 +1154,215 @@ export default function RoutineHome() {
   );
 }
 
-/* ─── Setup Sheet ─── */
+/* ─── Fitness Profile Setup ─── */
+const DAYS_OPTIONS = [
+  { value: "seg", label: "Seg" }, { value: "ter", label: "Ter" }, { value: "qua", label: "Qua" },
+  { value: "qui", label: "Qui" }, { value: "sex", label: "Sex" }, { value: "sab", label: "Sáb" }, { value: "dom", label: "Dom" },
+];
+
+function FitnessProfileSetup({ existing, onSave, onClose }: {
+  existing: FitnessProfile | null;
+  onSave: (fp: Omit<FitnessProfile, "id" | "user_id">) => void;
+  onClose: () => void;
+}) {
+  const [step, setStep] = useState(0);
+  const [modalidade, setModalidade] = useState(existing?.modalidade || "academia");
+  const [nivel, setNivel] = useState(existing?.nivel || "");
+  const [objetivo, setObjetivo] = useState(existing?.objetivo || "");
+  const [diasSemana, setDiasSemana] = useState<string[]>(existing?.dias_semana || []);
+  const [tempoDisponivel, setTempoDisponivel] = useState(existing?.tempo_disponivel || 45);
+  const [equipamento, setEquipamento] = useState(existing?.equipamento || "academia_completa");
+  const [pesoKg, setPesoKg] = useState(existing?.peso_kg?.toString() || "");
+  const [alturaCm, setAlturaCm] = useState(existing?.altura_cm?.toString() || "");
+  const [restricoes, setRestricoes] = useState(existing?.restricoes || "");
+
+  const totalSteps = 5;
+
+  const canContinue = () => {
+    if (step === 0) return !!nivel;
+    if (step === 1) return !!objetivo;
+    if (step === 2) return diasSemana.length > 0;
+    if (step === 3) return !!tempoDisponivel;
+    return true;
+  };
+
+  const handleSave = () => {
+    onSave({
+      modalidade,
+      nivel,
+      objetivo,
+      dias_semana: diasSemana,
+      tempo_disponivel: tempoDisponivel,
+      equipamento,
+      peso_kg: pesoKg ? parseFloat(pesoKg) : null,
+      altura_cm: alturaCm ? parseFloat(alturaCm) : null,
+      restricoes: restricoes || null,
+    });
+  };
+
+  const ChipSelect = ({ options, selected, onSelect, multi = false }: {
+    options: { value: string; label: string }[];
+    selected: string | string[];
+    onSelect: (v: string) => void;
+    multi?: boolean;
+  }) => (
+    <div className="grid grid-cols-2 gap-3">
+      {options.map(opt => {
+        const isActive = multi ? (selected as string[]).includes(opt.value) : selected === opt.value;
+        return (
+          <button key={opt.value} onClick={() => onSelect(opt.value)}
+            className="p-4 rounded-2xl border-[1.5px] text-left transition-all duration-200 active:scale-[0.98]"
+            style={{
+              borderColor: isActive ? "#1B4332" : "#E5E7EB",
+              background: isActive ? "hsl(153 40% 15% / 0.05)" : "#fff",
+            }}>
+            <span className="font-semibold text-sm" style={{ color: isActive ? "#1B4332" : "#374151" }}>{opt.label}</span>
+          </button>
+        );
+      })}
+    </div>
+  );
+
+  return (
+    <div className="min-h-screen bg-[#F8F6F2] safe-top flex flex-col animate-fade-in">
+      <div className="px-5 pt-5 pb-4">
+        <div className="flex items-center justify-between mb-4">
+          <button onClick={() => { if (step > 0) setStep(step - 1); else onClose(); }}
+            className="w-10 h-10 rounded-full bg-white flex items-center justify-center shadow-sm active:scale-95 transition-transform">
+            <ChevronLeft className="h-5 w-5 text-foreground" />
+          </button>
+          <span className="text-sm font-medium text-muted-foreground">{step + 1} de {totalSteps}</span>
+          <button onClick={onClose} className="w-10 h-10 rounded-full bg-white flex items-center justify-center shadow-sm active:scale-95 transition-transform">
+            <X className="h-5 w-5 text-muted-foreground" />
+          </button>
+        </div>
+        <Progress value={((step + 1) / totalSteps) * 100} className="h-1.5" />
+      </div>
+
+      <div className="flex-1 px-6 pt-6 overflow-y-auto">
+        {step === 0 && (<>
+          <h2 className="text-2xl font-bold tracking-tight text-center mb-2" style={{ letterSpacing: "-0.5px" }}>Qual seu nível?</h2>
+          <p className="text-sm text-muted-foreground text-center mb-8">Seja honesto — isso ajuda a montar o treino ideal</p>
+          <ChipSelect
+            options={[
+              { value: "iniciante", label: "Iniciante" },
+              { value: "intermediario", label: "Intermediário" },
+              { value: "avancado", label: "Avançado" },
+            ]}
+            selected={nivel} onSelect={setNivel}
+          />
+        </>)}
+
+        {step === 1 && (<>
+          <h2 className="text-2xl font-bold tracking-tight text-center mb-2" style={{ letterSpacing: "-0.5px" }}>Qual seu objetivo?</h2>
+          <p className="text-sm text-muted-foreground text-center mb-8">Isso define a estrutura dos treinos</p>
+          <ChipSelect
+            options={[
+              { value: "hipertrofia", label: "Hipertrofia" },
+              { value: "emagrecimento", label: "Emagrecimento" },
+              { value: "condicionamento", label: "Condicionamento" },
+              { value: "saude_geral", label: "Saúde geral" },
+            ]}
+            selected={objetivo} onSelect={setObjetivo}
+          />
+        </>)}
+
+        {step === 2 && (<>
+          <h2 className="text-2xl font-bold tracking-tight text-center mb-2" style={{ letterSpacing: "-0.5px" }}>Quais dias você treina?</h2>
+          <p className="text-sm text-muted-foreground text-center mb-8">Selecione de 2 a 6 dias</p>
+          <div className="flex flex-wrap gap-3 justify-center">
+            {DAYS_OPTIONS.map(d => {
+              const active = diasSemana.includes(d.value);
+              return (
+                <button key={d.value}
+                  onClick={() => setDiasSemana(prev => prev.includes(d.value) ? prev.filter(x => x !== d.value) : [...prev, d.value])}
+                  className="w-14 h-14 rounded-2xl border-[1.5px] flex items-center justify-center text-sm font-bold transition-all active:scale-95"
+                  style={{
+                    borderColor: active ? "#1B4332" : "#E5E7EB",
+                    background: active ? "#1B4332" : "#fff",
+                    color: active ? "#fff" : "#374151",
+                  }}>
+                  {d.label}
+                </button>
+              );
+            })}
+          </div>
+          {diasSemana.length > 0 && (
+            <p className="text-center text-sm text-muted-foreground mt-4">{diasSemana.length} dia{diasSemana.length > 1 ? "s" : ""} por semana</p>
+          )}
+        </>)}
+
+        {step === 3 && (<>
+          <h2 className="text-2xl font-bold tracking-tight text-center mb-2" style={{ letterSpacing: "-0.5px" }}>Tempo por treino?</h2>
+          <p className="text-sm text-muted-foreground text-center mb-8">Inclui aquecimento e alongamento</p>
+          <ChipSelect
+            options={[
+              { value: "30", label: "30 min" },
+              { value: "45", label: "45 min" },
+              { value: "60", label: "60 min" },
+              { value: "90", label: "90 min" },
+            ]}
+            selected={String(tempoDisponivel)}
+            onSelect={v => setTempoDisponivel(parseInt(v))}
+          />
+
+          <div className="mt-8 space-y-4">
+            <h3 className="text-base font-bold" style={{ letterSpacing: "-0.3px" }}>Equipamento</h3>
+            <ChipSelect
+              options={[
+                { value: "academia_completa", label: "Academia completa" },
+                { value: "em_casa", label: "Em casa" },
+                { value: "sem_equipamento", label: "Sem equipamento" },
+              ]}
+              selected={equipamento} onSelect={setEquipamento}
+            />
+          </div>
+        </>)}
+
+        {step === 4 && (<>
+          <h2 className="text-2xl font-bold tracking-tight text-center mb-2" style={{ letterSpacing: "-0.5px" }}>Dados complementares</h2>
+          <p className="text-sm text-muted-foreground text-center mb-8">Opcional — ajuda a personalizar os treinos</p>
+          <div className="space-y-4">
+            <div className="flex gap-4">
+              <div className="flex-1">
+                <label className="text-xs font-medium text-muted-foreground mb-1 block">Peso (kg)</label>
+                <Input type="number" placeholder="75" value={pesoKg} onChange={e => setPesoKg(e.target.value)} />
+              </div>
+              <div className="flex-1">
+                <label className="text-xs font-medium text-muted-foreground mb-1 block">Altura (cm)</label>
+                <Input type="number" placeholder="175" value={alturaCm} onChange={e => setAlturaCm(e.target.value)} />
+              </div>
+            </div>
+            <div>
+              <label className="text-xs font-medium text-muted-foreground mb-1 block">Restrições ou lesões</label>
+              <Textarea placeholder="Ex: dor no joelho, hérnia de disco..." value={restricoes} onChange={e => setRestricoes(e.target.value)} rows={3} className="resize-none" />
+            </div>
+          </div>
+        </>)}
+      </div>
+
+      <div className="px-6 pb-8 pt-4">
+        <Button className="w-full h-[52px] text-base font-bold rounded-2xl text-white transition-all duration-200"
+          style={{ background: canContinue() ? "linear-gradient(135deg, #1B4332, #2D6A4F)" : "#D1D5DB" }}
+          disabled={!canContinue()}
+          onClick={() => { if (step < totalSteps - 1) setStep(step + 1); else handleSave(); }}>
+          {step === totalSteps - 1 ? "Salvar e gerar treinos" : "Continuar"}
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+/* ─── Routine Setup Sheet ─── */
 const SPORT_TYPES = ["Corrida", "Futebol", "Beach Tennis", "Vôlei", "Caminhada", "Natação", "Outro"];
 const READING_THEMES = ["Autoajuda", "Espiritualidade", "Ficção", "Finanças", "Outro"];
 const SPIRITUAL_PRACTICES = ["Meditação", "Oração", "Reflexão", "Outra"];
 const SOCIAL_TYPES = ["Família", "Amigos", "Grupo de apoio"];
 const GYM_LEVELS = ["Iniciante", "Intermediário", "Avançado"];
-const GYM_FOCUS = ["Peito e Tríceps", "Costas e Bíceps", "Pernas", "Ombro", "Full Body", "Cardio"];
 
-function RoutineSetupSheet({ open, onOpenChange, activeCategories, preferences, onSave }: { open: boolean; onOpenChange: (v: boolean) => void; activeCategories: string[]; preferences: Record<string, any>; onSave: (c: string[], p: Record<string, any>) => void; }) {
+function RoutineSetupSheet({ open, onOpenChange, activeCategories, preferences, onSave }: {
+  open: boolean; onOpenChange: (v: boolean) => void; activeCategories: string[]; preferences: Record<string, any>; onSave: (c: string[], p: Record<string, any>) => void;
+}) {
   const [cats, setCats] = useState<string[]>(activeCategories);
   const [prefs, setPrefs] = useState<Record<string, any>>(preferences);
   useEffect(() => { setCats(activeCategories); setPrefs(preferences); }, [activeCategories, preferences, open]);
@@ -1058,7 +1417,6 @@ function RoutineSetupSheet({ open, onOpenChange, activeCategories, preferences, 
             })}
           </div>
         </div>
-        {/* Fixed save button */}
         <div className="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-background via-background to-transparent">
           <Button className="w-full h-[52px] text-base font-bold rounded-2xl text-white" disabled={cats.length < 2}
             style={cats.length >= 2 ? { background: "linear-gradient(135deg, #1B4332, #2D6A4F)" } : {}}
