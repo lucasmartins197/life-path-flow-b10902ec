@@ -262,10 +262,29 @@ export default function RoutineHome() {
     setFlowAnswers(newAnswers);
     setFlowSelected(null);
 
-    if (flowStep + 1 < steps.length) {
+    // Check if this is a non-AI sport after selecting modality
+    if (flowCategory === "esporte" && currentStep.key === "type" && NON_AI_SPORTS.includes(flowSelected)) {
+      // Show info card directly, no AI needed
+      setFlowCategory(null);
+      const msg = NON_AI_SPORT_MESSAGES[flowSelected] || `Busque locais para jogar ${flowSelected} na sua cidade.`;
+      const city = "sua cidade";
+      const searchQuery = encodeURIComponent(`${flowSelected} ${city}`);
+      setActivityData({
+        _category: "esporte",
+        _answers: newAnswers,
+        _nonAiSport: true,
+        _sportName: flowSelected,
+        _message: msg,
+        _searchUrl: `https://www.google.com/search?q=${searchQuery}`,
+      });
+      return;
+    }
+
+    // Recalculate steps with new answers (steps may change based on answers)
+    const updatedSteps = getFlowSteps(flowCategory, newAnswers);
+    if (flowStep + 1 < updatedSteps.length) {
       setFlowStep(flowStep + 1);
     } else {
-      // All done, call AI
       generatePlan(flowCategory, newAnswers);
     }
   }
