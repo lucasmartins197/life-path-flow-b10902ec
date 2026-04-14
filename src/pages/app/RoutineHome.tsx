@@ -96,10 +96,6 @@ function getFlowSteps(categoryId: string, answers: Record<string, string>): Flow
         { label: "Família", value: "Família" }, { label: "Amigos", value: "Amigos" },
         { label: "Grupo de apoio", value: "Grupo de apoio" }, { label: "Contato Âncora", value: "Contato Âncora" },
       ]},
-      { question: "Que tipo de interação?", key: "interaction", options: [
-        { label: "Ligação", value: "Ligação" }, { label: "Encontro presencial", value: "Encontro presencial" },
-        { label: "Mensagem especial", value: "Mensagem especial" }, { label: "Jantar/café", value: "Jantar/café" },
-      ]},
     ];
   }
   return [];
