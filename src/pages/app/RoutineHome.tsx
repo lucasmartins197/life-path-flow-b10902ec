@@ -183,6 +183,15 @@ export default function RoutineHome() {
   const [activityReport, setActivityReport] = useState("");
   const [aiFeedback, setAiFeedback] = useState("");
 
+  // Social interaction state
+  const [socialState, setSocialState] = useState<"ana_question" | "register" | "confirmed" | "followup" | "done" | null>(null);
+  const [socialWith, setSocialWith] = useState("");
+  const [socialDuration, setSocialDuration] = useState("");
+  const [socialTime, setSocialTime] = useState("");
+  const [socialReport, setSocialReport] = useState("");
+  const [socialFeedback, setSocialFeedback] = useState("");
+  const [socialSaving, setSocialSaving] = useState(false);
+
   // Reflection
   const [reflectionText, setReflectionText] = useState("");
   const [reflectionResponse, setReflectionResponse] = useState("");
