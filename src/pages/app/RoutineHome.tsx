@@ -107,7 +107,7 @@ function getFlowSteps(categoryId: string, answers: Record<string, string>): Flow
       ]},
       { question: "Quanto tempo você tem?", key: "duration", options: [
         { label: "5 min", value: "5" }, { label: "10 min", value: "10" },
-        { label: "15 min", value: "15" }, { label: "20 min", value: "20" },
+        { label: "15 min", value: "15" }, { label: "20 min", value: "20" }, { label: "30 min", value: "30" },
       ]},
     ];
   }
