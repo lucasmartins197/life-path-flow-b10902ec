@@ -203,7 +203,7 @@ function CreatePostDialog({
 }
 
 function CommentsDrawer({
-  open, onClose, postId, onAddComment
+  open, onClose, postId, onAddComment, onFetchComments
 }: {
   open: boolean;
   onClose: () => void;
@@ -422,7 +422,7 @@ export default function CommunityHome() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const {
-    posts, loading, createPost, toggleLike, addComment, reportPost, uploadPostImage
+    posts, loading, createPost, toggleLike, addComment, reportPost, uploadPostImage, fetchComments
   } = useCommunityFeed();
   const [showCreate, setShowCreate] = useState(false);
   const [commentsPostId, setCommentsPostId] = useState<string | null>(null);
