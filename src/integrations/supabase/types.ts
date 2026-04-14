@@ -1765,6 +1765,54 @@ export type Database = {
         }
         Relationships: []
       }
+      user_fitness_profile: {
+        Row: {
+          altura_cm: number | null
+          created_at: string
+          dias_semana: Json
+          equipamento: string
+          id: string
+          modalidade: string
+          nivel: string
+          objetivo: string
+          peso_kg: number | null
+          restricoes: string | null
+          tempo_disponivel: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          altura_cm?: number | null
+          created_at?: string
+          dias_semana?: Json
+          equipamento?: string
+          id?: string
+          modalidade?: string
+          nivel?: string
+          objetivo?: string
+          peso_kg?: number | null
+          restricoes?: string | null
+          tempo_disponivel?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          altura_cm?: number | null
+          created_at?: string
+          dias_semana?: Json
+          equipamento?: string
+          id?: string
+          modalidade?: string
+          nivel?: string
+          objetivo?: string
+          peso_kg?: number | null
+          restricoes?: string | null
+          tempo_disponivel?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -1837,6 +1885,39 @@ export type Database = {
           link?: string
           scheduled_at?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      weekly_workout_plan: {
+        Row: {
+          created_at: string
+          day_letter: string
+          exercises: Json
+          id: string
+          modalidade: string
+          muscle_groups: string[]
+          user_id: string
+          week_number: number
+        }
+        Insert: {
+          created_at?: string
+          day_letter: string
+          exercises?: Json
+          id?: string
+          modalidade?: string
+          muscle_groups?: string[]
+          user_id: string
+          week_number: number
+        }
+        Update: {
+          created_at?: string
+          day_letter?: string
+          exercises?: Json
+          id?: string
+          modalidade?: string
+          muscle_groups?: string[]
+          user_id?: string
+          week_number?: number
         }
         Relationships: []
       }
