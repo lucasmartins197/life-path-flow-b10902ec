@@ -431,6 +431,18 @@ export default function RoutineHome() {
     setFlowAnswers(newAnswers);
     setFlowSelected(null);
 
+    // Social: after selecting "com quem", go to custom social flow
+    if (flowCategory === "social" && currentStep.key === "with") {
+      setFlowCategory(null);
+      setSocialWith(flowSelected);
+      setSocialState("ana_question");
+      setSocialDuration("");
+      setSocialTime("");
+      setSocialReport("");
+      setSocialFeedback("");
+      return;
+    }
+
     if (flowCategory === "esporte" && currentStep.key === "type" && NON_AI_SPORTS.includes(flowSelected)) {
       setFlowCategory(null);
       const msg = NON_AI_SPORT_MESSAGES[flowSelected] || `Busque locais para jogar ${flowSelected} na sua cidade.`;
