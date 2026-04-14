@@ -525,6 +525,64 @@ export default function RoutineHome() {
     setActivityRating(0);
   }
 
+  function resetSocial() {
+    setSocialState(null);
+    setSocialWith("");
+    setSocialDuration("");
+    setSocialTime("");
+    setSocialReport("");
+    setSocialFeedback("");
+  }
+
+  const ANA_SOCIAL_MESSAGES: Record<string, string> = {
+    "Família": `Que ótimo, ${userName || "amigo(a)"}! Tempo com a família é um dos pilares da recuperação. Quanto tempo você vai dedicar a isso hoje, e que horas?`,
+    "Amigos": `Isso é lindo, ${userName || "amigo(a)"}! Conexão com amigos faz muita diferença. Me conta — quanto tempo você reservou e quando vai ser?`,
+    "Grupo de apoio": `Participar de um grupo é muito corajoso, ${userName || "amigo(a)"}. Quanto tempo vai dedicar hoje?`,
+    "Contato Âncora": `Seu âncora vai adorar saber de você, ${userName || "amigo(a)"}. Quanto tempo e quando vai ser esse contato?`,
+  };
+
+  async function registerSocialCommitment() {
+    if (!user || !socialDuration) return;
+    setSocialSaving(true);
+    const timeLabel = socialTime || "em breve";
+    await supabase.from("routine_activities").insert({
+      user_id: user.id,
+      category: "interacao_social",
+      activity_data: { com_quem: socialWith, duracao: socialDuration, horario: timeLabel } as any,
+      duration_minutes: parseInt(socialDuration) || 30,
+    } as any);
+    setSocialState("confirmed");
+    setSocialSaving(false);
+    toast.success("Compromisso registrado");
+    loadData();
+  }
+
+  async function submitSocialFollowup(text: string) {
+    if (!user) return;
+    setSocialSaving(true);
+    await supabase.from("routine_activities").insert({
+      user_id: user.id,
+      category: "interacao_social",
+      activity_data: { com_quem: socialWith, duracao: socialDuration, horario: socialTime, relato_posterior: text || "Foi bem" } as any,
+      duration_minutes: parseInt(socialDuration) || 30,
+    } as any);
+
+    // Get Ana's validation response
+    if (text.trim()) {
+      try {
+        const { data } = await supabase.functions.invoke("routine-ai", {
+          body: { type: "feedback", category: "interacao_social", preferences: { rating: 5, report: `Tempo com ${socialWith}: ${text}` }, userName }
+        });
+        if (data?.message) setSocialFeedback(data.message);
+      } catch {}
+    } else {
+      setSocialFeedback(`Que bom que foi bem! Cada momento com ${socialWith.toLowerCase()} fortalece sua jornada. Até a próxima.`);
+    }
+    setSocialState("done");
+    setSocialSaving(false);
+    loadData();
+  }
+
   async function sendReflection() {
     if (!user || !reflectionText.trim()) return;
     setReflectionLoading(true);
