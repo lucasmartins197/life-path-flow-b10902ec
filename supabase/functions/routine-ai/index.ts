@@ -25,46 +25,122 @@ serve(async (req) => {
       systemPrompt = `Você é Ana, terapeuta acolhedora do app Apostando na Vida. Dê uma sugestão curta e carinhosa (2-3 frases) de atividade para o usuário fazer AGORA (período: ${period}). Baseie-se nas categorias ativas dele: ${cats.join(", ")}. Use o nome dele se disponível. Tom: amiga terapeuta, nunca robótico. Seja específica e prática.`;
       userPrompt = `Usuário: ${userName || "amigo(a)"}. Categorias ativas: ${JSON.stringify(cats)}. Período: ${period}. Preferências: ${JSON.stringify(preferences)}.`;
 
+    } else if (type === "weekly_plan") {
+      // Generate full weekly workout plan based on fitness profile
+      const { nivel, objetivo, dias_semana, tempo_disponivel, equipamento, peso_kg, altura_cm, restricoes, modalidade, week_number } = preferences || {};
+      const dias = dias_semana || [];
+      const numDias = dias.length;
+
+      let splitDesc = "";
+      if (modalidade === "academia" || !modalidade) {
+        if (numDias <= 3) {
+          splitDesc = `Dia A: Peito + Tríceps + Ombro\nDia B: Costas + Bíceps + Abdômen\nDia C: Pernas + Glúteos`;
+        } else if (numDias === 4) {
+          splitDesc = `Dia A: Peito + Tríceps\nDia B: Costas + Bíceps\nDia C: Pernas\nDia D: Ombro + Abdômen`;
+        } else {
+          splitDesc = `Dia A: Peito\nDia B: Costas\nDia C: Pernas\nDia D: Ombro + Abdômen\nDia E: Braços`;
+        }
+
+        const dayLetters = ["A", "B", "C", "D", "E"].slice(0, Math.min(numDias, 5));
+
+        let exerciseCount = "";
+        const dur = tempo_disponivel || 45;
+        if (dur <= 15) exerciseCount = "APENAS 3-4 exercícios principais. SEM aquecimento separado. Direto ao ponto.";
+        else if (dur <= 30) exerciseCount = "Aquecimento 5min + 5-6 exercícios + alongamento 3min.";
+        else if (dur <= 45) exerciseCount = "Aquecimento 7min + 7-8 exercícios + alongamento 5min.";
+        else exerciseCount = "Aquecimento 10min + 8-9 exercícios + 1 finalizador + alongamento 8min.";
+
+        systemPrompt = `Você é um personal trainer profissional. Gere um plano semanal completo de treinos de academia.
+
+Perfil do usuário:
+- Nível: ${nivel || "Iniciante"}
+- Objetivo: ${objetivo || "Saúde geral"}
+- Tempo por treino: ${dur} minutos
+- Equipamento: ${equipamento || "Academia completa"}
+- Peso: ${peso_kg || "?"}kg, Altura: ${altura_cm || "?"}cm
+- Restrições/lesões: ${restricoes || "nenhuma"}
+- Semana número: ${week_number || 1} (VARIE os exercícios a cada semana para o mesmo grupo muscular - evite acomodação)
+
+Divisão muscular:
+${splitDesc}
+
+${exerciseCount}
+
+FORMATO: Cada exercício em UMA linha: "Nome — Xséries x Xreps — Xseg descanso". Sem descrições longas.
+
+Responda em JSON EXATO:
+{
+  "days": [
+    ${dayLetters.map(letter => `{
+      "day_letter": "${letter}",
+      "muscle_groups": ["grupo1", "grupo2"],
+      "trainingName": "nome do treino",
+      "exercises": [
+        {"name": "exercício", "sets": 4, "reps": "10", "rest": "60seg", "notes": "opcional"}
+      ]
+    }`).join(",\n    ")}
+  ]
+}`;
+        userPrompt = `Gere o plano da semana ${week_number || 1} agora.`;
+
+      } else {
+        // Caminhada / Corrida
+        const mod = modalidade === "corrida" ? "corrida" : "caminhada";
+        systemPrompt = `Você é um personal trainer. Gere um plano semanal progressivo de ${mod} para ${numDias} dias.
+
+Perfil: Nível ${nivel || "Iniciante"}, Objetivo: ${objetivo || "Condicionamento"}, Tempo: ${tempo_disponivel || 30}min por sessão.
+Semana ${week_number || 1}: ajuste a intensidade progressivamente (semana 1 mais leve, semana 4 mais intensa).
+
+Formato SUCINTO. Máximo 5 linhas por dia.
+
+Responda em JSON:
+{
+  "days": [
+    ${dias.slice(0, numDias).map((_: string, i: number) => `{
+      "day_letter": "${String.fromCharCode(65 + i)}",
+      "muscle_groups": ["${mod}"],
+      "trainingName": "${mod} dia ${i + 1}",
+      "exercises": [{"name": "descrição sucinta do treino", "sets": 1, "reps": "1", "rest": "", "notes": ""}]
+    }`).join(",\n    ")}
+  ]
+}`;
+        userPrompt = `Gere o plano da semana ${week_number || 1}.`;
+      }
+
     } else if (type === "sport") {
       const sportType = preferences?.type || "Corrida";
       const duration = preferences?.duration || 30;
       const level = preferences?.level || "Iniciante";
 
-      // Only AI-supported sports: Caminhada, Corrida, Natação
       if (sportType === "Caminhada") {
-        systemPrompt = `Você é um personal trainer do app Apostando na Vida. Crie um plano de caminhada SUCINTO para ${duration} minutos, nível ${level}. Formato OBRIGATÓRIO: máximo 5 linhas, direto ao ponto. Exemplo: "Aquecimento 5min → Caminhada moderada 20min → Desaquecimento 5min". Inclua dicas de postura e respiração em 1 linha. Responda em JSON: { "trainingName":"Caminhada ${duration}min", "text":"o plano em formato sucinto com setas →" }`;
+        systemPrompt = `Você é um personal trainer do app Apostando na Vida. Crie um plano de caminhada SUCINTO para ${duration} minutos, nível ${level}. Formato OBRIGATÓRIO: máximo 5 linhas, direto ao ponto. Responda em JSON: { "trainingName":"Caminhada ${duration}min", "text":"o plano em formato sucinto com setas →" }`;
       } else if (sportType === "Corrida") {
-        systemPrompt = `Você é um personal trainer do app Apostando na Vida. Crie um plano de corrida SUCINTO para ${duration} minutos, nível ${level}. Formato OBRIGATÓRIO: máximo 6 linhas objetivo. Aquecimento → Treino principal (tiros ou ritmo contínuo baseado no nível) → Desaquecimento. Sem descrições longas. Responda em JSON: { "trainingName":"Corrida ${duration}min - ${level}", "text":"o plano sucinto" }`;
+        systemPrompt = `Você é um personal trainer do app Apostando na Vida. Crie um plano de corrida SUCINTO para ${duration} minutos, nível ${level}. Formato OBRIGATÓRIO: máximo 6 linhas objetivo. Responda em JSON: { "trainingName":"Corrida ${duration}min - ${level}", "text":"o plano sucinto" }`;
       } else if (sportType === "Natação") {
-        systemPrompt = `Você é um personal trainer do app Apostando na Vida. Crie um treino de natação SUCINTO para ${duration} minutos, nível ${level}. Formato OBRIGATÓRIO: máximo 6 linhas com séries objetivas. Ex: "4x50m crawl / 2x100m costas". Responda em JSON: { "trainingName":"Natação ${duration}min", "text":"o plano sucinto com séries" }`;
+        systemPrompt = `Você é um personal trainer do app Apostando na Vida. Crie um treino de natação SUCINTO para ${duration} minutos, nível ${level}. Formato OBRIGATÓRIO: máximo 6 linhas. Responda em JSON: { "trainingName":"Natação ${duration}min", "text":"o plano sucinto com séries" }`;
       } else {
         systemPrompt = `Você é um personal trainer. Crie um plano sucinto de ${sportType} para ${duration} minutos. Máximo 6 linhas. Responda em JSON: { "trainingName":"${sportType} ${duration}min", "text":"plano sucinto" }`;
       }
       userPrompt = `Modalidade: ${sportType}. Tempo: ${duration}min. Nível: ${level}.`;
 
     } else if (type === "workout") {
-      const { peso, altura, objetivo, nivel, disponibilidade, foco, level, focus, equipment, duration } = preferences || {};
+      const { peso, altura, objetivo, nivel, foco, level, focus, equipment, duration } = preferences || {};
       const dur = duration || 45;
       const actualLevel = nivel || level || "Iniciante";
       const actualFocus = foco || focus || "Full Body";
       const actualGoal = objetivo || "Saúde geral";
 
       let exerciseCount = "";
-      if (dur <= 15) {
-        exerciseCount = "APENAS 3-4 exercícios principais. SEM aquecimento separado. SEM alongamento. Direto ao ponto.";
-      } else if (dur <= 30) {
-        exerciseCount = "Aquecimento 5min + 5-6 exercícios com séries e repetições + alongamento 3min.";
-      } else if (dur <= 45) {
-        exerciseCount = "Aquecimento 7min + 7-8 exercícios + alongamento 5min.";
-      } else {
-        exerciseCount = "Aquecimento 10min + 8-9 exercícios + 1 finalizador + alongamento 8min.";
-      }
+      if (dur <= 15) exerciseCount = "APENAS 3-4 exercícios principais. SEM aquecimento separado. Direto ao ponto.";
+      else if (dur <= 30) exerciseCount = "Aquecimento 5min + 5-6 exercícios + alongamento 3min.";
+      else if (dur <= 45) exerciseCount = "Aquecimento 7min + 7-8 exercícios + alongamento 5min.";
+      else exerciseCount = "Aquecimento 10min + 8-9 exercícios + 1 finalizador + alongamento 8min.";
 
       systemPrompt = `Você é um personal trainer profissional do app Apostando na Vida. O usuário tem EXATAMENTE ${dur} minutos. ${exerciseCount}
 
 Dados: Peso ${peso || "?"}kg, Altura ${altura || "?"}cm, Objetivo: ${actualGoal}, Nível: ${actualLevel}, Foco: ${actualFocus}.
 
-FORMATO OBRIGATÓRIO — SUCINTO E OBJETIVO. Cada exercício em UMA linha: "Nome — Xséries x Xreps — Xseg descanso". Sem descrições longas. O usuário já sabe executar os exercícios.
+FORMATO OBRIGATÓRIO — SUCINTO E OBJETIVO. Cada exercício em UMA linha: "Nome — Xséries x Xreps — Xseg descanso". Sem descrições longas.
 
 Responda em JSON: { "trainingName":"${actualFocus} - ${actualGoal} (${dur}min)", "text":"o treino completo formatado linha por linha" }`;
       userPrompt = `Gere o treino agora. Equipamento: ${equipment || "Academia completa"}. Tempo: ${dur}min.`;
@@ -76,17 +152,8 @@ Responda em JSON: { "trainingName":"${actualFocus} - ${actualGoal} (${dur}min)",
 - "Os Quatro Compromissos" - Don Miguel Ruiz
 - "Mindset" - Carol Dweck
 - "A Coragem de Ser Imperfeito" - Brené Brown
-- "Minimalismo Digital" - Cal Newport
-- "O Monge e o Executivo" - James C. Hunter
-- "Pai Rico Pai Pobre" - Robert Kiyosaki
 
-Para cada livro inclua: título, autor, resumo de 2 linhas, por que é bom para recuperação de ludopatia. 
-Para os links, use EXATAMENTE este formato:
-- googleBooksLink: "https://books.google.com/books?q=" + titulo e autor codificados (ex: https://books.google.com/books?q=O+Poder+do+Habito+Charles+Duhigg)
-- amazonLink: "https://www.amazon.com.br/s?k=" + titulo e autor codificados (ex: https://www.amazon.com.br/s?k=O+Poder+do+Habito+Charles+Duhigg)
-- isFree: true apenas para "Em Busca de Sentido" de Viktor Frankl (domínio público). false para os demais.
-
-Também inclua uma "dica do dia" inspiradora de 2-3 linhas.
+Para cada livro inclua links Google Books e Amazon Brasil.
 Responda em JSON: { "books": [{"title":"...", "author":"...", "summary":"...", "recoveryBenefit":"...", "googleBooksLink":"...", "amazonLink":"...", "isFree": true/false}], "dailyTip":"..." }`;
       userPrompt = `Tema preferido: ${preferences?.theme || "autoajuda"}. Tempo: ${preferences?.duration || 30} min.`;
 
@@ -97,70 +164,35 @@ Responda em JSON: { "books": [{"title":"...", "author":"...", "summary":"...", "
       if (practice === "Meditação") {
         let meditationStructure = "";
         if (duration <= 5) {
-          meditationStructure = `O roteiro deve ter EXATAMENTE 5 minutos:
-- Respiração guiada 4-7-8 (4min): inspire 4s, segure 7s, expire 8s. Repita ciclos.
-- Afirmação final (1min): uma frase poderosa de encerramento.
-Apenas 2 seções. Nada mais.`;
+          meditationStructure = `Apenas respiração guiada 4-7-8 (4min) + Afirmação final (1min). 2 seções.`;
         } else if (duration <= 10) {
-          meditationStructure = `O roteiro deve ter EXATAMENTE 10 minutos:
-- Respiração guiada (3min): ciclos 4-7-8
-- Visualização positiva curta (5min): guie uma cena de paz e segurança
-- Afirmação de encerramento (2min): 2-3 frases poderosas
-Apenas 3 seções.`;
+          meditationStructure = `Respiração (3min) + Visualização positiva curta (5min) + Afirmação (2min). 3 seções.`;
         } else if (duration <= 15) {
-          meditationStructure = `O roteiro deve ter EXATAMENTE 15 minutos:
-- Respiração guiada (3min): ciclos 4-7-8
-- Body scan (5min): percorra o corpo da cabeça aos pés relaxando cada parte
-- Visualização positiva (5min): cena detalhada de paz
-- Afirmação de encerramento (2min)
-4 seções.`;
+          meditationStructure = `Respiração (3min) + Body scan (5min) + Visualização (5min) + Afirmação (2min). 4 seções.`;
         } else if (duration <= 20) {
-          meditationStructure = `O roteiro deve ter EXATAMENTE 20 minutos:
-- Respiração guiada (4min): ciclos 4-7-8
-- Body scan (6min): percorra todo o corpo com atenção
-- Visualização completa (7min): cena rica e detalhada
-- Reflexão final (3min): pergunta para reflexão + afirmação
-4 seções.`;
+          meditationStructure = `Respiração (4min) + Body scan (6min) + Visualização completa (7min) + Reflexão (3min). 4 seções.`;
         } else {
-          meditationStructure = `O roteiro deve ter EXATAMENTE ${duration} minutos:
-- Respiração guiada (4min): ciclos 4-7-8
-- Body scan (6min): percorra todo o corpo
-- Visualização completa (7min): cena rica
-- Reflexão (3min): pergunta profunda
-- Journaling guiado (${duration - 20}min): 3 perguntas para o usuário escrever
-5 seções.`;
+          meditationStructure = `Respiração (4min) + Body scan (6min) + Visualização (7min) + Reflexão (3min) + Journaling guiado (${duration - 20}min). 5 seções.`;
         }
 
-        systemPrompt = `Você é uma guia espiritual acolhedora do app Apostando na Vida. O usuário tem ${duration} minutos. Crie um roteiro de meditação EXATAMENTE para este tempo, nem mais nem menos. Divida em seções com o tempo de cada uma.
-
-${meditationStructure}
-
-Para cada seção, dê instruções claras e detalhadas do que fazer. 
-Responda em JSON: { "title":"Meditação de ${duration} minutos", "sections": [{"name":"nome da seção", "duration":"Xmin", "instructions":"instruções detalhadas"}], "closingMessage":"mensagem de encerramento acolhedora" }`;
+        systemPrompt = `Você é uma guia espiritual acolhedora. O usuário tem ${duration} minutos. Crie um roteiro de meditação EXATAMENTE para este tempo. ${meditationStructure}
+Responda em JSON: { "title":"Meditação de ${duration} minutos", "sections": [{"name":"nome", "duration":"Xmin", "instructions":"instruções detalhadas"}], "closingMessage":"mensagem acolhedora" }`;
       } else {
-        let extra = "";
-        if (practice === "Oração") extra = " Inclua um versículo ou reflexão espiritual do dia no campo 'verse'.";
-        else if (practice === "Reflexão") extra = " Gere uma pergunta profunda e DIFERENTE a cada vez para journaling no campo 'deepQuestion'.";
-        systemPrompt = `Você é uma guia espiritual acolhedora do app Apostando na Vida. Gere um guia completo de ${practice} de ${duration} minutos.${extra} Responda em JSON: { "title":"...", "steps": ["passo 1...", "passo 2..."], "closingMessage":"...", "verse":"...ou null", "deepQuestion":"...ou null" }`;
+        systemPrompt = `Você é uma guia espiritual acolhedora. Gere um guia de ${practice} de ${duration} minutos. Responda em JSON: { "title":"...", "steps": ["passo 1...", "passo 2..."], "closingMessage":"...", "verse":"...ou null", "deepQuestion":"...ou null" }`;
       }
-      userPrompt = `Prática: ${practice}. Duração: ${duration}min. Passo da jornada: ${stepNumber || 1}. Nome: ${userName || "amigo(a)"}`;
+      userPrompt = `Prática: ${practice}. Duração: ${duration}min. Nome: ${userName || "amigo(a)"}`;
 
     } else if (type === "social") {
       const socialWith = preferences?.with || "Família";
-      const socialPrompts: Record<string, string> = {
-        "Família": "Sugira uma atividade familiar específica e concreta.",
-        "Amigos": "Sugira uma interação com amigos.",
-        "Grupo de apoio": "Sugira participação em grupo de apoio.",
-      };
-      systemPrompt = `Você é Ana, terapeuta do app Apostando na Vida. ${socialPrompts[socialWith] || socialPrompts["Família"]} Inclua: descrição detalhada da atividade, por que faz bem na recuperação. Responda em JSON: { "suggestion":"descrição da atividade", "whyItHelps":"por que faz bem na recuperação", "emoji":"emoji relevante" }`;
+      systemPrompt = `Você é Ana, terapeuta do app Apostando na Vida. Sugira uma atividade de interação social concreta com ${socialWith}. Responda em JSON: { "suggestion":"descrição da atividade", "whyItHelps":"por que faz bem na recuperação" }`;
       userPrompt = `Tipo: ${socialWith}. Nome: ${userName || "amigo(a)"}`;
 
     } else if (type === "feedback") {
-      systemPrompt = `Você é Ana, terapeuta do app Apostando na Vida. O usuário acabou de completar uma atividade de rotina. Dê um feedback carinhoso em 2-3 frases validando o esforço. Use o nome dele. Tom acolhedor.`;
+      systemPrompt = `Você é Ana, terapeuta do app Apostando na Vida. O usuário acabou de completar uma atividade. Dê um feedback carinhoso em 2-3 frases. Tom acolhedor.`;
       userPrompt = `Nome: ${userName || "amigo(a)"}. Categoria: ${category}. Avaliação: ${preferences?.rating}/5. Relato: ${preferences?.report || "sem relato"}`;
 
     } else if (type === "reflection") {
-      systemPrompt = `Você é Ana, terapeuta do app Apostando na Vida. O usuário escreveu uma reflexão noturna. Responda com uma carta curta (2-3 parágrafos) validando, destacando algo específico que ele escreveu, e terminando com uma frase de encorajamento para amanhã. Tom: amiga terapeuta carinhosa.`;
+      systemPrompt = `Você é Ana, terapeuta do app Apostando na Vida. Responda a reflexão noturna com uma carta curta (2-3 parágrafos) validando e encorajando. Tom: amiga terapeuta.`;
       userPrompt = `Nome: ${userName || "amigo(a)"}. Reflexão: ${reflectionContent}`;
 
     } else {
@@ -180,7 +212,7 @@ Responda em JSON: { "title":"Meditação de ${duration} minutos", "sections": [{
           { role: "user", content: userPrompt },
         ],
         temperature: 0.8,
-        max_tokens: 2000,
+        max_tokens: 3000,
       }),
     });
 
@@ -199,7 +231,6 @@ Responda em JSON: { "title":"Meditação de ${duration} minutos", "sections": [{
     const data = await response.json();
     let message = data.choices?.[0]?.message?.content || "";
 
-    // Strip markdown code fences if present
     if (message.includes("```json")) {
       message = message.replace(/```json\s*/g, "").replace(/```\s*/g, "").trim();
     } else if (message.startsWith("```")) {
