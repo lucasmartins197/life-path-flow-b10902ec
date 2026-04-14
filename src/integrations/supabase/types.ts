@@ -149,6 +149,66 @@ export type Database = {
         }
         Relationships: []
       }
+      appointments: {
+        Row: {
+          created_at: string
+          duration_minutes: number
+          id: string
+          meeting_link: string | null
+          payment_id: string | null
+          professional_id: string
+          rating: number | null
+          review_comment: string | null
+          scheduled_at: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          duration_minutes?: number
+          id?: string
+          meeting_link?: string | null
+          payment_id?: string | null
+          professional_id: string
+          rating?: number | null
+          review_comment?: string | null
+          scheduled_at: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          duration_minutes?: number
+          id?: string
+          meeting_link?: string | null
+          payment_id?: string | null
+          professional_id?: string
+          rating?: number | null
+          review_comment?: string | null
+          scheduled_at?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "appointments_payment_id_fkey"
+            columns: ["payment_id"]
+            isOneToOne: false
+            referencedRelation: "payments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "appointments_professional_id_fkey"
+            columns: ["professional_id"]
+            isOneToOne: false
+            referencedRelation: "professional_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       body_evolution: {
         Row: {
           ai_analysis: Json | null
@@ -1348,66 +1408,113 @@ export type Database = {
       }
       professional_profiles: {
         Row: {
+          approach: Json | null
           bio: string | null
           council_number: string | null
           council_state: string | null
           council_verified: boolean | null
           created_at: string
           credentials: string | null
+          gambling_specialist: boolean | null
           hourly_rate: number | null
           id: string
           is_approved: boolean | null
           is_online: boolean | null
+          meeting_link: string | null
           professional_type:
             | Database["public"]["Enums"]["professional_type"]
             | null
           rating: number | null
+          specialties: Json | null
           specialty: string
           total_sessions: number | null
           updated_at: string
           user_id: string
         }
         Insert: {
+          approach?: Json | null
           bio?: string | null
           council_number?: string | null
           council_state?: string | null
           council_verified?: boolean | null
           created_at?: string
           credentials?: string | null
+          gambling_specialist?: boolean | null
           hourly_rate?: number | null
           id?: string
           is_approved?: boolean | null
           is_online?: boolean | null
+          meeting_link?: string | null
           professional_type?:
             | Database["public"]["Enums"]["professional_type"]
             | null
           rating?: number | null
+          specialties?: Json | null
           specialty: string
           total_sessions?: number | null
           updated_at?: string
           user_id: string
         }
         Update: {
+          approach?: Json | null
           bio?: string | null
           council_number?: string | null
           council_state?: string | null
           council_verified?: boolean | null
           created_at?: string
           credentials?: string | null
+          gambling_specialist?: boolean | null
           hourly_rate?: number | null
           id?: string
           is_approved?: boolean | null
           is_online?: boolean | null
+          meeting_link?: string | null
           professional_type?:
             | Database["public"]["Enums"]["professional_type"]
             | null
           rating?: number | null
+          specialties?: Json | null
           specialty?: string
           total_sessions?: number | null
           updated_at?: string
           user_id?: string
         }
         Relationships: []
+      }
+      professional_reviews: {
+        Row: {
+          comment: string | null
+          created_at: string
+          id: string
+          professional_id: string
+          rating: number
+          user_id: string
+        }
+        Insert: {
+          comment?: string | null
+          created_at?: string
+          id?: string
+          professional_id: string
+          rating: number
+          user_id: string
+        }
+        Update: {
+          comment?: string | null
+          created_at?: string
+          id?: string
+          professional_id?: string
+          rating?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "professional_reviews_professional_id_fkey"
+            columns: ["professional_id"]
+            isOneToOne: false
+            referencedRelation: "professional_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       profiles: {
         Row: {
@@ -1670,6 +1777,27 @@ export type Database = {
           mood_rating?: number | null
           morning_plan?: Json | null
           notes?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      session_credits: {
+        Row: {
+          credits_remaining: number
+          id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          credits_remaining?: number
+          id?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          credits_remaining?: number
+          id?: string
           updated_at?: string
           user_id?: string
         }
