@@ -38,6 +38,8 @@ import AulaoSemanal from "./pages/app/AulaoSemanal";
 import SubscriptionHome from "./pages/app/SubscriptionHome";
 import MedalsHome from "./pages/app/MedalsHome";
 import MessagesHome from "./pages/app/MessagesHome";
+import BlockingHome from "./pages/app/BlockingHome";
+import { CommitmentGate } from "@/components/recovery/CommitmentGate";
 
 // Pro pages (PROFESSIONAL role)
 import ProHome from "./pages/pro/ProHome";
