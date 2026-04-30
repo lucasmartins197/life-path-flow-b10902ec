@@ -8,6 +8,8 @@ import { PortoSeguroButton } from "@/components/PortoSeguroButton";
 import { AIChatPanel } from "@/components/chat/AIChatPanel";
 import { PremiumNavCards } from "@/components/home/PremiumNavCards";
 import { useMedals } from "@/hooks/useMedals";
+import { BlockingBanner } from "@/components/recovery/BlockingBanner";
+import { EveningCheckIn } from "@/components/recovery/EveningCheckIn";
 
 /* ── Motivational quotes ── */
 const quotes = [
@@ -121,6 +123,7 @@ export default function AppHome() {
       </header>
 
       <main className="max-w-lg mx-auto px-5 pt-3 space-y-3">
+        <BlockingBanner />
         {/* ── Motivational Quote ── */}
         <section
           className="relative overflow-hidden p-4"
@@ -171,6 +174,7 @@ export default function AppHome() {
       <BottomNavigation />
       <PortoSeguroButton />
       <AIChatPanel />
+      <EveningCheckIn />
     </div>
   );
 }

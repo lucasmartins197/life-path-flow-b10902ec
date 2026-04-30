@@ -38,6 +38,8 @@ import AulaoSemanal from "./pages/app/AulaoSemanal";
 import SubscriptionHome from "./pages/app/SubscriptionHome";
 import MedalsHome from "./pages/app/MedalsHome";
 import MessagesHome from "./pages/app/MessagesHome";
+import BlockingHome from "./pages/app/BlockingHome";
+import { CommitmentGate } from "@/components/recovery/CommitmentGate";
 
 // Pro pages (PROFESSIONAL role)
 import ProHome from "./pages/pro/ProHome";
@@ -63,7 +65,7 @@ const App = () => (
             <Route path="/auth/professional-register" element={<ProfessionalRegister />} />
             
             {/* Protected APP routes (USER role) */}
-            <Route path="/app" element={<ProtectedRoute allowedRoles={["user", "admin"]}><AppHome /></ProtectedRoute>} />
+            <Route path="/app" element={<ProtectedRoute allowedRoles={["user", "admin"]}><CommitmentGate><AppHome /></CommitmentGate></ProtectedRoute>} />
             <Route path="/app/jornada" element={<ProtectedRoute allowedRoles={["user", "admin"]}><JourneysHome /></ProtectedRoute>} />
             <Route path="/app/jornada/:stepNumber" element={<ProtectedRoute allowedRoles={["user", "admin"]}><JourneyStep /></ProtectedRoute>} />
             <Route path="/app/terapia" element={<ProtectedRoute allowedRoles={["user", "admin"]}><TherapyHome /></ProtectedRoute>} />
@@ -87,6 +89,7 @@ const App = () => (
             <Route path="/app/assinatura" element={<ProtectedRoute allowedRoles={["user", "admin"]}><SubscriptionHome /></ProtectedRoute>} />
             <Route path="/app/medalhas" element={<ProtectedRoute allowedRoles={["user", "admin"]}><MedalsHome /></ProtectedRoute>} />
             <Route path="/app/mensagens" element={<ProtectedRoute allowedRoles={["user", "admin"]}><MessagesHome /></ProtectedRoute>} />
+            <Route path="/app/bloqueio" element={<ProtectedRoute allowedRoles={["user", "admin"]}><BlockingHome /></ProtectedRoute>} />
             
             {/* Protected PRO routes (PROFESSIONAL role) */}
             <Route path="/pro" element={<ProtectedRoute allowedRoles={["professional", "admin"]}><ProHome /></ProtectedRoute>} />
