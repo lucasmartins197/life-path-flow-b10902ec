@@ -14,6 +14,7 @@ import {
   User,
   CreditCard,
   Award,
+  Shield,
   X,
 } from "lucide-react";
 
@@ -25,14 +26,15 @@ const mainItems = [
 ];
 
 const drawerItems = [
-  { label: "Histórias",       icon: Users,      path: "/app/comunidade" },
-  { label: "Aulão Semanal",   icon: PlayCircle, path: "/app/aulao" },
-  { label: "🏅 Medalhas",    icon: Award,      path: "/app/medalhas" },
-  { label: "Minhas Finanças", icon: Wallet,     path: "/app/financas" },
-  { label: "Apoio Jurídico",  icon: Scale,      path: "/app/juridico" },
-  { label: "Contato Âncora",  icon: Anchor,     path: "/app/ancora" },
-  { label: "Perfil",          icon: User,       path: "/app/perfil" },
-  { label: "Assinatura",      icon: CreditCard, path: "/app/assinatura" },
+  { label: "Histórias",         icon: Users,      path: "/app/comunidade" },
+  { label: "Aulão Semanal",     icon: PlayCircle, path: "/app/aulao" },
+  { label: "Medalhas",          icon: Award,      path: "/app/medalhas" },
+  { label: "Minhas Finanças",   icon: Wallet,     path: "/app/financas" },
+  { label: "Apoio Jurídico",    icon: Scale,      path: "/app/juridico" },
+  { label: "Bloqueio Apostas",  icon: Shield,     path: "/app/bloqueio" },
+  { label: "Contato Âncora",    icon: Anchor,     path: "/app/ancora" },
+  { label: "Perfil",            icon: User,       path: "/app/perfil" },
+  { label: "Assinatura",        icon: CreditCard, path: "/app/assinatura" },
 ];
 
 export function BottomNavigation() {
