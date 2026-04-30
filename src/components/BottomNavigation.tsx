@@ -44,6 +44,8 @@ export function BottomNavigation() {
   const navigate = useNavigate();
   const location = useLocation();
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const { configured: shieldConfigured, loading: shieldLoading } = useShield();
+  const shieldNeedsSetup = !shieldLoading && !shieldConfigured;
 
   const isActive = (path: string) => {
     if (path === "/app") return location.pathname === "/app";
@@ -73,21 +75,27 @@ export function BottomNavigation() {
             </div>
 
             <div className="grid grid-cols-3 gap-3">
-              {drawerItems.map((item) => (
-                <button
-                  key={item.path}
-                  onClick={() => {
-                    navigate(item.path);
-                    setDrawerOpen(false);
-                  }}
-                  className="flex flex-col items-center gap-2 p-4 rounded-2xl bg-secondary/50 hover:bg-secondary active:scale-95 transition-all touch-target"
-                >
-                  <item.icon className="h-6 w-6 text-primary" />
-                  <span className="text-xs font-medium text-foreground text-center leading-tight">
-                    {item.label}
-                  </span>
-                </button>
-              ))}
+              {drawerItems.map((item) => {
+                const showShieldBadge = item.key === "shield" && shieldNeedsSetup;
+                return (
+                  <button
+                    key={item.path}
+                    onClick={() => {
+                      navigate(item.path);
+                      setDrawerOpen(false);
+                    }}
+                    className="relative flex flex-col items-center gap-2 p-4 rounded-2xl bg-secondary/50 hover:bg-secondary active:scale-95 transition-all touch-target"
+                  >
+                    <item.icon className="h-6 w-6 text-primary" />
+                    <span className="text-xs font-medium text-foreground text-center leading-tight">
+                      {item.label}
+                    </span>
+                    {showShieldBadge && (
+                      <span className="absolute top-2 right-2 w-2.5 h-2.5 rounded-full bg-destructive ring-2 ring-card" />
+                    )}
+                  </button>
+                );
+              })}
             </div>
           </div>
         </div>
@@ -123,7 +131,7 @@ export function BottomNavigation() {
           {/* "Mais" button */}
           <button
             onClick={() => setDrawerOpen(true)}
-            className="bottom-nav-item"
+            className="bottom-nav-item relative"
           >
             <div className="nav-icon-bg">
               <LayoutGrid className="h-5 w-5 stroke-[1.6]" />
@@ -131,6 +139,9 @@ export function BottomNavigation() {
             <span className="text-[10px] font-semibold tracking-tight text-muted-foreground">
               Mais
             </span>
+            {shieldNeedsSetup && (
+              <span className="absolute top-1 right-3 w-2 h-2 rounded-full bg-destructive ring-2 ring-background" />
+            )}
           </button>
         </div>
       </nav>
