@@ -15,8 +15,10 @@ import {
   CreditCard,
   Award,
   Shield,
+  ShieldCheck,
   X,
 } from "lucide-react";
+import { useShield } from "@/hooks/useShield";
 
 const mainItems = [
   { id: "home",    label: "Home",    icon: House,    path: "/app" },
@@ -25,16 +27,17 @@ const mainItems = [
   { id: "rotina",  label: "Rotina",  icon: Calendar, path: "/app/rotina" },
 ];
 
-const drawerItems = [
-  { label: "Histórias",         icon: Users,      path: "/app/comunidade" },
-  { label: "Aulão Semanal",     icon: PlayCircle, path: "/app/aulao" },
-  { label: "Medalhas",          icon: Award,      path: "/app/medalhas" },
-  { label: "Minhas Finanças",   icon: Wallet,     path: "/app/financas" },
-  { label: "Apoio Jurídico",    icon: Scale,      path: "/app/juridico" },
-  { label: "Bloqueio Apostas",  icon: Shield,     path: "/app/bloqueio" },
-  { label: "Contato Âncora",    icon: Anchor,     path: "/app/ancora" },
-  { label: "Perfil",            icon: User,       path: "/app/perfil" },
-  { label: "Assinatura",        icon: CreditCard, path: "/app/assinatura" },
+const drawerItems: { label: string; icon: any; path: string; key?: string }[] = [
+  { label: "Meu Escudo",        icon: ShieldCheck, path: "/app/escudo", key: "shield" },
+  { label: "Histórias",         icon: Users,       path: "/app/comunidade" },
+  { label: "Aulão Semanal",     icon: PlayCircle,  path: "/app/aulao" },
+  { label: "Medalhas",          icon: Award,       path: "/app/medalhas" },
+  { label: "Minhas Finanças",   icon: Wallet,      path: "/app/financas" },
+  { label: "Apoio Jurídico",    icon: Scale,       path: "/app/juridico" },
+  { label: "Bloqueio Apostas",  icon: Shield,      path: "/app/bloqueio" },
+  { label: "Contato Âncora",    icon: Anchor,      path: "/app/ancora" },
+  { label: "Perfil",            icon: User,        path: "/app/perfil" },
+  { label: "Assinatura",        icon: CreditCard,  path: "/app/assinatura" },
 ];
 
 export function BottomNavigation() {
