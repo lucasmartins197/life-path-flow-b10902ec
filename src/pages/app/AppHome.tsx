@@ -9,6 +9,7 @@ import { AIChatPanel } from "@/components/chat/AIChatPanel";
 import { PremiumNavCards } from "@/components/home/PremiumNavCards";
 import { useMedals } from "@/hooks/useMedals";
 import { BlockingBanner } from "@/components/recovery/BlockingBanner";
+import { EveningCheckIn } from "@/components/recovery/EveningCheckIn";
 
 /* ── Motivational quotes ── */
 const quotes = [
@@ -173,6 +174,7 @@ export default function AppHome() {
       <BottomNavigation />
       <PortoSeguroButton />
       <AIChatPanel />
+      <EveningCheckIn />
     </div>
   );
 }
