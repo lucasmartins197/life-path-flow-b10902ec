@@ -209,6 +209,33 @@ export type Database = {
           },
         ]
       }
+      blocked_sites: {
+        Row: {
+          active: boolean
+          created_at: string
+          id: string
+          is_default: boolean
+          url: string
+          user_id: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          id?: string
+          is_default?: boolean
+          url: string
+          user_id: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          id?: string
+          is_default?: boolean
+          url?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       body_evolution: {
         Row: {
           ai_analysis: Json | null
@@ -565,6 +592,42 @@ export type Database = {
         }
         Relationships: []
       }
+      digital_guardian: {
+        Row: {
+          created_at: string
+          guardian_email: string | null
+          guardian_name: string
+          guardian_phone: string | null
+          id: string
+          invite_sent_at: string | null
+          notify_on_temptation: boolean
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          guardian_email?: string | null
+          guardian_name: string
+          guardian_phone?: string | null
+          id?: string
+          invite_sent_at?: string | null
+          notify_on_temptation?: boolean
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          guardian_email?: string | null
+          guardian_name?: string
+          guardian_phone?: string | null
+          id?: string
+          invite_sent_at?: string | null
+          notify_on_temptation?: boolean
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       direct_messages: {
         Row: {
           content: string
@@ -815,6 +878,33 @@ export type Database = {
           recurring_day?: number | null
           transaction_date?: string
           type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      gambling_streak: {
+        Row: {
+          confirmation_date: string
+          created_at: string
+          id: string
+          notes: string | null
+          stayed_clean: boolean
+          user_id: string
+        }
+        Insert: {
+          confirmation_date: string
+          created_at?: string
+          id?: string
+          notes?: string | null
+          stayed_clean: boolean
+          user_id: string
+        }
+        Update: {
+          confirmation_date?: string
+          created_at?: string
+          id?: string
+          notes?: string | null
+          stayed_clean?: boolean
           user_id?: string
         }
         Relationships: []
@@ -1986,6 +2076,39 @@ export type Database = {
           stripe_customer_id?: string | null
           stripe_subscription_id?: string | null
           updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      temptation_events: {
+        Row: {
+          created_at: string
+          guardian_notified: boolean
+          id: string
+          intensity: string | null
+          notes: string | null
+          outcome: string | null
+          triggered_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          guardian_notified?: boolean
+          id?: string
+          intensity?: string | null
+          notes?: string | null
+          outcome?: string | null
+          triggered_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          guardian_notified?: boolean
+          id?: string
+          intensity?: string | null
+          notes?: string | null
+          outcome?: string | null
+          triggered_at?: string
           user_id?: string
         }
         Relationships: []
