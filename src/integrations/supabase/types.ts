@@ -1588,6 +1588,39 @@ export type Database = {
         }
         Relationships: []
       }
+      recovery_commitments: {
+        Row: {
+          blocking_configured: boolean
+          blocking_configured_at: string | null
+          created_at: string
+          id: string
+          signature_name: string
+          signed_at: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          blocking_configured?: boolean
+          blocking_configured_at?: string | null
+          created_at?: string
+          id?: string
+          signature_name: string
+          signed_at?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          blocking_configured?: boolean
+          blocking_configured_at?: string | null
+          created_at?: string
+          id?: string
+          signature_name?: string
+          signed_at?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       recovery_scores: {
         Row: {
           calculated_at: string
