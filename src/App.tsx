@@ -39,6 +39,7 @@ import SubscriptionHome from "./pages/app/SubscriptionHome";
 import MedalsHome from "./pages/app/MedalsHome";
 import MessagesHome from "./pages/app/MessagesHome";
 import BlockingHome from "./pages/app/BlockingHome";
+import ShieldHome from "./pages/app/ShieldHome";
 import { CommitmentGate } from "@/components/recovery/CommitmentGate";
 
 // Pro pages (PROFESSIONAL role)
