@@ -88,8 +88,8 @@ const App = () => (
             <Route path="/app/aulao" element={<ProtectedRoute allowedRoles={["user", "admin"]}><AulaoSemanal /></ProtectedRoute>} />
             <Route path="/app/assinatura" element={<ProtectedRoute allowedRoles={["user", "admin"]}><SubscriptionHome /></ProtectedRoute>} />
             <Route path="/app/medalhas" element={<ProtectedRoute allowedRoles={["user", "admin"]}><MedalsHome /></ProtectedRoute>} />
-            <Route path="/app/mensagens" element={<ProtectedRoute allowedRoles={["user", "admin"]}><CommitmentGate><MessagesHome /></CommitmentGate></ProtectedRoute>} />
-            <Route path="/app/bloqueio" element={<ProtectedRoute allowedRoles={["user", "admin"]}><CommitmentGate><BlockingHome /></CommitmentGate></ProtectedRoute>} />
+            <Route path="/app/mensagens" element={<ProtectedRoute allowedRoles={["user", "admin"]}><MessagesHome /></ProtectedRoute>} />
+            <Route path="/app/bloqueio" element={<ProtectedRoute allowedRoles={["user", "admin"]}><BlockingHome /></ProtectedRoute>} />
             
             {/* Protected PRO routes (PROFESSIONAL role) */}
             <Route path="/pro" element={<ProtectedRoute allowedRoles={["professional", "admin"]}><ProHome /></ProtectedRoute>} />
