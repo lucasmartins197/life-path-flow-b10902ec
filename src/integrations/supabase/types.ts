@@ -1616,11 +1616,13 @@ export type Database = {
           created_at: string
           date_of_birth: string | null
           full_name: string | null
+          gambling_duration: string | null
           id: string
           neighborhood: string | null
           number: string | null
           onboarding_completed: boolean | null
           phone: string | null
+          recovery_situation: string | null
           state: string | null
           street: string | null
           stripe_customer_id: string | null
@@ -1639,11 +1641,13 @@ export type Database = {
           created_at?: string
           date_of_birth?: string | null
           full_name?: string | null
+          gambling_duration?: string | null
           id?: string
           neighborhood?: string | null
           number?: string | null
           onboarding_completed?: boolean | null
           phone?: string | null
+          recovery_situation?: string | null
           state?: string | null
           street?: string | null
           stripe_customer_id?: string | null
@@ -1662,11 +1666,13 @@ export type Database = {
           created_at?: string
           date_of_birth?: string | null
           full_name?: string | null
+          gambling_duration?: string | null
           id?: string
           neighborhood?: string | null
           number?: string | null
           onboarding_completed?: boolean | null
           phone?: string | null
+          recovery_situation?: string | null
           state?: string | null
           street?: string | null
           stripe_customer_id?: string | null
