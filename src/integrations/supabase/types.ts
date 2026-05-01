@@ -1675,6 +1675,7 @@ export type Database = {
       profiles: {
         Row: {
           avatar_url: string | null
+          bio: string | null
           city: string | null
           complement: string | null
           country: string | null
@@ -1684,7 +1685,9 @@ export type Database = {
           full_name: string | null
           gambling_duration: string | null
           id: string
+          is_public: boolean
           neighborhood: string | null
+          notifications_enabled: boolean
           number: string | null
           onboarding_completed: boolean | null
           phone: string | null
@@ -1700,6 +1703,7 @@ export type Database = {
         }
         Insert: {
           avatar_url?: string | null
+          bio?: string | null
           city?: string | null
           complement?: string | null
           country?: string | null
@@ -1709,7 +1713,9 @@ export type Database = {
           full_name?: string | null
           gambling_duration?: string | null
           id?: string
+          is_public?: boolean
           neighborhood?: string | null
+          notifications_enabled?: boolean
           number?: string | null
           onboarding_completed?: boolean | null
           phone?: string | null
@@ -1725,6 +1731,7 @@ export type Database = {
         }
         Update: {
           avatar_url?: string | null
+          bio?: string | null
           city?: string | null
           complement?: string | null
           country?: string | null
@@ -1734,7 +1741,9 @@ export type Database = {
           full_name?: string | null
           gambling_duration?: string | null
           id?: string
+          is_public?: boolean
           neighborhood?: string | null
+          notifications_enabled?: boolean
           number?: string | null
           onboarding_completed?: boolean | null
           phone?: string | null
