@@ -41,6 +41,7 @@ import MessagesHome from "./pages/app/MessagesHome";
 import BlockingHome from "./pages/app/BlockingHome";
 import ShieldHome from "./pages/app/ShieldHome";
 import { CommitmentGate } from "@/components/recovery/CommitmentGate";
+import { OnboardingGate } from "@/components/onboarding/OnboardingGate";
 
 // Pro pages (PROFESSIONAL role)
 import ProHome from "./pages/pro/ProHome";
