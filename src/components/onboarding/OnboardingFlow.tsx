@@ -75,11 +75,11 @@ export function OnboardingFlow({ onComplete }: { onComplete: () => void }) {
 
   function goNext() {
     setDirection("forward");
-    setStep((s) => Math.min(TOTAL_STEPS, (s + 1) as StepId));
+    setStep((s) => Math.min(TOTAL_STEPS, s + 1) as StepId);
   }
   function goBack() {
     setDirection("back");
-    setStep((s) => Math.max(1, (s - 1) as StepId));
+    setStep((s) => Math.max(1, s - 1) as StepId);
   }
 
   const update = <K extends keyof OnboardingData>(key: K, value: OnboardingData[K]) =>
