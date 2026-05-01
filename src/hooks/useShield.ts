@@ -36,6 +36,9 @@ export const DEFAULT_SITES = [
   "estrela.bet",
   "betfair.com",
   "bodog.com",
+  "playpix.com",
+  "vaidebet.com",
+  "superbet.com",
 ];
 
 function todayISO() {
@@ -91,7 +94,7 @@ export function useShield() {
       const seed = DEFAULT_SITES.map((u) => ({
         user_id: user.id,
         url: u,
-        active: true,
+        active: false,
         is_default: true,
       }));
       const { data: inserted } = await supabase.from("blocked_sites").insert(seed).select();
