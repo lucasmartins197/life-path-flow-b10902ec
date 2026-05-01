@@ -104,6 +104,39 @@ export type Database = {
         }
         Relationships: []
       }
+      anchor_alerts: {
+        Row: {
+          alert_type: string
+          contact_id: string | null
+          created_at: string
+          id: string
+          message: string | null
+          sent_at: string
+          status: string
+          user_id: string
+        }
+        Insert: {
+          alert_type: string
+          contact_id?: string | null
+          created_at?: string
+          id?: string
+          message?: string | null
+          sent_at?: string
+          status?: string
+          user_id: string
+        }
+        Update: {
+          alert_type?: string
+          contact_id?: string | null
+          created_at?: string
+          id?: string
+          message?: string | null
+          sent_at?: string
+          status?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       anchor_contacts: {
         Row: {
           created_at: string
@@ -146,6 +179,39 @@ export type Database = {
           relationship?: string
           updated_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      anchor_settings: {
+        Row: {
+          created_at: string
+          id: string
+          notify_inactive: boolean
+          notify_relapse: boolean
+          notify_step_complete: boolean
+          updated_at: string
+          user_id: string
+          weekly_report: boolean
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          notify_inactive?: boolean
+          notify_relapse?: boolean
+          notify_step_complete?: boolean
+          updated_at?: string
+          user_id: string
+          weekly_report?: boolean
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          notify_inactive?: boolean
+          notify_relapse?: boolean
+          notify_step_complete?: boolean
+          updated_at?: string
+          user_id?: string
+          weekly_report?: boolean
         }
         Relationships: []
       }
