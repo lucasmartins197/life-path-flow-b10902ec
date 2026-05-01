@@ -1564,19 +1564,25 @@ export type Database = {
       }
       professional_profiles: {
         Row: {
+          accepts_plan: boolean
           approach: Json | null
+          availability: Json
           bio: string | null
           council_number: string | null
           council_state: string | null
           council_verified: boolean | null
           created_at: string
           credentials: string | null
+          full_name: string | null
           gambling_specialist: boolean | null
           hourly_rate: number | null
           id: string
           is_approved: boolean | null
           is_online: boolean | null
           meeting_link: string | null
+          payout_amount: number | null
+          photo_url: string | null
+          professional_email: string | null
           professional_type:
             | Database["public"]["Enums"]["professional_type"]
             | null
@@ -1586,21 +1592,28 @@ export type Database = {
           total_sessions: number | null
           updated_at: string
           user_id: string
+          whatsapp: string | null
         }
         Insert: {
+          accepts_plan?: boolean
           approach?: Json | null
+          availability?: Json
           bio?: string | null
           council_number?: string | null
           council_state?: string | null
           council_verified?: boolean | null
           created_at?: string
           credentials?: string | null
+          full_name?: string | null
           gambling_specialist?: boolean | null
           hourly_rate?: number | null
           id?: string
           is_approved?: boolean | null
           is_online?: boolean | null
           meeting_link?: string | null
+          payout_amount?: number | null
+          photo_url?: string | null
+          professional_email?: string | null
           professional_type?:
             | Database["public"]["Enums"]["professional_type"]
             | null
@@ -1610,21 +1623,28 @@ export type Database = {
           total_sessions?: number | null
           updated_at?: string
           user_id: string
+          whatsapp?: string | null
         }
         Update: {
+          accepts_plan?: boolean
           approach?: Json | null
+          availability?: Json
           bio?: string | null
           council_number?: string | null
           council_state?: string | null
           council_verified?: boolean | null
           created_at?: string
           credentials?: string | null
+          full_name?: string | null
           gambling_specialist?: boolean | null
           hourly_rate?: number | null
           id?: string
           is_approved?: boolean | null
           is_online?: boolean | null
           meeting_link?: string | null
+          payout_amount?: number | null
+          photo_url?: string | null
+          professional_email?: string | null
           professional_type?:
             | Database["public"]["Enums"]["professional_type"]
             | null
@@ -1634,6 +1654,7 @@ export type Database = {
           total_sessions?: number | null
           updated_at?: string
           user_id?: string
+          whatsapp?: string | null
         }
         Relationships: []
       }

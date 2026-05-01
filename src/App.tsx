@@ -49,6 +49,7 @@ import ProHome from "./pages/pro/ProHome";
 
 // Admin pages (ADMIN role)
 import AdminHome from "./pages/admin/AdminHome";
+import AdminProfessionals from "./pages/admin/AdminProfessionals";
 
 const queryClient = new QueryClient();
 
@@ -101,6 +102,7 @@ const App = () => (
             
             {/* Protected ADMIN routes (ADMIN role) */}
             <Route path="/admin" element={<ProtectedRoute allowedRoles={["admin"]}><AdminHome /></ProtectedRoute>} />
+            <Route path="/admin/profissionais" element={<ProtectedRoute allowedRoles={["admin"]}><AdminProfessionals /></ProtectedRoute>} />
             
             {/* Catch-all */}
             <Route path="*" element={<NotFound />} />
