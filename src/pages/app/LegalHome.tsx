@@ -2,79 +2,138 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Scale,
-  Search,
-  MapPin,
-  Filter,
-  Star,
-  Clock,
-  Shield,
-  Calculator,
   ChevronLeft,
-  ChevronRight,
+  AlertTriangle,
+  FileText,
+  Home,
+  Briefcase,
+  AlertCircle,
+  Shield,
+  Heart,
+  Users,
+  Loader2,
+  X,
 } from "lucide-react";
-import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { BottomNavigation } from "@/components/BottomNavigation";
 import { AIChatPanel } from "@/components/chat/AIChatPanel";
-import { DebtSimulator } from "@/components/legal/DebtSimulator";
-import { LawyerBookingDialog } from "@/components/legal/LawyerBookingDialog";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
-import { useQuery } from "@tanstack/react-query";
+import { toast } from "sonner";
 
-const SPECIALTIES = [
-  "Direito do Consumidor",
-  "Renegociação de Dívidas",
-  "Direito Bancário",
-  "Superendividamento",
-  "Recuperação Judicial",
+type TopicKey = "dividas" | "patrimonio" | "trabalho" | "negativado" | "autoexclusao" | "familia";
+
+interface Topic {
+  key: TopicKey;
+  icon: typeof FileText;
+  title: string;
+  subtitle: string;
+}
+
+const TOPICS: Topic[] = [
+  { key: "dividas", icon: FileText, title: "Dívidas por Apostas", subtitle: "Seus direitos como devedor" },
+  { key: "patrimonio", icon: Home, title: "Proteção do Patrimônio Familiar", subtitle: "Como proteger sua família" },
+  { key: "trabalho", icon: Briefcase, title: "Direitos Trabalhistas", subtitle: "Ludopatia e o ambiente de trabalho" },
+  { key: "negativado", icon: AlertCircle, title: "Nome Negativado", subtitle: "Como limpar seu nome" },
+  { key: "autoexclusao", icon: Shield, title: "Medidas de Autoexclusão", subtitle: "Proteja-se legalmente das apostas" },
+  { key: "familia", icon: Heart, title: "Impacto na Família", subtitle: "Divórcio, guarda e pensão" },
 ];
+
+// Lightweight markdown renderer (headings, bullets, bold)
+function renderMarkdown(text: string) {
+  const lines = text.split("\n");
+  const elements: JSX.Element[] = [];
+  let listBuffer: string[] = [];
+
+  const flushList = (key: number) => {
+    if (listBuffer.length) {
+      elements.push(
+        <ul key={`ul-${key}`} className="list-disc pl-5 space-y-1.5 my-3 text-sm text-foreground/90 leading-relaxed">
+          {listBuffer.map((item, i) => (
+            <li key={i} dangerouslySetInnerHTML={{ __html: formatInline(item) }} />
+          ))}
+        </ul>
+      );
+      listBuffer = [];
+    }
+  };
+
+  const formatInline = (s: string) =>
+    s
+      .replace(/\*\*(.+?)\*\*/g, '<strong class="text-foreground font-semibold">$1</strong>')
+      .replace(/\*(.+?)\*/g, '<em>$1</em>');
+
+  lines.forEach((raw, idx) => {
+    const line = raw.trim();
+    if (!line) {
+      flushList(idx);
+      return;
+    }
+    if (line.startsWith("### ")) {
+      flushList(idx);
+      elements.push(
+        <h4 key={idx} className="font-semibold text-base text-foreground mt-4 mb-2">
+          {line.slice(4)}
+        </h4>
+      );
+    } else if (line.startsWith("## ")) {
+      flushList(idx);
+      elements.push(
+        <h3 key={idx} className="font-bold text-lg text-foreground mt-5 mb-2">
+          {line.slice(3)}
+        </h3>
+      );
+    } else if (line.startsWith("# ")) {
+      flushList(idx);
+      elements.push(
+        <h2 key={idx} className="font-bold text-xl text-foreground mt-5 mb-3">
+          {line.slice(2)}
+        </h2>
+      );
+    } else if (/^[-*]\s+/.test(line)) {
+      listBuffer.push(line.replace(/^[-*]\s+/, ""));
+    } else {
+      flushList(idx);
+      elements.push(
+        <p
+          key={idx}
+          className="text-sm text-foreground/90 leading-relaxed my-2"
+          dangerouslySetInnerHTML={{ __html: formatInline(line) }}
+        />
+      );
+    }
+  });
+  flushList(lines.length);
+  return elements;
+}
 
 export default function LegalHome() {
   const navigate = useNavigate();
-  const [searchTerm, setSearchTerm] = useState("");
-  const [cityFilter, setCityFilter] = useState("");
-  const [specialtyFilter, setSpecialtyFilter] = useState("");
-  const [showSimulator, setShowSimulator] = useState(false);
-  const [selectedLawyer, setSelectedLawyer] = useState<any>(null);
+  const [activeTopic, setActiveTopic] = useState<Topic | null>(null);
+  const [content, setContent] = useState<string>("");
+  const [loading, setLoading] = useState(false);
 
-  const { data: lawyers = [], isLoading } = useQuery({
-    queryKey: ["lawyers", searchTerm, cityFilter, specialtyFilter],
-    queryFn: async () => {
-      let query = supabase
-        .from("professional_profiles")
-        .select("*, profiles!inner(full_name, avatar_url, city, phone)")
-        .eq("professional_type", "advogado")
-        .eq("is_approved", true);
-
-      if (specialtyFilter && specialtyFilter !== "all") {
-        query = query.ilike("specialty", `%${specialtyFilter}%`);
-      }
-
-      const { data, error } = await query;
+  const openTopic = async (topic: Topic) => {
+    setActiveTopic(topic);
+    setContent("");
+    setLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("legal-info", {
+        body: { topic: topic.key },
+      });
       if (error) throw error;
-
-      let filtered = data || [];
-      if (searchTerm) {
-        const t = searchTerm.toLowerCase();
-        filtered = filtered.filter((l: any) =>
-          l.profiles?.full_name?.toLowerCase().includes(t) ||
-          l.specialty?.toLowerCase().includes(t)
-        );
-      }
-      if (cityFilter) {
-        const c = cityFilter.toLowerCase();
-        filtered = filtered.filter((l: any) =>
-          l.profiles?.city?.toLowerCase().includes(c)
-        );
-      }
-      return filtered;
-    },
-  });
+      if (data?.error) throw new Error(data.error);
+      setContent(data?.content || "Não foi possível carregar o conteúdo.");
+    } catch (e: any) {
+      toast.error(e?.message || "Erro ao carregar conteúdo");
+      setContent("");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-background safe-top pb-28">
-
-      {/* ── Header ──────────────────────────────── */}
+      {/* Header */}
       <header className="bg-card border-b border-border/60 px-5 pt-8 pb-5">
         <div className="max-w-lg mx-auto">
           <button
@@ -84,159 +143,126 @@ export default function LegalHome() {
             <ChevronLeft className="h-4 w-4" />
             Home
           </button>
-          <h1 className="text-2xl font-bold text-foreground">Apoio Jurídico</h1>
-          <p className="text-sm text-muted-foreground mt-0.5">Advogados especializados em dívidas</p>
+          <div className="flex items-center gap-3">
+            <div className="w-11 h-11 rounded-xl bg-secondary flex items-center justify-center shrink-0">
+              <Scale className="h-5 w-5 text-foreground" />
+            </div>
+            <div>
+              <h1 className="text-2xl font-bold text-foreground">Apoio Jurídico</h1>
+              <p className="text-sm text-muted-foreground mt-0.5">
+                Entenda seus direitos e encontre orientação
+              </p>
+            </div>
+          </div>
         </div>
       </header>
 
       <main className="max-w-lg mx-auto px-5 pt-6 space-y-6">
-
-        {/* ── Simulador CTA ─────────────────────── */}
-        <button
-          onClick={() => setShowSimulator((v) => !v)}
-          className="w-full card-premium p-4 flex items-center gap-4 text-left hover:scale-[1.01] active:scale-[0.99] transition-transform"
-        >
-          <div className="w-10 h-10 rounded-xl bg-secondary flex items-center justify-center shrink-0">
-            <Calculator className="h-5 w-5 text-foreground" />
-          </div>
-          <div className="flex-1">
-            <p className="font-semibold text-sm text-foreground">Simulador de Renegociação</p>
-            <p className="text-xs text-muted-foreground mt-0.5">Calcule prazos e parcelas com IA</p>
-          </div>
-          <ChevronRight className={`h-4 w-4 text-muted-foreground transition-transform ${showSimulator ? "rotate-90" : ""}`} />
-        </button>
-
-        {showSimulator && <DebtSimulator />}
-
-        {/* ── Filtros ───────────────────────────── */}
-        <div className="card-premium p-4 space-y-3">
-          <div className="relative">
-            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Buscar por nome ou área..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10 input-premium"
-            />
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div className="relative">
-              <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground z-10" />
-              <Input
-                placeholder="Cidade"
-                value={cityFilter}
-                onChange={(e) => setCityFilter(e.target.value)}
-                className="pl-10 input-premium"
-              />
-            </div>
-            <Select value={specialtyFilter} onValueChange={setSpecialtyFilter}>
-              <SelectTrigger className="input-premium border-border">
-                <Filter className="h-4 w-4 mr-2 text-muted-foreground" />
-                <SelectValue placeholder="Especialidade" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todas</SelectItem>
-                {SPECIALTIES.map((s) => (
-                  <SelectItem key={s} value={s}>{s}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+        {/* Aviso */}
+        <div className="rounded-xl bg-card border border-border border-l-4 border-l-warning p-4 flex gap-3">
+          <AlertTriangle className="h-5 w-5 text-warning shrink-0 mt-0.5" />
+          <p className="text-xs text-foreground/80 leading-relaxed">
+            As informações aqui são <strong className="font-semibold">educativas</strong> e não substituem
+            consultoria jurídica profissional. Para seu caso específico, consulte um advogado.
+          </p>
         </div>
 
-        {/* ── Lista de advogados ────────────────── */}
+        {/* Tópicos */}
         <section>
           <p className="section-title flex items-center gap-2">
             <Scale className="h-3.5 w-3.5" />
-            Advogados disponíveis
+            Temas jurídicos
           </p>
-
-          {isLoading ? (
-            <div className="space-y-3">
-              {[1, 2, 3].map((i) => <div key={i} className="skeleton h-28 rounded-2xl" />)}
-            </div>
-          ) : lawyers.length === 0 ? (
-            <div className="card-premium p-10 text-center">
-              <Scale className="h-10 w-10 mx-auto text-muted-foreground/40 mb-3" />
-              <p className="text-sm text-muted-foreground">Nenhum advogado encontrado.</p>
-              <p className="text-xs text-muted-foreground mt-1">Tente remover os filtros.</p>
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {lawyers.map((lawyer: any) => (
-                <div key={lawyer.id} className="card-premium p-4">
-                  <div className="flex gap-4">
-                    <div className="w-12 h-12 rounded-xl bg-secondary flex items-center justify-center shrink-0">
-                      <Scale className="h-6 w-6 text-foreground" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-start justify-between gap-2">
-                        <div>
-                          <p className="font-semibold text-sm text-foreground">
-                            {lawyer.profiles?.full_name || "Advogado"}
-                          </p>
-                          <p className="text-xs text-muted-foreground">
-                            OAB/{lawyer.council_state} {lawyer.council_number}
-                          </p>
-                        </div>
-                        {lawyer.rating > 0 && (
-                          <div className="flex items-center gap-0.5 shrink-0">
-                            <Star className="h-3.5 w-3.5 text-warning fill-warning" />
-                            <span className="text-sm font-semibold">{Number(lawyer.rating).toFixed(1)}</span>
-                          </div>
-                        )}
-                      </div>
-
-                      <div className="flex flex-wrap gap-1.5 mt-2">
-                        <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-secondary text-muted-foreground uppercase tracking-wide">
-                          {lawyer.specialty}
-                        </span>
-                        {lawyer.profiles?.city && (
-                          <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full border border-border text-muted-foreground flex items-center gap-1">
-                            <MapPin className="h-2.5 w-2.5" />
-                            {lawyer.profiles.city}
-                          </span>
-                        )}
-                      </div>
-
-                      <div className="flex items-center justify-between mt-3">
-                        <span className="text-sm font-bold text-foreground">
-                          R$ {Number(lawyer.hourly_rate).toFixed(0)}
-                          <span className="font-normal text-muted-foreground text-xs">/consulta</span>
-                        </span>
-                        <button
-                          onClick={() => setSelectedLawyer(lawyer)}
-                          className="btn-cta py-2 px-4 text-xs"
-                        >
-                          <Clock className="h-3.5 w-3.5" />
-                          Agendar
-                        </button>
-                      </div>
-                    </div>
+          <div className="space-y-3">
+            {TOPICS.map((t) => {
+              const Icon = t.icon;
+              return (
+                <button
+                  key={t.key}
+                  onClick={() => openTopic(t)}
+                  className="w-full card-premium p-4 flex items-center gap-4 text-left hover:scale-[1.01] active:scale-[0.99] transition-transform"
+                >
+                  <div className="w-11 h-11 rounded-xl bg-secondary flex items-center justify-center shrink-0">
+                    <Icon className="h-5 w-5 text-foreground" />
                   </div>
-                </div>
-              ))}
-            </div>
-          )}
+                  <div className="flex-1 min-w-0">
+                    <p className="font-semibold text-sm text-foreground">{t.title}</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">{t.subtitle}</p>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
         </section>
 
-        {/* ── LGPD notice ───────────────────────── */}
+        {/* Marketplace de advogados */}
+        <section>
+          <button
+            onClick={() => navigate("/app/juridico/advogados")}
+            className="w-full card-premium p-4 flex items-center gap-4 text-left hover:scale-[1.01] active:scale-[0.99] transition-transform border-l-4 border-l-primary"
+          >
+            <div className="w-11 h-11 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+              <Users className="h-5 w-5 text-primary" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="font-semibold text-sm text-foreground">Encontre um advogado</p>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                Profissionais especializados em dívidas e ludopatia
+              </p>
+            </div>
+          </button>
+        </section>
+
+        {/* LGPD */}
         <div className="rounded-xl border border-border p-4 flex gap-3">
           <Shield className="h-4 w-4 text-muted-foreground shrink-0 mt-0.5" />
           <p className="text-xs text-muted-foreground leading-relaxed">
-            Seus dados são compartilhados com o profissional selecionado apenas mediante seu consentimento explícito, conforme a LGPD.
+            Conteúdo educativo gerado com apoio de IA. Sempre verifique informações atualizadas e consulte
+            profissionais qualificados.
           </p>
         </div>
-
       </main>
 
-      {selectedLawyer && (
-        <LawyerBookingDialog
-          lawyer={selectedLawyer}
-          open={!!selectedLawyer}
-          onOpenChange={(open) => !open && setSelectedLawyer(null)}
-        />
-      )}
+      {/* Topic Dialog */}
+      <Dialog open={!!activeTopic} onOpenChange={(o) => !o && setActiveTopic(null)}>
+        <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto p-0 gap-0">
+          {activeTopic && (
+            <>
+              <div className="sticky top-0 bg-card border-b border-border px-5 py-4 flex items-center gap-3 z-10">
+                <div className="w-10 h-10 rounded-xl bg-secondary flex items-center justify-center shrink-0">
+                  <activeTopic.icon className="h-5 w-5 text-foreground" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="font-semibold text-sm text-foreground">{activeTopic.title}</p>
+                  <p className="text-xs text-muted-foreground">{activeTopic.subtitle}</p>
+                </div>
+                <button
+                  onClick={() => setActiveTopic(null)}
+                  className="w-8 h-8 rounded-lg hover:bg-secondary flex items-center justify-center"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+              <div className="px-5 py-4">
+                {loading ? (
+                  <div className="flex flex-col items-center justify-center py-12 gap-3">
+                    <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                    <p className="text-sm text-muted-foreground">Gerando explicação...</p>
+                  </div>
+                ) : (
+                  <div className="prose-content">{renderMarkdown(content)}</div>
+                )}
+                <div className="mt-6 rounded-lg bg-warning/10 border border-warning/30 p-3 flex gap-2">
+                  <AlertTriangle className="h-4 w-4 text-warning shrink-0 mt-0.5" />
+                  <p className="text-xs text-foreground/80 leading-relaxed">
+                    Conteúdo educativo. Consulte um advogado para orientação sobre seu caso.
+                  </p>
+                </div>
+              </div>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
 
       <BottomNavigation />
       <AIChatPanel />
