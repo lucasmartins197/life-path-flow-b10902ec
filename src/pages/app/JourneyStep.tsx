@@ -127,21 +127,8 @@ export default function JourneyStep() {
     return () => clearInterval(interval);
   }, [startedAt, timeRemaining]);
 
-  // Video 10s timer
-  useEffect(() => {
-    if (currentSection !== 2 || videoWatched) return;
-    const interval = setInterval(() => {
-      setVideoTimer((t) => {
-        if (t >= 10) {
-          setVideoWatched(true);
-          clearInterval(interval);
-          return t;
-        }
-        return t + 1;
-      });
-    }, 1000);
-    return () => clearInterval(interval);
-  }, [currentSection, videoWatched]);
+  // Video watched is now triggered at 90% playback by VideoPlayer
+
 
   async function loadProgress() {
     setLoading(true);
