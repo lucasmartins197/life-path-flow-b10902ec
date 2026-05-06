@@ -387,7 +387,7 @@ export default function ProntuarioHome() {
                   </CardHeader>
                   <CardContent className="space-y-3">
                     <div>
-                      <p className="text-xs font-semibold text-green-600 mb-1">✅ Pontos Fortes:</p>
+                      <p className="text-xs font-semibold text-green-600 mb-1">Pontos Fortes:</p>
                       <ul className="space-y-1">
                         {p.overall_assessment?.strengths?.map((s, i) => (
                           <li key={i} className="text-sm text-muted-foreground">• {s}</li>
@@ -396,7 +396,7 @@ export default function ProntuarioHome() {
                     </div>
                     <Separator />
                     <div>
-                      <p className="text-xs font-semibold text-orange-600 mb-1">⚠️ Áreas de Melhoria:</p>
+                      <p className="text-xs font-semibold text-orange-600 mb-1">Áreas de Melhoria:</p>
                       <ul className="space-y-1">
                         {p.overall_assessment?.areas_improvement?.map((s, i) => (
                           <li key={i} className="text-sm text-muted-foreground">• {s}</li>

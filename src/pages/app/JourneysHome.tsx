@@ -223,7 +223,7 @@ export default function JourneysHome() {
                           color: isDone ? "rgba(255,255,255,0.5)" : "#9CA3AF",
                         }}
                       >
-                        ⏱ Mínimo 12h de comprometimento
+                        Mínimo 12h de comprometimento
                       </span>
                     </div>
                   </div>
