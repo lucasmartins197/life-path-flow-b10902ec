@@ -99,7 +99,7 @@ export default function MedalsHome() {
             )}
             {discountsEarned > 0 && (
               <p className="text-xs text-muted-foreground mt-1">
-                🎉 Você já ganhou {discountsEarned} desconto{discountsEarned > 1 ? "s" : ""} de 50%!
+                Você já ganhou {discountsEarned} desconto{discountsEarned > 1 ? "s" : ""} de 50%!
               </p>
             )}
           </div>
@@ -125,8 +125,12 @@ export default function MedalsHome() {
                     boxShadow: earnedData ? "0 4px 12px rgba(27,67,50,0.2)" : "none",
                   }}
                 >
-                  <div className="text-2xl">
-                    {earnedData ? medal.icon : "🔒"}
+                  <div className="flex items-center justify-center h-7">
+                    {earnedData ? (
+                      <medal.icon className="h-6 w-6" style={{ color: "#E8D590" }} />
+                    ) : (
+                      <Lock className="h-5 w-5" style={{ color: "#9CA3AF" }} />
+                    )}
                   </div>
                   <span
                     className="text-[10px] font-semibold leading-tight"
@@ -168,8 +172,12 @@ export default function MedalsHome() {
                     boxShadow: earnedData ? "0 4px 12px rgba(26,58,92,0.2)" : "none",
                   }}
                 >
-                  <div className="text-2xl">
-                    {earnedData ? medal.icon : "🔒"}
+                  <div className="flex items-center justify-center h-7">
+                    {earnedData ? (
+                      <medal.icon className="h-6 w-6" style={{ color: "#9DC4F0" }} />
+                    ) : (
+                      <Lock className="h-5 w-5" style={{ color: "#9CA3AF" }} />
+                    )}
                   </div>
                   <span
                     className="text-[10px] font-semibold leading-tight"
