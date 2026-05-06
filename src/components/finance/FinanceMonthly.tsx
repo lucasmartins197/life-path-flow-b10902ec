@@ -361,10 +361,10 @@ export function FinanceMonthly({
           <div className="fixed inset-0 z-[55]" onClick={() => setMenuOpen(false)} />
           <div className="fixed z-[60] flex flex-col gap-2 items-end" style={{ bottom: "calc(14rem + env(safe-area-inset-bottom, 0px))", right: "1.25rem" }}>
             {[
-              { label: "💰 Nova Entrada", type: "income" as const },
-              { label: "💸 Nova Saída", type: "expense" as const },
-              { label: "💳 Nova Dívida", type: "debt" as const },
-              { label: "✅ Registrar Pagamento", type: "payment" as const },
+              { label: "Nova Entrada", type: "income" as const },
+              { label: "Nova Saída", type: "expense" as const },
+              { label: "Nova Dívida", type: "debt" as const },
+              { label: "Registrar Pagamento", type: "payment" as const },
             ].map(item => (
               <button key={item.type} onClick={() => openModal(item.type)}
                 className="bg-card border border-border shadow-lg rounded-xl px-4 py-2.5 text-sm font-medium text-foreground hover:bg-muted transition-colors whitespace-nowrap">
@@ -378,7 +378,7 @@ export function FinanceMonthly({
       {/* ═══ MODAL: Nova Entrada ═══ */}
       <Dialog open={modalType === "income"} onOpenChange={open => !open && setModalType(null)}>
         <DialogContent className="max-w-sm rounded-2xl max-h-[85vh] overflow-y-auto">
-          <DialogHeader><DialogTitle>💰 Nova Entrada</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle>Nova Entrada</DialogTitle></DialogHeader>
           <div className="space-y-4 pt-2">
             <div>
               <label className="text-sm font-medium text-foreground">Descrição</label>
@@ -411,7 +411,7 @@ export function FinanceMonthly({
       {/* ═══ MODAL: Nova Saída ═══ */}
       <Dialog open={modalType === "expense"} onOpenChange={open => !open && setModalType(null)}>
         <DialogContent className="max-w-sm rounded-2xl max-h-[85vh] overflow-y-auto">
-          <DialogHeader><DialogTitle>💸 Nova Saída</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle>Nova Saída</DialogTitle></DialogHeader>
           <div className="space-y-4 pt-2">
             <div>
               <label className="text-sm font-medium text-foreground">Descrição</label>
@@ -448,7 +448,7 @@ export function FinanceMonthly({
       {/* ═══ MODAL: Nova Dívida ═══ */}
       <Dialog open={modalType === "debt"} onOpenChange={open => !open && setModalType(null)}>
         <DialogContent className="max-w-sm rounded-2xl max-h-[85vh] overflow-y-auto">
-          <DialogHeader><DialogTitle>💳 Nova Dívida</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle>Nova Dívida</DialogTitle></DialogHeader>
           <div className="space-y-4 pt-2">
             <div>
               <label className="text-sm font-medium text-foreground">Credor (banco/pessoa/empresa)</label>
@@ -489,7 +489,7 @@ export function FinanceMonthly({
       {/* ═══ MODAL: Registrar Pagamento ═══ */}
       <Dialog open={modalType === "payment"} onOpenChange={open => !open && setModalType(null)}>
         <DialogContent className="max-w-sm rounded-2xl max-h-[85vh] overflow-y-auto">
-          <DialogHeader><DialogTitle>✅ Registrar Pagamento</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle>Registrar Pagamento</DialogTitle></DialogHeader>
           {debts.length === 0 ? (
             <div className="py-6 text-center">
               <CreditCard className="h-8 w-8 mx-auto text-muted-foreground/30 mb-2" />
