@@ -90,7 +90,7 @@ export default function JourneyStep() {
 
   // Video (Etapa 2)
   const [videoWatched, setVideoWatched] = useState(false);
-  const [videoTimer, setVideoTimer] = useState(0);
+  const [videoUrl, setVideoUrl] = useState<string | null>(null);
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
 
   const intakeComplete = intakeMood && intakeReason.trim() && intakeTime;
