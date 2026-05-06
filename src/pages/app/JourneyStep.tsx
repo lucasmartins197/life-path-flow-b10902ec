@@ -11,7 +11,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import AnaLetter from "@/components/journey/AnaLetter";
 import {
-  Loader2, ArrowLeft, CheckCircle, Clock, Award, Send, Play,
+  Loader2, ArrowLeft, CheckCircle, Clock, Award, Send, Play, Frown, Meh, Smile, Flame, Leaf, Film, ClipboardList, MessageSquare,
 } from "lucide-react";
 
 /* ── Step metadata ── */
@@ -37,10 +37,10 @@ const CHECKLIST_ITEMS = [
 ];
 
 const MOOD_OPTIONS = [
-  { emoji: "😔", label: "Mal" },
-  { emoji: "😐", label: "Regular" },
-  { emoji: "🙂", label: "Ok" },
-  { emoji: "💪", label: "Motivado" },
+  { Icon: Frown, label: "Mal" },
+  { Icon: Meh, label: "Regular" },
+  { Icon: Smile, label: "Ok" },
+  { Icon: Flame, label: "Motivado" },
 ];
 
 const TIME_OPTIONS = [
@@ -344,7 +344,7 @@ export default function JourneyStep() {
                 color: isDone || isActive ? "#fff" : "#9CA3AF",
               }}
             >
-              {isDone ? "✓" : n}
+              {isDone ? <CheckCircle className="h-3.5 w-3.5" /> : n}
             </div>
             {n < TOTAL_SECTIONS && (
               <div
@@ -367,9 +367,9 @@ export default function JourneyStep() {
             style={{ background: "linear-gradient(135deg, #C9A84C, #E8D590)", boxShadow: "0 0 40px rgba(201,168,76,0.5)" }}>
             <Award className="h-12 w-12 text-white" />
           </div>
-          <h1 className="text-2xl font-bold text-white mb-2">Parabéns! 🎉</h1>
+          <h1 className="text-2xl font-bold text-white mb-2">Parabéns!</h1>
           <p className="text-white/80 text-lg mb-1">Você conquistou a medalha</p>
-          <p className="text-xl font-bold" style={{ color: "#E8D590" }}>🏅 {meta.medal}</p>
+          <p className="text-xl font-bold flex items-center justify-center gap-2" style={{ color: "#E8D590" }}><Award className="h-5 w-5" /> {meta.medal}</p>
           <p className="text-white/50 text-sm mt-6">Redirecionando para a Jornada...</p>
         </div>
       </div>
@@ -397,12 +397,12 @@ export default function JourneyStep() {
               <p className="text-sm text-white/60">Passo {stepNumber} de 12</p>
               <h1 className="text-lg font-bold text-white truncate">{meta.name}</h1>
             </div>
-            <span className="text-sm" style={{ color: "#E8D590" }}>🏅 {meta.medal}</span>
+            <span className="text-sm flex items-center gap-1" style={{ color: "#E8D590" }}><Award className="h-4 w-4" /> {meta.medal}</span>
           </div>
           <p className="text-sm text-white/70 mb-2">{meta.subtitle}</p>
           <div className="flex items-center gap-2 text-xs text-white/50">
             <Clock className="h-3 w-3" />
-            {timeRemaining > 0 ? `Disponível em: ${formatTime(timeRemaining)}` : "✅ Tempo cumprido"}
+            {timeRemaining > 0 ? `Disponível em: ${formatTime(timeRemaining)}` : "Tempo cumprido"}
           </div>
         </div>
       </div>
@@ -417,7 +417,7 @@ export default function JourneyStep() {
           <Card className="border-none shadow-lg">
             <CardContent className="pt-6 space-y-5">
               <div className="text-center mb-2">
-                <div className="text-3xl mb-2">🌱</div>
+                <Leaf className="h-7 w-7 mx-auto mb-2 text-primary" />
                 <h2 className="text-lg font-bold text-foreground">Antes de começar, me conta...</h2>
               </div>
 
@@ -436,7 +436,7 @@ export default function JourneyStep() {
                         background: intakeMood === m.label ? "#E8F5E9" : "transparent",
                       }}
                     >
-                      <span className="text-2xl">{m.emoji}</span>
+                      <m.Icon className="h-6 w-6" style={{ color: intakeMood === m.label ? "#1B4332" : "#6B7280" }} />
                       <span className="text-xs font-medium" style={{ color: intakeMood === m.label ? "#1B4332" : "#6B7280" }}>
                         {m.label}
                       </span>
@@ -520,7 +520,7 @@ export default function JourneyStep() {
               <div className="p-5 space-y-4">
                 <div>
                   <h3 className="font-bold text-foreground">Passo {stepNumber} — {meta.name}</h3>
-                  <p className="text-sm text-muted-foreground mt-0.5">🎬 3 min</p>
+                  <p className="text-sm text-muted-foreground mt-0.5 flex items-center gap-1"><Film className="h-3.5 w-3.5" /> 3 min</p>
                 </div>
 
                 {!videoWatched && (
@@ -548,7 +548,7 @@ export default function JourneyStep() {
           <Card>
             <CardHeader>
               <CardTitle className="text-base flex items-center gap-2">
-                📋 O que você vai fazer FORA do app
+                <ClipboardList className="h-4 w-4" /> O que você vai fazer FORA do app
                 {allChecked && <CheckCircle className="h-4 w-4 text-green-600" />}
               </CardTitle>
             </CardHeader>
@@ -589,7 +589,7 @@ export default function JourneyStep() {
           <Card>
             <CardHeader>
               <CardTitle className="text-base flex items-center gap-2">
-                💭 Responda com honestidade
+                <MessageSquare className="h-4 w-4" /> Responda com honestidade
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-5">
@@ -653,7 +653,7 @@ export default function JourneyStep() {
           <Card className="border-2" style={{ borderColor: canComplete ? "#2D6A4F" : undefined }}>
             <CardContent className="pt-6 space-y-4">
               <div className="text-center">
-                <div className="text-3xl mb-2">🏅</div>
+                <Award className="h-8 w-8 mx-auto mb-2 text-primary" />
                 <h3 className="font-bold text-lg">Concluir Passo {stepNumber}</h3>
                 <p className="text-sm text-muted-foreground mt-1">Medalha: {meta.medal}</p>
               </div>
@@ -674,7 +674,7 @@ export default function JourneyStep() {
                 <div className="flex items-center gap-2">
                   {timeRemaining <= 0 ? <CheckCircle className="h-4 w-4 text-green-600" /> : <Clock className="h-4 w-4 text-muted-foreground" />}
                   <span className={timeRemaining <= 0 ? "text-green-700" : "text-muted-foreground"}>
-                    {timeRemaining > 0 ? `⏱ Disponível em: ${formatTime(timeRemaining)}` : "⏱ Tempo cumprido"}
+                    {timeRemaining > 0 ? `Disponível em: ${formatTime(timeRemaining)}` : "Tempo cumprido"}
                   </span>
                 </div>
               </div>
@@ -686,7 +686,7 @@ export default function JourneyStep() {
                 onClick={completeStep}
               >
                 {saving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Award className="h-4 w-4 mr-2" />}
-                {canComplete ? "Concluir Passo e Ganhar Medalha 🏅" : "Complete os requisitos acima"}
+                {canComplete ? "Concluir Passo e Ganhar Medalha" : "Complete os requisitos acima"}
               </Button>
             </CardContent>
           </Card>
