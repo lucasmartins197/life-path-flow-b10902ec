@@ -22,7 +22,7 @@ export default function SubscriptionHome() {
   useEffect(() => {
     if (success) {
       toast({
-        title: "Parabéns! 🎉",
+        title: "Parabéns!",
         description: "Sua assinatura foi ativada com sucesso. Aproveite todos os recursos!",
       });
     }

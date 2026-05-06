@@ -157,7 +157,7 @@ export default function AppHome() {
           </div>
           <div className="flex-1">
             <p className="text-sm font-bold text-foreground">
-              🔥 {streakDays} {streakDays === 1 ? "dia seguido" : "dias seguidos"}
+              {streakDays} {streakDays === 1 ? "dia seguido" : "dias seguidos"}
             </p>
             <p className="text-xs text-muted-foreground mt-0.5">
               {streakDays > 0

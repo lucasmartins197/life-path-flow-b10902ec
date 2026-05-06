@@ -103,7 +103,7 @@ export default function AnaLetter({ letters, isLoading, onSendReply, maxExchange
         <div className="text-center py-6 px-4">
           <p className="text-base" style={{ color: "#2D6A4F", fontFamily: "Georgia, 'Times New Roman', serif" }}>
             Ana ficará com você durante toda a sua jornada.<br />
-            Nos vemos no próximo passo. 🌱
+            Nos vemos no próximo passo.
           </p>
         </div>
       )}
@@ -197,7 +197,7 @@ function LetterCard({ content, animate }: { content: string; animate: boolean })
             fontSize: "15px",
           }}
         >
-          Com carinho, Ana 🌱
+          Com carinho, Ana
         </p>
       )}
     </div>
