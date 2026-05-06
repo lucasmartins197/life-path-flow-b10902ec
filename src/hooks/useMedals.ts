@@ -3,6 +3,11 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { useCallback } from "react";
+import {
+  Leaf, Sparkles, Heart, ClipboardList, Gem, Unlock, Feather, FileText,
+  Handshake, Eye, Brain, Trophy, MessageCircle, Stethoscope, Calendar,
+  TreePine, Dumbbell, Bird, Star, Crown, type LucideIcon,
+} from "lucide-react";
 
 /* ── All possible medals ── */
 export interface MedalDef {
@@ -10,32 +15,32 @@ export interface MedalDef {
   name: string;
   description: string;
   badge_type: string;
-  icon: string; // emoji
+  icon: LucideIcon;
 }
 
 export const MEDAL_DEFINITIONS: MedalDef[] = [
   // Journey steps (12)
-  { id: "journey-1",  name: "Reconhecimento",   description: "Concluiu o Passo 1",  badge_type: "journey", icon: "🌱" },
-  { id: "journey-2",  name: "Esperança",        description: "Concluiu o Passo 2",  badge_type: "journey", icon: "🌟" },
-  { id: "journey-3",  name: "Entrega",          description: "Concluiu o Passo 3",  badge_type: "journey", icon: "🙏" },
-  { id: "journey-4",  name: "Inventário",       description: "Concluiu o Passo 4",  badge_type: "journey", icon: "📋" },
-  { id: "journey-5",  name: "Verdade",          description: "Concluiu o Passo 5",  badge_type: "journey", icon: "💎" },
-  { id: "journey-6",  name: "Disponibilidade",  description: "Concluiu o Passo 6",  badge_type: "journey", icon: "🔓" },
-  { id: "journey-7",  name: "Humildade",        description: "Concluiu o Passo 7",  badge_type: "journey", icon: "🕊️" },
-  { id: "journey-8",  name: "Responsabilidade", description: "Concluiu o Passo 8",  badge_type: "journey", icon: "📝" },
-  { id: "journey-9",  name: "Reparação",        description: "Concluiu o Passo 9",  badge_type: "journey", icon: "🤝" },
-  { id: "journey-10", name: "Vigilância",       description: "Concluiu o Passo 10", badge_type: "journey", icon: "👁️" },
-  { id: "journey-11", name: "Conexão Real",     description: "Concluiu o Passo 11", badge_type: "journey", icon: "🧘" },
-  { id: "journey-12", name: "Propósito",        description: "Concluiu o Passo 12", badge_type: "journey", icon: "🏆" },
+  { id: "journey-1",  name: "Reconhecimento",   description: "Concluiu o Passo 1",  badge_type: "journey", icon: Leaf },
+  { id: "journey-2",  name: "Esperança",        description: "Concluiu o Passo 2",  badge_type: "journey", icon: Sparkles },
+  { id: "journey-3",  name: "Entrega",          description: "Concluiu o Passo 3",  badge_type: "journey", icon: Heart },
+  { id: "journey-4",  name: "Inventário",       description: "Concluiu o Passo 4",  badge_type: "journey", icon: ClipboardList },
+  { id: "journey-5",  name: "Verdade",          description: "Concluiu o Passo 5",  badge_type: "journey", icon: Gem },
+  { id: "journey-6",  name: "Disponibilidade",  description: "Concluiu o Passo 6",  badge_type: "journey", icon: Unlock },
+  { id: "journey-7",  name: "Humildade",        description: "Concluiu o Passo 7",  badge_type: "journey", icon: Feather },
+  { id: "journey-8",  name: "Responsabilidade", description: "Concluiu o Passo 8",  badge_type: "journey", icon: FileText },
+  { id: "journey-9",  name: "Reparação",        description: "Concluiu o Passo 9",  badge_type: "journey", icon: Handshake },
+  { id: "journey-10", name: "Vigilância",       description: "Concluiu o Passo 10", badge_type: "journey", icon: Eye },
+  { id: "journey-11", name: "Conexão Real",     description: "Concluiu o Passo 11", badge_type: "journey", icon: Brain },
+  { id: "journey-12", name: "Propósito",        description: "Concluiu o Passo 12", badge_type: "journey", icon: Trophy },
   // Therapy sessions (up to 8 medals for 4 sessions)
-  { id: "therapy-1",  name: "Primeiro Passo Terapêutico", description: "Agendou sua 1ª sessão",  badge_type: "therapy", icon: "💬" },
-  { id: "therapy-2",  name: "Conexão Profissional",       description: "Concluiu sua 1ª sessão",  badge_type: "therapy", icon: "🩺" },
-  { id: "therapy-3",  name: "Compromisso Contínuo",       description: "Agendou sua 2ª sessão",   badge_type: "therapy", icon: "📅" },
-  { id: "therapy-4",  name: "Evolução Terapêutica",       description: "Concluiu sua 2ª sessão",  badge_type: "therapy", icon: "🌿" },
-  { id: "therapy-5",  name: "Dedicação ao Processo",      description: "Agendou sua 3ª sessão",   badge_type: "therapy", icon: "💪" },
-  { id: "therapy-6",  name: "Transformação em Curso",     description: "Concluiu sua 3ª sessão",  badge_type: "therapy", icon: "🦋" },
-  { id: "therapy-7",  name: "Veterano Terapêutico",       description: "Agendou sua 4ª sessão",   badge_type: "therapy", icon: "⭐" },
-  { id: "therapy-8",  name: "Mestre do Autocuidado",      description: "Concluiu sua 4ª sessão",  badge_type: "therapy", icon: "👑" },
+  { id: "therapy-1",  name: "Primeiro Passo Terapêutico", description: "Agendou sua 1ª sessão",  badge_type: "therapy", icon: MessageCircle },
+  { id: "therapy-2",  name: "Conexão Profissional",       description: "Concluiu sua 1ª sessão",  badge_type: "therapy", icon: Stethoscope },
+  { id: "therapy-3",  name: "Compromisso Contínuo",       description: "Agendou sua 2ª sessão",   badge_type: "therapy", icon: Calendar },
+  { id: "therapy-4",  name: "Evolução Terapêutica",       description: "Concluiu sua 2ª sessão",  badge_type: "therapy", icon: TreePine },
+  { id: "therapy-5",  name: "Dedicação ao Processo",      description: "Agendou sua 3ª sessão",   badge_type: "therapy", icon: Dumbbell },
+  { id: "therapy-6",  name: "Transformação em Curso",     description: "Concluiu sua 3ª sessão",  badge_type: "therapy", icon: Bird },
+  { id: "therapy-7",  name: "Veterano Terapêutico",       description: "Agendou sua 4ª sessão",   badge_type: "therapy", icon: Star },
+  { id: "therapy-8",  name: "Mestre do Autocuidado",      description: "Concluiu sua 4ª sessão",  badge_type: "therapy", icon: Crown },
 ];
 
 export interface EarnedBadge {
@@ -82,11 +87,11 @@ export function useMedals() {
         user_id: user.id,
         badge_name: def.name,
         badge_type: def.badge_type,
-        metadata: { medal_id: medalId, icon: def.icon },
+        metadata: { medal_id: medalId },
       });
 
       if (!error) {
-        toast.success(`🏅 Medalha conquistada: ${def.name}!`, {
+        toast.success(`Medalha conquistada: ${def.name}!`, {
           description: def.description,
           duration: 4000,
         });
