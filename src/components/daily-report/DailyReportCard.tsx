@@ -14,6 +14,8 @@ import {
   Loader2,
   Target,
   X,
+  Star, Heart, AlertCircle, LifeBuoy, Compass, ClipboardList, Apple, Dumbbell,
+  type LucideIcon,
 } from "lucide-react";
 
 interface DailyAIData {
@@ -30,13 +32,13 @@ interface DailyAIData {
   score: number;
 }
 
-function getMoodConfig(mood: string) {
+function getMoodConfig(mood: string): { color: string; label: string; Icon: LucideIcon } {
   switch (mood) {
-    case "positivo": return { color: "bg-green-500", label: "Tudo certo!", emoji: "🌟" };
-    case "neutro": return { color: "bg-blue-500", label: "Atenção leve", emoji: "💙" };
-    case "atencao": return { color: "bg-orange-500", label: "Atenção", emoji: "⚠️" };
-    case "critico": return { color: "bg-red-500", label: "Precisa de apoio", emoji: "🆘" };
-    default: return { color: "bg-primary", label: "Seu dia", emoji: "✨" };
+    case "positivo": return { color: "bg-green-500", label: "Tudo certo!", Icon: Star };
+    case "neutro": return { color: "bg-blue-500", label: "Atenção leve", Icon: Heart };
+    case "atencao": return { color: "bg-orange-500", label: "Atenção", Icon: AlertCircle };
+    case "critico": return { color: "bg-red-500", label: "Precisa de apoio", Icon: LifeBuoy };
+    default: return { color: "bg-primary", label: "Seu dia", Icon: Sparkles };
   }
 }
 
@@ -116,7 +118,7 @@ export function DailyReportCard() {
             <span className="text-xs font-medium text-muted-foreground">Relatório Diário da Lia</span>
           </div>
           <div className="flex items-center gap-1">
-            <Badge variant="secondary" className="text-xs">{mood.emoji} {aiData.score}/100</Badge>
+            <Badge variant="secondary" className="text-xs flex items-center gap-1"><mood.Icon className="h-3 w-3" /> {aiData.score}/100</Badge>
             <button onClick={() => setIsDismissed(true)} className="p-1 text-muted-foreground hover:text-foreground">
               <X className="h-3.5 w-3.5" />
             </button>
@@ -154,25 +156,25 @@ export function DailyReportCard() {
           <div className="space-y-3 pt-2 border-t border-border animate-in fade-in duration-300">
             {aiData.journey_summary && (
               <div>
-                <p className="text-xs font-semibold text-muted-foreground mb-0.5">🧭 Jornada</p>
+                <p className="text-xs font-semibold text-muted-foreground mb-0.5 flex items-center gap-1"><Compass className="h-3 w-3" /> Jornada</p>
                 <p className="text-sm text-foreground">{aiData.journey_summary}</p>
               </div>
             )}
             {aiData.routine_summary && (
               <div>
-                <p className="text-xs font-semibold text-muted-foreground mb-0.5">📋 Rotina</p>
+                <p className="text-xs font-semibold text-muted-foreground mb-0.5 flex items-center gap-1"><ClipboardList className="h-3 w-3" /> Rotina</p>
                 <p className="text-sm text-foreground">{aiData.routine_summary}</p>
               </div>
             )}
             {aiData.nutrition_summary && (
               <div>
-                <p className="text-xs font-semibold text-muted-foreground mb-0.5">🍎 Nutrição</p>
+                <p className="text-xs font-semibold text-muted-foreground mb-0.5 flex items-center gap-1"><Apple className="h-3 w-3" /> Nutrição</p>
                 <p className="text-sm text-foreground">{aiData.nutrition_summary}</p>
               </div>
             )}
             {aiData.exercise_summary && (
               <div>
-                <p className="text-xs font-semibold text-muted-foreground mb-0.5">🏋️ Exercícios</p>
+                <p className="text-xs font-semibold text-muted-foreground mb-0.5 flex items-center gap-1"><Dumbbell className="h-3 w-3" /> Exercícios</p>
                 <p className="text-sm text-foreground">{aiData.exercise_summary}</p>
               </div>
             )}
