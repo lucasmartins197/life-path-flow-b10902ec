@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import AnaLetter from "@/components/journey/AnaLetter";
+import VideoPlayer from "@/components/journey/VideoPlayer";
 import {
   Loader2, ArrowLeft, CheckCircle, Clock, Award, Send, Play, Frown, Meh, Smile, Flame, Leaf, Film, ClipboardList, MessageSquare,
 } from "lucide-react";
@@ -89,7 +90,6 @@ export default function JourneyStep() {
 
   // Video (Etapa 2)
   const [videoWatched, setVideoWatched] = useState(false);
-  const [videoTimer, setVideoTimer] = useState(0);
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
 
   const intakeComplete = intakeMood && intakeReason.trim() && intakeTime;
@@ -126,21 +126,8 @@ export default function JourneyStep() {
     return () => clearInterval(interval);
   }, [startedAt, timeRemaining]);
 
-  // Video 10s timer
-  useEffect(() => {
-    if (currentSection !== 2 || videoWatched) return;
-    const interval = setInterval(() => {
-      setVideoTimer((t) => {
-        if (t >= 10) {
-          setVideoWatched(true);
-          clearInterval(interval);
-          return t;
-        }
-        return t + 1;
-      });
-    }, 1000);
-    return () => clearInterval(interval);
-  }, [currentSection, videoWatched]);
+  // Video watched is now triggered at 90% playback by VideoPlayer
+
 
   async function loadProgress() {
     setLoading(true);
@@ -496,26 +483,14 @@ export default function JourneyStep() {
           <Card className="border-none shadow-lg overflow-hidden">
             <CardContent className="p-0">
               {/* Video player / placeholder */}
-              {videoUrl ? (
-                <div className="aspect-video">
-                  <iframe
-                    src={videoUrl}
-                    className="w-full h-full"
-                    allow="autoplay; fullscreen"
-                    allowFullScreen
-                  />
-                </div>
-              ) : (
-                <div
-                  className="aspect-video flex flex-col items-center justify-center cursor-pointer"
-                  style={{ background: "linear-gradient(135deg, #1B4332, #2D6A4F)" }}
-                >
-                  <div className="w-16 h-16 rounded-full flex items-center justify-center bg-white/20 mb-3">
-                    <Play className="h-8 w-8 text-white ml-1" />
-                  </div>
-                  <p className="text-white/70 text-sm">Vídeo em breve</p>
-                </div>
-              )}
+              <VideoPlayer
+                url={videoUrl}
+                watched={videoWatched}
+                onWatched={() => {
+                  setVideoWatched(true);
+                  saveProgress({ video_watched: true } as any);
+                }}
+              />
 
               <div className="p-5 space-y-4">
                 <div>
@@ -523,10 +498,19 @@ export default function JourneyStep() {
                   <p className="text-sm text-muted-foreground mt-0.5 flex items-center gap-1"><Film className="h-3.5 w-3.5" /> 3 min</p>
                 </div>
 
-                {!videoWatched && (
+                {!videoWatched && videoUrl && (
                   <p className="text-xs text-muted-foreground text-center">
-                    Aguarde {Math.max(0, 10 - videoTimer)}s para continuar...
+                    Assista a pelo menos 90% do vídeo para liberar a próxima seção.
                   </p>
+                )}
+                {!videoWatched && !videoUrl && (
+                  <Button
+                    variant="outline"
+                    className="w-full"
+                    onClick={() => setVideoWatched(true)}
+                  >
+                    Marcar como assistido
+                  </Button>
                 )}
 
                 {videoWatched && (
