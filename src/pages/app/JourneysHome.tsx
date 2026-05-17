@@ -285,10 +285,10 @@ export default function JourneysHome() {
               </p>
             </div>
             <iframe
-              src="https://www.youtube.com/embed/1sOmc_iDXn4?rel=0&modestbranding=1&showinfo=0&iv_load_policy=3&fs=1"
+              src="https://drive.google.com/file/d/1NVhQqDYM3Z6XdwRh9HMMi-m3NHqkX31K/preview"
               width="100%"
               style={{ aspectRatio: "16 / 9", border: "none" }}
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allow="autoplay"
               allowFullScreen
               title="Introdução à Jornada dos 12 Passos"
             />

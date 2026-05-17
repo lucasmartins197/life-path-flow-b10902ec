@@ -211,6 +211,22 @@ export default function FinanceHome() {
         </div>
       </header>
 
+      <section className="max-w-lg mx-auto px-5 pt-4">
+        <h2 className="text-base font-bold mb-3" style={{ color: "#1B4332" }}>
+          Reestruturação Financeira
+        </h2>
+        <div className="w-full rounded-xl overflow-hidden shadow-md bg-black">
+          <iframe
+            src="https://drive.google.com/file/d/1Z_wWpaUapxxLvO92qvS6kSsaR_r_VwsV/preview"
+            width="100%"
+            style={{ aspectRatio: "16 / 9", border: "none" }}
+            allow="autoplay"
+            allowFullScreen
+            title="Reestruturação Financeira"
+          />
+        </div>
+      </section>
+
       {!profile ? (
         <div className="max-w-lg mx-auto px-5 pt-10 text-center">
           <Wallet className="h-12 w-12 mx-auto text-muted-foreground/30 mb-4" />
