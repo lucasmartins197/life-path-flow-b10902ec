@@ -556,6 +556,10 @@ export default function JourneyStep() {
             <>
               <CheckCircle className="h-5 w-5 mr-2" /> Passo concluído — refazer
             </>
+          ) : !stepTaskDone && !isAdmin ? (
+            <>
+              <Lock className="h-5 w-5 mr-2" /> Complete a tarefa para concluir
+            </>
           ) : (
             <>
               Concluir Passo {stepNumber}
