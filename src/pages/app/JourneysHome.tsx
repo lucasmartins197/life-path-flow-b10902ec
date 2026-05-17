@@ -2,12 +2,12 @@ import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { useJourneyValidation, STEP_TASK_LABEL } from "@/hooks/useJourneyValidation";
 import {
   ChevronLeft,
   Lock,
   Play,
   Award,
-  Clock,
   CheckCircle2,
 } from "lucide-react";
 import { BottomNavigation } from "@/components/BottomNavigation";
