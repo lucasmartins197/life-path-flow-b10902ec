@@ -104,7 +104,7 @@ export default function JourneysHome() {
       </header>
 
       <main className="max-w-lg mx-auto px-5 pt-5 space-y-3">
-        {isLoading ? (
+        {loading ? (
           <div className="space-y-3">
             {[1, 2, 3, 4].map((i) => (
               <div key={i} className="h-24 rounded-2xl bg-muted animate-pulse" />
