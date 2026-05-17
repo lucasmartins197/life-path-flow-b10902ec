@@ -173,7 +173,8 @@ export default function JourneyStep() {
     if (data) {
       setProgressData(data);
       setStartedAt(data.started_at);
-      setCurrentSection(data.current_section || 1);
+      const sec = data.current_section || 1;
+      setCurrentSection(sec === 2 ? 3 : sec);
       const cl = data.checklist_items;
       if (Array.isArray(cl) && cl.length === CHECKLIST_ITEMS.length) {
         setCheckedItems(cl.map(Boolean));
