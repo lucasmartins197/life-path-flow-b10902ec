@@ -12,8 +12,24 @@ import { useToast } from "@/hooks/use-toast";
 import AnaLetter from "@/components/journey/AnaLetter";
 import VideoPlayer from "@/components/journey/VideoPlayer";
 import {
-  Loader2, ArrowLeft, CheckCircle, Clock, Award, Send, Play, Frown, Meh, Smile, Flame, Leaf, Film, ClipboardList, MessageSquare,
+  Loader2, ArrowLeft, CheckCircle, Clock, Award, Send, Play, Frown, Meh, Smile, Flame, Leaf, Film, ClipboardList, MessageSquare, Headphones,
 } from "lucide-react";
+
+/* ── Step audio (Google Drive direct download) ── */
+const STEP_AUDIO: Record<number, string> = {
+  1: "https://drive.google.com/uc?export=download&id=1vA0l9CZK1CVv2RbP8ohAlv13aAJDSTqS",
+  2: "https://drive.google.com/uc?export=download&id=1vW-vGZgzN2mwtfi9ilbRai0QVa-GYoHx",
+  3: "https://drive.google.com/uc?export=download&id=1Ei49PpIkHzeuFX-xRJEizTQDw4Jd1rih",
+  4: "https://drive.google.com/uc?export=download&id=1Qs-NEAL_rjbs_WvPvHMABc3I2I4W_6PZ",
+  5: "https://drive.google.com/uc?export=download&id=1nTFaHJ3UwP-KG1cuekLojldo5jBkyfDj",
+  6: "https://drive.google.com/uc?export=download&id=1lrj_W5zRksRNwguWvmyGNn-R2CPlb39p",
+  7: "https://drive.google.com/uc?export=download&id=1h6CTkk0_Y-8jr5KOasWvli4JU9EYnhiT",
+  8: "https://drive.google.com/uc?export=download&id=1vNJE3l8sfYxaZgSvnvHxAJ24lsJpgzZI",
+  9: "https://drive.google.com/uc?export=download&id=1vmtwJJqO0Gpoi-JVSYPwFpIYewL0f3X0",
+  10: "https://drive.google.com/uc?export=download&id=1sjv1n9oHmk2JlyXA7rZjSlg64CWbezBT",
+  11: "https://drive.google.com/uc?export=download&id=1UKbokVn_DSNOE-vN-mr1ctkctUyyBnpc",
+  12: "https://drive.google.com/uc?export=download&id=12lLG_MIjaQqnim4yP4FDu9F__nfK1GDb",
+};
 
 /* ── Step metadata ── */
 const STEP_META: Record<number, { name: string; subtitle: string; medal: string }> = {
