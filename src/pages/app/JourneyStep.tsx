@@ -119,7 +119,7 @@ export default function JourneyStep() {
     return Math.max(0, MIN_HOURS * 3600 - elapsed);
   }, [startedAt]);
 
-  const canComplete = timeRemaining <= 0 && allChecked && answersComplete && conversation.length > 0;
+  const canComplete = allChecked && answersComplete && conversation.length > 0;
 
   const formatTime = (seconds: number) => {
     const h = Math.floor(seconds / 3600);
@@ -403,11 +403,8 @@ export default function JourneyStep() {
             <span className="text-sm flex items-center gap-1" style={{ color: "#E8D590" }}><Award className="h-4 w-4" /> {meta.medal}</span>
           </div>
           <p className="text-sm text-white/70 mb-2">{meta.subtitle}</p>
-          <div className="flex items-center gap-2 text-xs text-white/50">
-            <Clock className="h-3 w-3" />
-            {timeRemaining > 0 ? `Disponível em: ${formatTime(timeRemaining)}` : "Tempo cumprido"}
-          </div>
         </div>
+
       </div>
 
       {/* Step indicator */}
@@ -692,12 +689,6 @@ export default function JourneyStep() {
                 <div className="flex items-center gap-2">
                   {conversation.length > 0 ? <CheckCircle className="h-4 w-4 text-green-600" /> : <Clock className="h-4 w-4 text-muted-foreground" />}
                   <span className={conversation.length > 0 ? "text-green-700" : "text-muted-foreground"}>Carta da Ana recebida</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  {timeRemaining <= 0 ? <CheckCircle className="h-4 w-4 text-green-600" /> : <Clock className="h-4 w-4 text-muted-foreground" />}
-                  <span className={timeRemaining <= 0 ? "text-green-700" : "text-muted-foreground"}>
-                    {timeRemaining > 0 ? `Disponível em: ${formatTime(timeRemaining)}` : "Tempo cumprido"}
-                  </span>
                 </div>
               </div>
 

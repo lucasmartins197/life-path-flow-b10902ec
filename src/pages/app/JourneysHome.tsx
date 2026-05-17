@@ -40,14 +40,8 @@ export default function JourneysHome() {
   const { user } = useAuth();
   const [progress, setProgress] = useState<JourneyProgressRow[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [showIntro, setShowIntro] = useState(
-    () => typeof window !== "undefined" && sessionStorage.getItem("journey_intro_seen") !== "1"
-  );
 
-  const dismissIntro = () => {
-    sessionStorage.setItem("journey_intro_seen", "1");
-    setShowIntro(false);
-  };
+
 
   useEffect(() => {
     if (!user) return;
@@ -270,40 +264,7 @@ export default function JourneysHome() {
       <PortoSeguroButton />
       <AIChatPanel />
 
-      {showIntro && (
-        <div className="fixed inset-0 z-[100] bg-black/80 flex items-center justify-center p-4 safe-top safe-bottom overflow-y-auto">
-          <div className="w-full max-w-lg bg-white rounded-2xl overflow-hidden shadow-2xl my-auto">
-            <div
-              className="px-5 py-4"
-              style={{ background: "linear-gradient(135deg, #1B4332, #2D6A4F)" }}
-            >
-              <h2 className="text-white font-bold text-lg">
-                Antes de começar, assista este vídeo
-              </h2>
-              <p className="text-white/70 text-xs mt-1">
-                Uma breve introdução à Jornada dos 12 Passos
-              </p>
-            </div>
-            <iframe
-              src="https://drive.google.com/file/d/1NVhQqDYM3Z6XdwRh9HMMi-m3NHqkX31K/preview"
-              width="100%"
-              style={{ aspectRatio: "16 / 9", border: "none" }}
-              allow="autoplay"
-              allowFullScreen
-              title="Introdução à Jornada dos 12 Passos"
-            />
-            <div className="p-5">
-              <button
-                onClick={dismissIntro}
-                className="w-full h-12 rounded-xl font-semibold text-white transition-transform active:scale-[0.98]"
-                style={{ background: "linear-gradient(135deg, #1B4332, #2D6A4F)" }}
-              >
-                Continuar para a Jornada
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
+
