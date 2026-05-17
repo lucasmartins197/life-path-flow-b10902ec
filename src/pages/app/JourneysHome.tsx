@@ -40,14 +40,8 @@ export default function JourneysHome() {
   const { user } = useAuth();
   const [progress, setProgress] = useState<JourneyProgressRow[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [showIntro, setShowIntro] = useState(
-    () => typeof window !== "undefined" && sessionStorage.getItem("journey_intro_seen") !== "1"
-  );
 
-  const dismissIntro = () => {
-    sessionStorage.setItem("journey_intro_seen", "1");
-    setShowIntro(false);
-  };
+
 
   useEffect(() => {
     if (!user) return;
