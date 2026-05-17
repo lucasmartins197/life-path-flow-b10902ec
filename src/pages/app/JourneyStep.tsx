@@ -1,13 +1,20 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import confetti from "canvas-confetti";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useMedals } from "@/hooks/useMedals";
+import {
+  useJourneyValidation,
+  STEP_VALIDATION_MEDAL,
+  STEP_TASK_LABEL,
+} from "@/hooks/useJourneyValidation";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import {
-  Loader2, ArrowLeft, Award, Headphones, Sparkles, MessageSquare, Compass, ArrowRight, CheckCircle,
+  Loader2, ArrowLeft, Award, Headphones, Sparkles, MessageSquare, Compass, ArrowRight,
+  CheckCircle, Lock, RefreshCw,
 } from "lucide-react";
 
 /* ── Áudio do passo (Google Drive) ── */
@@ -167,6 +174,8 @@ export default function JourneyStep() {
   const { user } = useAuth();
   const { toast } = useToast();
   const { awardMedal } = useMedals();
+  const { isUnlocked, isDone: taskValidated, isAdmin, refetch: revalidate, validations } =
+    useJourneyValidation();
   const step = STEPS[stepNumber] || STEPS[1];
 
   const [loading, setLoading] = useState(true);
@@ -175,6 +184,9 @@ export default function JourneyStep() {
   const [resposta, setResposta] = useState("");
   const [isCompleted, setIsCompleted] = useState(false);
   const [showCelebration, setShowCelebration] = useState(false);
+
+  const stepUnlocked = isUnlocked(stepNumber);
+  const stepTaskDone = taskValidated(stepNumber);
 
   useEffect(() => {
     if (!user) return;
@@ -217,6 +229,17 @@ export default function JourneyStep() {
     }
   }
 
+  function fireConfetti() {
+    const end = Date.now() + 1500;
+    const colors = ["#C9A84C", "#E8D590", "#1B4332", "#2D6A4F"];
+    (function frame() {
+      confetti({ particleCount: 4, angle: 60, spread: 70, origin: { x: 0 }, colors });
+      confetti({ particleCount: 4, angle: 120, spread: 70, origin: { x: 1 }, colors });
+      if (Date.now() < end) requestAnimationFrame(frame);
+    })();
+  }
+
+  /** Validates against Supabase, then completes the step + awards medal. */
   async function completeStep() {
     if (!user) return;
     if (!resposta.trim()) {
@@ -225,6 +248,20 @@ export default function JourneyStep() {
     }
     setCompleting(true);
     await saveResposta();
+
+    // Force a fresh validation read
+    const fresh = await revalidate();
+    const passed = isAdmin || !!fresh.data?.[stepNumber]?.done;
+
+    if (!passed) {
+      setCompleting(false);
+      toast({
+        variant: "destructive",
+        title: "Tarefa ainda não concluída",
+        description: STEP_TASK_LABEL[stepNumber],
+      });
+      return;
+    }
 
     // upsert journey_progress
     const { data: existing } = await supabase
@@ -253,11 +290,15 @@ export default function JourneyStep() {
       .update({ current_step: stepNumber + 1 })
       .eq("user_id", user.id);
 
+    // Award both the validation medal and the legacy journey medal
+    await awardMedal(STEP_VALIDATION_MEDAL[stepNumber].id);
     await awardMedal(`journey-${stepNumber}`);
+
     setIsCompleted(true);
     setShowCelebration(true);
+    if (stepNumber === 12) fireConfetti();
     setCompleting(false);
-    setTimeout(() => navigate("/app/jornada"), 2800);
+    setTimeout(() => navigate("/app/jornada"), stepNumber === 12 ? 4200 : 2800);
   }
 
   if (showCelebration) {
