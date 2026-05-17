@@ -2,12 +2,12 @@ import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { useJourneyValidation, STEP_TASK_LABEL } from "@/hooks/useJourneyValidation";
 import {
   ChevronLeft,
   Lock,
   Play,
   Award,
-  Clock,
   CheckCircle2,
 } from "lucide-react";
 import { BottomNavigation } from "@/components/BottomNavigation";
@@ -38,22 +38,15 @@ interface JourneyProgressRow {
 export default function JourneysHome() {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const [progress, setProgress] = useState<JourneyProgressRow[]>([]);
+  const { isUnlocked, isDone, isLoading: validating, isAdmin, refetch } = useJourneyValidation();
   const [isLoading, setIsLoading] = useState(true);
-
-
 
   useEffect(() => {
     if (!user) return;
-    (async () => {
-      const { data: p } = await supabase
-        .from("journey_progress")
-        .select("step_number, is_completed")
-        .eq("user_id", user.id);
-      if (p) setProgress(p as JourneyProgressRow[]);
-      setIsLoading(false);
-    })();
-  }, [user]);
+    setIsLoading(false);
+    // Re-run validation each time the screen mounts
+    refetch();
+  }, [user, refetch]);
 
   const allSteps = Array.from({ length: 12 }, (_, i) => {
     const num = i + 1;
@@ -62,14 +55,14 @@ export default function JourneysHome() {
   });
 
   const getStatus = (stepNum: number): "completed" | "available" | "locked" => {
-    if (progress.find((p) => p.step_number === stepNum && p.is_completed)) return "completed";
-    if (stepNum === 1) return "available";
-    if (progress.find((p) => p.step_number === stepNum - 1 && p.is_completed)) return "available";
+    if (isDone(stepNum)) return "completed";
+    if (isUnlocked(stepNum)) return "available";
     return "locked";
   };
 
-  const completedCount = progress.filter((p) => p.is_completed).length;
+  const completedCount = allSteps.filter((s) => isDone(s.step_number)).length;
   const pct = Math.round((completedCount / 12) * 100);
+  const loading = isLoading || validating;
 
   return (
     <div className="min-h-screen bg-background safe-top pb-28">
@@ -111,7 +104,7 @@ export default function JourneysHome() {
       </header>
 
       <main className="max-w-lg mx-auto px-5 pt-5 space-y-3">
-        {isLoading ? (
+        {loading ? (
           <div className="space-y-3">
             {[1, 2, 3, 4].map((i) => (
               <div key={i} className="h-24 rounded-2xl bg-muted animate-pulse" />
@@ -212,20 +205,16 @@ export default function JourneysHome() {
                     >
                       "{step.subtitle}"
                     </p>
-                    <div className="flex items-center gap-1 mt-1.5">
-                      <Clock
-                        className="h-3 w-3"
-                        style={{
-                          color: isDone ? "rgba(255,255,255,0.5)" : "#9CA3AF",
-                        }}
-                      />
+                    <div className="flex items-start gap-1 mt-1.5">
                       <span
-                        className="text-[11px]"
+                        className="text-[11px] leading-tight"
                         style={{
-                          color: isDone ? "rgba(255,255,255,0.5)" : "#9CA3AF",
+                          color: isDone ? "rgba(255,255,255,0.6)" : isLocked ? "#9CA3AF" : "#6B7280",
                         }}
                       >
-                        Mínimo 12h de comprometimento
+                        {isLocked
+                          ? "Complete a tarefa anterior para desbloquear"
+                          : STEP_TASK_LABEL[step.step_number]}
                       </span>
                     </div>
                   </div>

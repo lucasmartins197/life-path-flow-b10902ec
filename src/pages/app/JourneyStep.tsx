@@ -1,13 +1,20 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import confetti from "canvas-confetti";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useMedals } from "@/hooks/useMedals";
+import {
+  useJourneyValidation,
+  STEP_VALIDATION_MEDAL,
+  STEP_TASK_LABEL,
+} from "@/hooks/useJourneyValidation";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import {
-  Loader2, ArrowLeft, Award, Headphones, Sparkles, MessageSquare, Compass, ArrowRight, CheckCircle,
+  Loader2, ArrowLeft, Award, Headphones, Sparkles, MessageSquare, Compass, ArrowRight,
+  CheckCircle, Lock, RefreshCw,
 } from "lucide-react";
 
 /* ── Áudio do passo (Google Drive) ── */
@@ -167,6 +174,8 @@ export default function JourneyStep() {
   const { user } = useAuth();
   const { toast } = useToast();
   const { awardMedal } = useMedals();
+  const { isUnlocked, isDone: taskValidated, isAdmin, refetch: revalidate, validations } =
+    useJourneyValidation();
   const step = STEPS[stepNumber] || STEPS[1];
 
   const [loading, setLoading] = useState(true);
@@ -175,6 +184,9 @@ export default function JourneyStep() {
   const [resposta, setResposta] = useState("");
   const [isCompleted, setIsCompleted] = useState(false);
   const [showCelebration, setShowCelebration] = useState(false);
+
+  const stepUnlocked = isUnlocked(stepNumber);
+  const stepTaskDone = taskValidated(stepNumber);
 
   useEffect(() => {
     if (!user) return;
@@ -217,6 +229,17 @@ export default function JourneyStep() {
     }
   }
 
+  function fireConfetti() {
+    const end = Date.now() + 1500;
+    const colors = ["#C9A84C", "#E8D590", "#1B4332", "#2D6A4F"];
+    (function frame() {
+      confetti({ particleCount: 4, angle: 60, spread: 70, origin: { x: 0 }, colors });
+      confetti({ particleCount: 4, angle: 120, spread: 70, origin: { x: 1 }, colors });
+      if (Date.now() < end) requestAnimationFrame(frame);
+    })();
+  }
+
+  /** Validates against Supabase, then completes the step + awards medal. */
   async function completeStep() {
     if (!user) return;
     if (!resposta.trim()) {
@@ -225,6 +248,20 @@ export default function JourneyStep() {
     }
     setCompleting(true);
     await saveResposta();
+
+    // Force a fresh validation read
+    const fresh = await revalidate();
+    const passed = isAdmin || !!fresh.data?.[stepNumber]?.done;
+
+    if (!passed) {
+      setCompleting(false);
+      toast({
+        variant: "destructive",
+        title: "Tarefa ainda não concluída",
+        description: STEP_TASK_LABEL[stepNumber],
+      });
+      return;
+    }
 
     // upsert journey_progress
     const { data: existing } = await supabase
@@ -253,11 +290,15 @@ export default function JourneyStep() {
       .update({ current_step: stepNumber + 1 })
       .eq("user_id", user.id);
 
+    // Award both the validation medal and the legacy journey medal
+    await awardMedal(STEP_VALIDATION_MEDAL[stepNumber].id);
     await awardMedal(`journey-${stepNumber}`);
+
     setIsCompleted(true);
     setShowCelebration(true);
+    if (stepNumber === 12) fireConfetti();
     setCompleting(false);
-    setTimeout(() => navigate("/app/jornada"), 2800);
+    setTimeout(() => navigate("/app/jornada"), stepNumber === 12 ? 4200 : 2800);
   }
 
   if (showCelebration) {
@@ -284,6 +325,70 @@ export default function JourneyStep() {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  /* ── Locked screen: previous step task not validated yet ── */
+  if (!stepUnlocked) {
+    return (
+      <div className="min-h-screen bg-background pb-24 safe-top">
+        <div style={{ background: "linear-gradient(135deg, #1B4332, #2D6A4F)" }}>
+          <div className="max-w-2xl mx-auto px-5 py-4 flex items-center gap-3">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => navigate("/app/jornada")}
+              className="text-white hover:bg-white/20 shrink-0"
+            >
+              <ArrowLeft className="h-5 w-5" />
+            </Button>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm text-white/60">Passo {stepNumber} de 12</p>
+              <h1 className="text-lg font-bold text-white truncate">{step.name}</h1>
+            </div>
+          </div>
+        </div>
+
+        <div className="max-w-2xl mx-auto px-5 pt-10 flex flex-col items-center text-center animate-fade-in">
+          <div
+            className="w-20 h-20 rounded-full flex items-center justify-center mb-5"
+            style={{ background: "#E5E7EB" }}
+          >
+            <Lock className="h-9 w-9" style={{ color: "#6B7280" }} />
+          </div>
+          <h2 className="text-xl font-bold text-foreground mb-2">Passo bloqueado</h2>
+          <p className="text-sm text-muted-foreground max-w-sm mb-6">
+            Complete a tarefa anterior para desbloquear este passo.
+          </p>
+          <div
+            className="rounded-2xl p-4 w-full max-w-sm mb-6 text-left"
+            style={{ background: "#F5F0E8", border: "1px solid #E8D590" }}
+          >
+            <p className="text-[11px] font-semibold uppercase tracking-widest mb-1" style={{ color: "#1B4332" }}>
+              Tarefa do Passo {stepNumber - 1}
+            </p>
+            <p className="text-sm" style={{ color: "#1B4332" }}>
+              {STEP_TASK_LABEL[stepNumber - 1]}
+            </p>
+          </div>
+          <div className="flex gap-2 w-full max-w-sm">
+            <Button
+              variant="outline"
+              className="flex-1"
+              onClick={() => navigate(`/app/jornada/${stepNumber - 1}`)}
+            >
+              <ArrowLeft className="h-4 w-4 mr-1" /> Ir ao passo anterior
+            </Button>
+            <Button
+              className="flex-1 text-white"
+              style={{ background: "linear-gradient(135deg, #1B4332, #2D6A4F)" }}
+              onClick={() => revalidate()}
+            >
+              <RefreshCw className="h-4 w-4 mr-1" /> Verificar
+            </Button>
+          </div>
+        </div>
       </div>
     );
   }
@@ -381,21 +486,44 @@ export default function JourneyStep() {
         <div className="rounded-2xl p-5 bg-card border border-border shadow-sm">
           <div className="flex items-center gap-2 mb-3">
             <Compass className="h-5 w-5" style={{ color: "#1B4332" }} />
-            <h2 className="text-sm font-bold uppercase tracking-wide" style={{ color: "#1B4332" }}>
+            <h2 className="text-sm font-bold uppercase tracking-wide flex-1" style={{ color: "#1B4332" }}>
               Atividade prática
             </h2>
+            {stepTaskDone ? (
+              <span
+                className="text-[10px] font-bold px-2 py-1 rounded-full flex items-center gap-1 uppercase tracking-wide"
+                style={{ background: "#D1FAE5", color: "#065F46" }}
+              >
+                <CheckCircle className="h-3 w-3" /> Concluída
+              </span>
+            ) : (
+              <span
+                className="text-[10px] font-bold px-2 py-1 rounded-full uppercase tracking-wide"
+                style={{ background: "#FEF3C7", color: "#92400E" }}
+              >
+                Pendente
+              </span>
+            )}
           </div>
-          <p className="text-foreground text-sm mb-4 leading-relaxed">
+          <p className="text-foreground text-sm mb-2 leading-relaxed">
             {step.activity}
           </p>
-          <Button
-            onClick={() => navigate(step.activityRoute)}
-            className="w-full text-white"
-            style={{ background: "linear-gradient(135deg, #1B4332, #2D6A4F)" }}
-          >
-            {step.activityButton}
-            <ArrowRight className="h-4 w-4 ml-2" />
-          </Button>
+          <p className="text-xs text-muted-foreground mb-4 italic">
+            Tarefa validada automaticamente: {STEP_TASK_LABEL[stepNumber]}
+          </p>
+          <div className="flex gap-2">
+            <Button
+              onClick={() => navigate(step.activityRoute)}
+              className="flex-1 text-white"
+              style={{ background: "linear-gradient(135deg, #1B4332, #2D6A4F)" }}
+            >
+              {step.activityButton}
+              <ArrowRight className="h-4 w-4 ml-2" />
+            </Button>
+            <Button variant="outline" size="icon" onClick={() => revalidate()} title="Verificar tarefa">
+              <RefreshCw className="h-4 w-4" />
+            </Button>
+          </div>
         </div>
 
         {/* 5. VÍDEO YOUTUBE */}
@@ -412,12 +540,14 @@ export default function JourneyStep() {
         {/* CONCLUIR PASSO */}
         <Button
           onClick={completeStep}
-          disabled={completing || !resposta.trim()}
-          className="w-full h-12 text-white font-semibold"
+          disabled={completing || !resposta.trim() || (!stepTaskDone && !isAdmin)}
+          className="w-full h-12 text-white font-semibold disabled:opacity-60"
           style={{
             background: isCompleted
               ? "linear-gradient(135deg, #C9A84C, #E8D590)"
-              : "linear-gradient(135deg, #1B4332, #2D6A4F)",
+              : stepTaskDone || isAdmin
+              ? "linear-gradient(135deg, #1B4332, #2D6A4F)"
+              : "#9CA3AF",
           }}
         >
           {completing ? (
@@ -425,6 +555,10 @@ export default function JourneyStep() {
           ) : isCompleted ? (
             <>
               <CheckCircle className="h-5 w-5 mr-2" /> Passo concluído — refazer
+            </>
+          ) : !stepTaskDone && !isAdmin ? (
+            <>
+              <Lock className="h-5 w-5 mr-2" /> Complete a tarefa para concluir
             </>
           ) : (
             <>

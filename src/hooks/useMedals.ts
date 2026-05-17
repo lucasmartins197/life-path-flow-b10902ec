@@ -6,7 +6,9 @@ import { useCallback } from "react";
 import {
   Leaf, Sparkles, Heart, ClipboardList, Gem, Unlock, Feather, FileText,
   Handshake, Eye, Brain, Trophy, MessageCircle, Stethoscope, Calendar,
-  TreePine, Dumbbell, Bird, Star, Crown, type LucideIcon,
+  TreePine, Dumbbell, Bird, Star, Crown, Footprints, Megaphone, Users,
+  Search, Mic, Sunrise, LifeBuoy, Scale, Flame, ShieldCheck, Gavel, PartyPopper,
+  type LucideIcon,
 } from "lucide-react";
 
 /* ── All possible medals ── */
@@ -41,6 +43,19 @@ export const MEDAL_DEFINITIONS: MedalDef[] = [
   { id: "therapy-6",  name: "Transformação em Curso",     description: "Concluiu sua 3ª sessão",  badge_type: "therapy", icon: Bird },
   { id: "therapy-7",  name: "Veterano Terapêutico",       description: "Agendou sua 4ª sessão",   badge_type: "therapy", icon: Star },
   { id: "therapy-8",  name: "Mestre do Autocuidado",      description: "Concluiu sua 4ª sessão",  badge_type: "therapy", icon: Crown },
+  // Journey task validation medals (auto-awarded when the practical task is detected in Supabase)
+  { id: "journey-task-1",  name: "Primeiro Passo",                description: "Completou seu perfil no app",            badge_type: "journey-task", icon: Footprints },
+  { id: "journey-task-2",  name: "Voz da Esperança",              description: "Publicou sua 1ª história",               badge_type: "journey-task", icon: Megaphone },
+  { id: "journey-task-3",  name: "Não Estou Sozinho",             description: "Cadastrou seu Contato Âncora",           badge_type: "journey-task", icon: Users },
+  { id: "journey-task-4",  name: "Me Conheço",                    description: "Registrou um gatilho no Meu Escudo",     badge_type: "journey-task", icon: Search },
+  { id: "journey-task-5",  name: "Coragem de Falar",              description: "Publicou a 2ª história",                 badge_type: "journey-task", icon: Mic },
+  { id: "journey-task-6",  name: "Nova Rotina",                   description: "Criou sua primeira rotina",              badge_type: "journey-task", icon: Sunrise },
+  { id: "journey-task-7",  name: "Busquei Ajuda",                 description: "Agendou sessão de terapia",              badge_type: "journey-task", icon: LifeBuoy },
+  { id: "journey-task-8",  name: "Encarei a Realidade",           description: "Registrou suas dívidas",                 badge_type: "journey-task", icon: Scale },
+  { id: "journey-task-9",  name: "3 Dias de Vitória",             description: "Fez check-in por 3 dias seguidos",       badge_type: "journey-task", icon: Flame },
+  { id: "journey-task-10", name: "Sempre Vigilante",              description: "Ativou alertas no Meu Escudo",           badge_type: "journey-task", icon: ShieldCheck },
+  { id: "journey-task-11", name: "Lutando pelos Meus Direitos",   description: "Acionou o Apoio Jurídico",               badge_type: "journey-task", icon: Gavel },
+  { id: "journey-task-12", name: "Jornada Completa",              description: "Publicou sua história de conquista",     badge_type: "journey-task", icon: PartyPopper },
 ];
 
 export interface EarnedBadge {
