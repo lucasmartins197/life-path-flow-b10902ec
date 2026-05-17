@@ -505,7 +505,7 @@ export default function JourneyStep() {
                 className="w-full text-white"
                 disabled={!intakeComplete}
                 style={intakeComplete ? { background: "linear-gradient(135deg, #1B4332, #2D6A4F)" } : {}}
-                onClick={() => goToSection(2)}
+                onClick={() => goToSection(3)}
               >
                 Começar minha jornada →
               </Button>
