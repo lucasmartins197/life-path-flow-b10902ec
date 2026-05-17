@@ -513,54 +513,6 @@ export default function JourneyStep() {
           </Card>
         )}
 
-        {/* ═══ ETAPA 2 — VÍDEO ═══ */}
-        {currentSection === 2 && (
-          <Card className="border-none shadow-lg overflow-hidden">
-            <CardContent className="p-0">
-              {/* Video player / placeholder */}
-              <VideoPlayer
-                url={videoUrl}
-                watched={videoWatched}
-                onWatched={() => {
-                  setVideoWatched(true);
-                  saveProgress({ video_watched: true } as any);
-                }}
-              />
-
-              <div className="p-5 space-y-4">
-                <div>
-                  <h3 className="font-bold text-foreground">Passo {stepNumber} — {meta.name}</h3>
-                  <p className="text-sm text-muted-foreground mt-0.5 flex items-center gap-1"><Film className="h-3.5 w-3.5" /> 3 min</p>
-                </div>
-
-                {!videoWatched && videoUrl && (
-                  <p className="text-xs text-muted-foreground text-center">
-                    Assista a pelo menos 90% do vídeo para liberar a próxima seção.
-                  </p>
-                )}
-                {!videoWatched && !videoUrl && (
-                  <Button
-                    variant="outline"
-                    className="w-full"
-                    onClick={() => setVideoWatched(true)}
-                  >
-                    Marcar como assistido
-                  </Button>
-                )}
-
-                {videoWatched && (
-                  <Button
-                    className="w-full text-white"
-                    style={{ background: "linear-gradient(135deg, #1B4332, #2D6A4F)" }}
-                    onClick={() => goToSection(3)}
-                  >
-                    Já assisti, continuar →
-                  </Button>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-        )}
 
         {/* ═══ ETAPA 3 — ATIVIDADES EXTERNAS (checklist) ═══ */}
         {currentSection === 3 && (
