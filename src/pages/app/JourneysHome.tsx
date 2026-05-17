@@ -269,6 +269,42 @@ export default function JourneysHome() {
       <BottomNavigation />
       <PortoSeguroButton />
       <AIChatPanel />
+
+      {showIntro && (
+        <div className="fixed inset-0 z-[100] bg-black/80 flex items-center justify-center p-4 safe-top safe-bottom overflow-y-auto">
+          <div className="w-full max-w-lg bg-white rounded-2xl overflow-hidden shadow-2xl my-auto">
+            <div
+              className="px-5 py-4"
+              style={{ background: "linear-gradient(135deg, #1B4332, #2D6A4F)" }}
+            >
+              <h2 className="text-white font-bold text-lg">
+                Antes de começar, assista este vídeo
+              </h2>
+              <p className="text-white/70 text-xs mt-1">
+                Uma breve introdução à Jornada dos 12 Passos
+              </p>
+            </div>
+            <div className="aspect-video w-full bg-black">
+              <iframe
+                src="https://www.youtube.com/embed/1sOmc_iDXn4"
+                className="w-full h-full"
+                allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
+                allowFullScreen
+                title="Introdução à Jornada dos 12 Passos"
+              />
+            </div>
+            <div className="p-5">
+              <button
+                onClick={dismissIntro}
+                className="w-full h-12 rounded-xl font-semibold text-white transition-transform active:scale-[0.98]"
+                style={{ background: "linear-gradient(135deg, #1B4332, #2D6A4F)" }}
+              >
+                Continuar para a Jornada
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
