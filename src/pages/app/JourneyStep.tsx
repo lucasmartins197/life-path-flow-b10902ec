@@ -415,6 +415,28 @@ export default function JourneyStep() {
 
       <div className="max-w-2xl mx-auto px-5 pb-5 space-y-5">
 
+        {/* ═══ ÁUDIO DO PASSO ═══ */}
+        {STEP_AUDIO[stepNumber] && (
+          <div
+            className="rounded-2xl p-4 shadow-md"
+            style={{ background: "linear-gradient(135deg, #1B4332, #2D6A4F)" }}
+          >
+            <div className="flex items-center gap-2 mb-3 text-white">
+              <Headphones className="h-4 w-4" style={{ color: "#E8D590" }} />
+              <div className="flex-1 min-w-0">
+                <p className="text-xs uppercase tracking-widest" style={{ color: "#E8D590" }}>
+                  Áudio do Passo {stepNumber}
+                </p>
+                <p className="text-sm font-semibold truncate">{meta.name}</p>
+              </div>
+            </div>
+            <audio controls preload="none" className="w-full">
+              <source src={STEP_AUDIO[stepNumber]} type="audio/mpeg" />
+              Seu navegador não suporta áudio HTML5.
+            </audio>
+          </div>
+        )}
+
         {/* ═══ ETAPA 1 — FORMULÁRIO DE ENTRADA ═══ */}
         {currentSection === 1 && (
           <Card className="border-none shadow-lg">
