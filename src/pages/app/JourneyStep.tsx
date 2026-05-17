@@ -690,12 +690,6 @@ export default function JourneyStep() {
                   {conversation.length > 0 ? <CheckCircle className="h-4 w-4 text-green-600" /> : <Clock className="h-4 w-4 text-muted-foreground" />}
                   <span className={conversation.length > 0 ? "text-green-700" : "text-muted-foreground"}>Carta da Ana recebida</span>
                 </div>
-                <div className="flex items-center gap-2">
-                  {timeRemaining <= 0 ? <CheckCircle className="h-4 w-4 text-green-600" /> : <Clock className="h-4 w-4 text-muted-foreground" />}
-                  <span className={timeRemaining <= 0 ? "text-green-700" : "text-muted-foreground"}>
-                    {timeRemaining > 0 ? `Disponível em: ${formatTime(timeRemaining)}` : "Tempo cumprido"}
-                  </span>
-                </div>
               </div>
 
               <Button
