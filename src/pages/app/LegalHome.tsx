@@ -165,10 +165,10 @@ export default function LegalHome() {
           </h2>
           <div className="w-full rounded-xl overflow-hidden shadow-md bg-black">
             <iframe
-              src="https://www.youtube.com/embed/KlXBXPQMz58?rel=0&modestbranding=1&showinfo=0&iv_load_policy=3&fs=1"
+              src="https://drive.google.com/file/d/1gfJ9MPX_-izhSjYMQQTi-L-k-yrIJLGB/preview"
               width="100%"
               style={{ aspectRatio: "16 / 9", border: "none" }}
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allow="autoplay"
               allowFullScreen
               title="Entenda seus direitos"
             />
