@@ -975,6 +975,33 @@ export type Database = {
         }
         Relationships: []
       }
+      jornada_respostas: {
+        Row: {
+          created_at: string
+          id: string
+          passo_numero: number
+          resposta: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          passo_numero: number
+          resposta: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          passo_numero?: number
+          resposta?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       journey_progress: {
         Row: {
           ai_conversation: Json | null
