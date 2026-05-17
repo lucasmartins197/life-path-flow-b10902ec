@@ -403,11 +403,8 @@ export default function JourneyStep() {
             <span className="text-sm flex items-center gap-1" style={{ color: "#E8D590" }}><Award className="h-4 w-4" /> {meta.medal}</span>
           </div>
           <p className="text-sm text-white/70 mb-2">{meta.subtitle}</p>
-          <div className="flex items-center gap-2 text-xs text-white/50">
-            <Clock className="h-3 w-3" />
-            {timeRemaining > 0 ? `Disponível em: ${formatTime(timeRemaining)}` : "Tempo cumprido"}
-          </div>
         </div>
+
       </div>
 
       {/* Step indicator */}
