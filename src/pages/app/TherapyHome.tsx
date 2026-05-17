@@ -189,6 +189,23 @@ export default function TherapyHome() {
       </header>
 
       <main className="max-w-lg mx-auto px-5 pt-6 space-y-6">
+        {/* ── Vídeo introdutório ───────────────────── */}
+        <section>
+          <h2 className="text-base font-bold mb-3" style={{ color: "#1B4332" }}>
+            Acompanhamento Psicológico
+          </h2>
+          <div className="w-full rounded-xl overflow-hidden shadow-md bg-black">
+            <iframe
+              src="https://drive.google.com/file/d/1p4L5F5jkiUCltDejhgrK9x54HYU0ErFN/preview"
+              width="100%"
+              style={{ aspectRatio: "16 / 9", border: "none" }}
+              allow="autoplay"
+              allowFullScreen
+              title="Acompanhamento Psicológico"
+            />
+          </div>
+        </section>
+
         {/* ── Search ────────────────────────────────── */}
         <div className="relative">
           <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
