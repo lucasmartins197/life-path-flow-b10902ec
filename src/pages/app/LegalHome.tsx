@@ -158,6 +158,22 @@ export default function LegalHome() {
       </header>
 
       <main className="max-w-lg mx-auto px-5 pt-6 space-y-6">
+        {/* Vídeo introdutório */}
+        <section>
+          <h2 className="text-base font-bold mb-3" style={{ color: "#1B4332" }}>
+            Entenda seus direitos
+          </h2>
+          <div className="aspect-video w-full rounded-xl overflow-hidden shadow-md bg-black">
+            <iframe
+              src="https://www.youtube.com/embed/KlXBXPQMz58?rel=0&modestbranding=1&showinfo=0"
+              className="w-full h-full"
+              allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
+              allowFullScreen
+              title="Entenda seus direitos"
+            />
+          </div>
+        </section>
+
         {/* Aviso */}
         <div className="rounded-xl bg-card border border-border border-l-4 border-l-warning p-4 flex gap-3">
           <AlertTriangle className="h-5 w-5 text-warning shrink-0 mt-0.5" />
