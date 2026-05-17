@@ -119,7 +119,7 @@ export default function JourneyStep() {
     return Math.max(0, MIN_HOURS * 3600 - elapsed);
   }, [startedAt]);
 
-  const canComplete = timeRemaining <= 0 && allChecked && answersComplete && conversation.length > 0;
+  const canComplete = allChecked && answersComplete && conversation.length > 0;
 
   const formatTime = (seconds: number) => {
     const h = Math.floor(seconds / 3600);
