@@ -1142,6 +1142,22 @@ export default function RoutineHome() {
         )}
       </header>
 
+      <section className="max-w-lg mx-auto px-5 pt-4">
+        <h2 className="text-base font-bold mb-3" style={{ color: "#1B4332" }}>
+          Reconectando-se à Vida
+        </h2>
+        <div className="w-full rounded-xl overflow-hidden shadow-md bg-black">
+          <iframe
+            src="https://drive.google.com/file/d/1Bt_yn6VN_NXryCSEkuCH1ZHEt3bZkZZx/preview"
+            width="100%"
+            style={{ aspectRatio: "16 / 9", border: "none" }}
+            allow="autoplay"
+            allowFullScreen
+            title="Reconectando-se à Vida"
+          />
+        </div>
+      </section>
+
       <div className="max-w-lg mx-auto px-5 pt-4 flex gap-2">
         {(["hoje", "historico"] as const).map(t => (
           <button key={t} className="flex-1 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200"
