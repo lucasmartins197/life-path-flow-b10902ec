@@ -286,7 +286,7 @@ export default function JourneysHome() {
             </div>
             <div className="aspect-video w-full bg-black">
               <iframe
-                src="https://www.youtube.com/embed/1sOmc_iDXn4"
+                src="https://www.youtube.com/embed/1sOmc_iDXn4?rel=0&modestbranding=1&showinfo=0"
                 className="w-full h-full"
                 allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
                 allowFullScreen
