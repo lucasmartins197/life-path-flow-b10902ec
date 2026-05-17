@@ -12,8 +12,24 @@ import { useToast } from "@/hooks/use-toast";
 import AnaLetter from "@/components/journey/AnaLetter";
 import VideoPlayer from "@/components/journey/VideoPlayer";
 import {
-  Loader2, ArrowLeft, CheckCircle, Clock, Award, Send, Play, Frown, Meh, Smile, Flame, Leaf, Film, ClipboardList, MessageSquare,
+  Loader2, ArrowLeft, CheckCircle, Clock, Award, Send, Play, Frown, Meh, Smile, Flame, Leaf, Film, ClipboardList, MessageSquare, Headphones,
 } from "lucide-react";
+
+/* ── Step audio (Google Drive direct download) ── */
+const STEP_AUDIO: Record<number, string> = {
+  1: "https://drive.google.com/uc?export=download&id=1vA0l9CZK1CVv2RbP8ohAlv13aAJDSTqS",
+  2: "https://drive.google.com/uc?export=download&id=1vW-vGZgzN2mwtfi9ilbRai0QVa-GYoHx",
+  3: "https://drive.google.com/uc?export=download&id=1Ei49PpIkHzeuFX-xRJEizTQDw4Jd1rih",
+  4: "https://drive.google.com/uc?export=download&id=1Qs-NEAL_rjbs_WvPvHMABc3I2I4W_6PZ",
+  5: "https://drive.google.com/uc?export=download&id=1nTFaHJ3UwP-KG1cuekLojldo5jBkyfDj",
+  6: "https://drive.google.com/uc?export=download&id=1lrj_W5zRksRNwguWvmyGNn-R2CPlb39p",
+  7: "https://drive.google.com/uc?export=download&id=1h6CTkk0_Y-8jr5KOasWvli4JU9EYnhiT",
+  8: "https://drive.google.com/uc?export=download&id=1vNJE3l8sfYxaZgSvnvHxAJ24lsJpgzZI",
+  9: "https://drive.google.com/uc?export=download&id=1vmtwJJqO0Gpoi-JVSYPwFpIYewL0f3X0",
+  10: "https://drive.google.com/uc?export=download&id=1sjv1n9oHmk2JlyXA7rZjSlg64CWbezBT",
+  11: "https://drive.google.com/uc?export=download&id=1UKbokVn_DSNOE-vN-mr1ctkctUyyBnpc",
+  12: "https://drive.google.com/uc?export=download&id=12lLG_MIjaQqnim4yP4FDu9F__nfK1GDb",
+};
 
 /* ── Step metadata ── */
 const STEP_META: Record<number, { name: string; subtitle: string; medal: string }> = {
@@ -398,6 +414,28 @@ export default function JourneyStep() {
       <StepIndicator />
 
       <div className="max-w-2xl mx-auto px-5 pb-5 space-y-5">
+
+        {/* ═══ ÁUDIO DO PASSO ═══ */}
+        {STEP_AUDIO[stepNumber] && (
+          <div
+            className="rounded-2xl p-4 shadow-md"
+            style={{ background: "linear-gradient(135deg, #1B4332, #2D6A4F)" }}
+          >
+            <div className="flex items-center gap-2 mb-3 text-white">
+              <Headphones className="h-4 w-4" style={{ color: "#E8D590" }} />
+              <div className="flex-1 min-w-0">
+                <p className="text-xs uppercase tracking-widest" style={{ color: "#E8D590" }}>
+                  Áudio do Passo {stepNumber}
+                </p>
+                <p className="text-sm font-semibold truncate">{meta.name}</p>
+              </div>
+            </div>
+            <audio controls preload="none" className="w-full">
+              <source src={STEP_AUDIO[stepNumber]} type="audio/mpeg" />
+              Seu navegador não suporta áudio HTML5.
+            </audio>
+          </div>
+        )}
 
         {/* ═══ ETAPA 1 — FORMULÁRIO DE ENTRADA ═══ */}
         {currentSection === 1 && (
