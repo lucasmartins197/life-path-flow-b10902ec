@@ -1,21 +1,16 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useMedals } from "@/hooks/useMedals";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
-import { Input } from "@/components/ui/input";
-import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
-import AnaLetter from "@/components/journey/AnaLetter";
-
 import {
-  Loader2, ArrowLeft, CheckCircle, Clock, Award, Send, Play, Frown, Meh, Smile, Flame, Leaf, Film, ClipboardList, MessageSquare, Headphones,
+  Loader2, ArrowLeft, Award, Headphones, Sparkles, MessageSquare, Compass, ArrowRight, CheckCircle,
 } from "lucide-react";
 
-/* ── Step audio (Google Drive direct download) ── */
+/* ── Áudio do passo (Google Drive) ── */
 const STEP_AUDIO: Record<number, string> = {
   1: "https://drive.google.com/uc?export=download&id=1vA0l9CZK1CVv2RbP8ohAlv13aAJDSTqS",
   2: "https://drive.google.com/uc?export=download&id=1vW-vGZgzN2mwtfi9ilbRai0QVa-GYoHx",
@@ -31,49 +26,139 @@ const STEP_AUDIO: Record<number, string> = {
   12: "https://drive.google.com/uc?export=download&id=12lLG_MIjaQqnim4yP4FDu9F__nfK1GDb",
 };
 
-/* ── Step metadata ── */
-const STEP_META: Record<number, { name: string; subtitle: string; medal: string }> = {
-  1: { name: "Reconhecimento", subtitle: "Admito que perdi o controle e que isso desorganizou minha vida", medal: "Coragem de Olhar" },
-  2: { name: "Esperança", subtitle: "Posso recuperar minha lucidez", medal: "Primeiro Raio de Luz" },
-  3: { name: "Entrega", subtitle: "Um propósito maior que meus impulsos", medal: "Âncora Plantada" },
-  4: { name: "Inventário", subtitle: "Honestidade sobre o impacto", medal: "Espelho Honesto" },
-  5: { name: "Verdade", subtitle: "Reconheço a dimensão real", medal: "Voz que Liberta" },
-  6: { name: "Disponibilidade", subtitle: "Pronto para abandonar padrões", medal: "Porta Aberta" },
-  7: { name: "Humildade", subtitle: "Peço força para transformar", medal: "Força que Dobra" },
-  8: { name: "Responsabilidade", subtitle: "Listo quem prejudiquei", medal: "Peso nos Ombros" },
-  9: { name: "Reparação", subtitle: "Faço reparações possíveis", medal: "Ponte Reconstruída" },
-  10: { name: "Vigilância", subtitle: "Inventário diário", medal: "Guarda Fiel" },
-  11: { name: "Conexão Real", subtitle: "Silêncio e direção", medal: "Raízes Profundas" },
-  12: { name: "Propósito", subtitle: "Vivo e compartilho", medal: "Farol Aceso" },
-};
-
-const CHECKLIST_ITEMS = [
-  'Escrever em um papel: "Eu, [nome], admito que perdi o controle sobre as apostas." Assinar e guardar.',
-  "Listar 3 situações em que as apostas prejudicaram sua vida nos últimos 3 meses",
-  "Desligar todas as notificações de plataformas de apostas por 24 horas",
-];
-
-const MOOD_OPTIONS = [
-  { Icon: Frown, label: "Mal" },
-  { Icon: Meh, label: "Regular" },
-  { Icon: Smile, label: "Ok" },
-  { Icon: Flame, label: "Motivado" },
-];
-
-const TIME_OPTIONS = [
-  "Menos de 1 ano",
-  "1-3 anos",
-  "3-5 anos",
-  "Mais de 5 anos",
-];
-
-const MIN_HOURS = 12;
-const TOTAL_SECTIONS = 6;
-
-interface ConvoMsg {
-  role: "user" | "assistant";
-  content: string;
+interface StepContent {
+  name: string;
+  medal: string;
+  message: string;
+  question: string;
+  activity: string;
+  activityButton: string;
+  activityRoute: string;
+  youtubeId: string;
 }
+
+const STEPS: Record<number, StepContent> = {
+  1: {
+    name: "Reconhecimento",
+    medal: "Coragem de Olhar",
+    message: "O primeiro passo é o mais corajoso. Você admitiu o problema — isso já é uma vitória.",
+    question: "Em quais áreas da sua vida o jogo causou mais impacto? Seja honesto consigo mesmo.",
+    activity: "Complete seu perfil no app — quanto mais informações você registrar, mais personalizada será sua jornada.",
+    activityButton: "Completar meu perfil",
+    activityRoute: "/app/perfil",
+    youtubeId: "dpvudFrQHJo",
+  },
+  2: {
+    name: "Esperança",
+    medal: "Primeiro Raio de Luz",
+    message: "Pessoas perderam tudo e reconstruíram suas vidas. Você também pode — um dia de cada vez.",
+    question: "Como seria sua vida daqui a 1 ano se você se mantiver na recuperação? Descreva com detalhes.",
+    activity: "Publique sua primeira história no app. Não precisa se identificar — seu relato pode ser a esperança que outra pessoa precisa hoje.",
+    activityButton: "Ir para Histórias que Conectam",
+    activityRoute: "/app/comunidade",
+    youtubeId: "xyaUZHTUHkU",
+  },
+  3: {
+    name: "Entrega",
+    medal: "Âncora Plantada",
+    message: "Pedir ajuda não é fraqueza. É a decisão mais inteligente que você pode tomar agora.",
+    question: "Quem é a pessoa de confiança que pode te apoiar nessa jornada? Já contou para ela sobre o que está passando?",
+    activity: "Cadastre agora seu Contato Âncora — a pessoa que você liga nos momentos de crise. Ter esse contato salvo no app pode evitar uma recaída.",
+    activityButton: "Cadastrar meu Contato Âncora",
+    activityRoute: "/app/ancora",
+    youtubeId: "82CZZveTJqE",
+  },
+  4: {
+    name: "Inventário",
+    medal: "Espelho Honesto",
+    message: "Conhecer seus gatilhos é a arma mais poderosa contra a recaída.",
+    question: "O que geralmente te levava a apostar? Tédio, ansiedade, dívidas, solidão? Identifique seus 3 principais gatilhos.",
+    activity: "Registre seus gatilhos no Meu Escudo. O app vai te alertar quando você estiver em situação de risco.",
+    activityButton: "Configurar Meu Escudo",
+    activityRoute: "/app/escudo",
+    youtubeId: "Y3hINuMsmrA",
+  },
+  5: {
+    name: "Verdade",
+    medal: "Voz que Liberta",
+    message: "A vergonha perde força quando você fala. O silêncio alimenta o vício.",
+    question: "Existe alguém importante na sua vida para quem você ainda não contou a verdade? O que te impede de falar?",
+    activity: "Poste um depoimento anônimo em Histórias que Conectam. Falar a verdade — mesmo que anonimamente — é o primeiro passo para a cura.",
+    activityButton: "Publicar depoimento anônimo",
+    activityRoute: "/app/comunidade",
+    youtubeId: "YpvINqS3uPw",
+  },
+  6: {
+    name: "Disponibilidade",
+    medal: "Porta Aberta",
+    message: "Mudar exige mais do que querer — exige agir diferente todos os dias.",
+    question: "Quais hábitos do seu dia a dia precisam mudar para afastar o risco de recaída? Liste pelo menos 3.",
+    activity: "Crie sua primeira rotina no app. Estrutura diária é proteção — cada hábito saudável ocupa o espaço que o jogo ocupava.",
+    activityButton: "Criar minha Rotina Inteligente",
+    activityRoute: "/app/rotina",
+    youtubeId: "oBi37roJ0RY",
+  },
+  7: {
+    name: "Humildade",
+    medal: "Força que Dobra",
+    message: "Você não precisa ter tudo resolvido para pedir ajuda. Precisa apenas ser honesto.",
+    question: "Em que momento do vício você mais se iludiu achando que estava no controle? O que essa ilusão te custou?",
+    activity: "Agende sua primeira sessão de terapia online. Profissionais especializados em ludopatia estão aqui para te ajudar — sem julgamento.",
+    activityButton: "Agendar sessão de Terapia",
+    activityRoute: "/app/terapia",
+    youtubeId: "RNkJUNA71MY",
+  },
+  8: {
+    name: "Reparação",
+    medal: "Ponte Reconstruída",
+    message: "Você não pode mudar o passado. Mas pode mudar o que faz a partir de agora.",
+    question: "Quem foi mais afetado pelo seu comportamento? O que você gostaria de dizer ou fazer por essa pessoa?",
+    activity: "Registre suas dívidas no app. Encarar os números é o primeiro passo para reorganizar sua vida financeira com um plano real.",
+    activityButton: "Ir para Finanças",
+    activityRoute: "/app/financas",
+    youtubeId: "sLsN078bgY8",
+  },
+  9: {
+    name: "Responsabilidade",
+    medal: "Peso nos Ombros",
+    message: "Cada dia sem apostar é prova de que você é capaz. Construa sua nova identidade com ações.",
+    question: "Que compromisso concreto você assume consigo mesmo hoje? Escreva como se fosse um contrato com você mesmo.",
+    activity: "Ative o check-in diário na sua Rotina Inteligente. Registrar sua presença todo dia é o ato mais poderoso de responsabilidade que existe.",
+    activityButton: "Ativar check-in diário",
+    activityRoute: "/app/rotina",
+    youtubeId: "7y1uvHZ_znY",
+  },
+  10: {
+    name: "Vigilância",
+    medal: "Guarda Fiel",
+    message: "A recaída começa na cabeça antes de acontecer. Você já sabe reconhecer os sinais.",
+    question: "Nos últimos dias sentiu vontade de apostar? O que aconteceu antes? Qual foi o gatilho?",
+    activity: "Configure os alertas de proteção no Meu Escudo. Quando o risco aparecer, o app age antes que você precise agir sozinho.",
+    activityButton: "Configurar alertas no Meu Escudo",
+    activityRoute: "/app/escudo",
+    youtubeId: "KvfQCwczYhI",
+  },
+  11: {
+    name: "Conexão Final",
+    medal: "Raízes Profundas",
+    message: "Quando você tem razões para viver, o jogo perde o poder sobre você.",
+    question: "O que te dá sentido e propósito além do jogo? Família, trabalho, um sonho? Escreva sobre isso.",
+    activity: "Se você perdeu dinheiro para casas de apostas, pode haver um caminho jurídico para recuperá-lo. Acesse o Apoio Jurídico e entenda seus direitos.",
+    activityButton: "Acessar Apoio Jurídico",
+    activityRoute: "/app/juridico",
+    youtubeId: "YpvINqS3uPw",
+  },
+  12: {
+    name: "Repasse",
+    medal: "Farol Aceso",
+    message: "Sua história tem o poder de salvar outra pessoa. Compartilhar é parte da sua cura.",
+    question: "Se você pudesse mandar uma mensagem para alguém no início do vício, o que diria? Escreva essa mensagem agora.",
+    activity: "Publique sua história de conquista em Histórias que Conectam e compartilhe o app Apostando na Vida com alguém que precisa. Você completa sua jornada ajudando outros a começar a deles.",
+    activityButton: "Publicar minha conquista",
+    activityRoute: "/app/comunidade",
+    youtubeId: "xyaUZHTUHkU",
+  },
+};
 
 export default function JourneyStep() {
   const { stepNumber: stepParam } = useParams();
@@ -82,299 +167,114 @@ export default function JourneyStep() {
   const { user } = useAuth();
   const { toast } = useToast();
   const { awardMedal } = useMedals();
-  const meta = STEP_META[stepNumber] || STEP_META[1];
+  const step = STEPS[stepNumber] || STEPS[1];
 
-  /* ── State ── */
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [progressData, setProgressData] = useState<any>(null);
-
-  // Sections: 1=intake, 2=video, 3=checklist, 4=questions, 5=AI, 6=conclusion
-  const [currentSection, setCurrentSection] = useState(1);
-  const [checkedItems, setCheckedItems] = useState<boolean[]>(new Array(CHECKLIST_ITEMS.length).fill(false));
-  const [answers, setAnswers] = useState({ feeling: "", hardest_moment: "", commitment: "" });
-  const [conversation, setConversation] = useState<ConvoMsg[]>([]);
-  const [aiLoading, setAiLoading] = useState(false);
-  const [startedAt, setStartedAt] = useState<string | null>(null);
+  const [completing, setCompleting] = useState(false);
+  const [resposta, setResposta] = useState("");
+  const [isCompleted, setIsCompleted] = useState(false);
   const [showCelebration, setShowCelebration] = useState(false);
-  const [userName, setUserName] = useState("");
 
-  // Intake form (Etapa 1)
-  const [intakeMood, setIntakeMood] = useState("");
-  const [intakeReason, setIntakeReason] = useState("");
-  const [intakeTime, setIntakeTime] = useState("");
-
-  // Video (Etapa 2)
-  const [videoWatched, setVideoWatched] = useState(false);
-  const [videoUrl, setVideoUrl] = useState<string | null>(null);
-
-  const intakeComplete = intakeMood && intakeReason.trim() && intakeTime;
-  const allChecked = checkedItems.every(Boolean);
-  const answersComplete = answers.feeling.trim() && answers.hardest_moment.trim() && answers.commitment.trim();
-
-  /* Timer logic */
-  const timeRemaining = useMemo(() => {
-    if (!startedAt) return MIN_HOURS * 3600;
-    const elapsed = (Date.now() - new Date(startedAt).getTime()) / 1000;
-    return Math.max(0, MIN_HOURS * 3600 - elapsed);
-  }, [startedAt]);
-
-  const canComplete = allChecked && answersComplete && conversation.length > 0;
-
-  const formatTime = (seconds: number) => {
-    const h = Math.floor(seconds / 3600);
-    const m = Math.floor((seconds % 3600) / 60);
-    return `${h}h ${m}min`;
-  };
-
-  /* ── Load ── */
   useEffect(() => {
     if (!user) return;
-    loadProgress();
+    (async () => {
+      setLoading(true);
+      const [{ data: r }, { data: p }] = await Promise.all([
+        supabase
+          .from("jornada_respostas" as any)
+          .select("resposta")
+          .eq("user_id", user.id)
+          .eq("passo_numero", stepNumber)
+          .maybeSingle(),
+        supabase
+          .from("journey_progress")
+          .select("is_completed")
+          .eq("user_id", user.id)
+          .eq("step_number", stepNumber)
+          .maybeSingle(),
+      ]);
+      if (r && (r as any).resposta) setResposta((r as any).resposta);
+      if (p?.is_completed) setIsCompleted(true);
+      setLoading(false);
+    })();
   }, [user, stepNumber]);
 
-  // Timer tick
-  useEffect(() => {
-    if (!startedAt || timeRemaining <= 0) return;
-    const interval = setInterval(() => {
-      setStartedAt((prev) => prev);
-    }, 60000);
-    return () => clearInterval(interval);
-  }, [startedAt, timeRemaining]);
-
-  // Video watched is now triggered at 90% playback by VideoPlayer
-
-
-  async function loadProgress() {
-    setLoading(true);
-
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("full_name")
-      .eq("user_id", user!.id)
-      .maybeSingle();
-    if (profile?.full_name) setUserName(profile.full_name.split(" ")[0]);
-
-    // Load video_url from journey_steps if exists
-    const { data: stepData } = await supabase
-      .from("journey_steps")
-      .select("video_url")
-      .eq("step_number", stepNumber)
-      .maybeSingle();
-    if (stepData?.video_url) setVideoUrl(stepData.video_url);
-
-    const { data } = await supabase
-      .from("journey_progress")
-      .select("*")
-      .eq("user_id", user!.id)
-      .eq("step_number", stepNumber)
-      .maybeSingle();
-
-    if (data) {
-      setProgressData(data);
-      setStartedAt(data.started_at);
-      const sec = data.current_section || 1;
-      setCurrentSection(sec === 2 ? 3 : sec);
-      const cl = data.checklist_items;
-      if (Array.isArray(cl) && cl.length === CHECKLIST_ITEMS.length) {
-        setCheckedItems(cl.map(Boolean));
-      }
-      const a = data.answers as any;
-      if (a && typeof a === "object") {
-        setAnswers({
-          feeling: a.feeling || "",
-          hardest_moment: a.hardest_moment || "",
-          commitment: a.commitment || "",
-        });
-        if (a.intake_mood) setIntakeMood(a.intake_mood);
-        if (a.intake_reason) setIntakeReason(a.intake_reason);
-        if (a.intake_time) setIntakeTime(a.intake_time);
-        if (a.video_watched) setVideoWatched(true);
-      }
-      const conv = data.ai_conversation;
-      if (Array.isArray(conv)) setConversation(conv as unknown as ConvoMsg[]);
-    } else {
-      const { data: newData } = await supabase
-        .from("journey_progress")
-        .insert({ user_id: user!.id, step_number: stepNumber })
-        .select()
-        .single();
-      if (newData) {
-        setProgressData(newData);
-        setStartedAt(newData.started_at);
-      }
-    }
-    setLoading(false);
-  }
-
-  async function saveProgress(updates: Record<string, any> = {}) {
-    if (!user || !progressData) return;
-    const allAnswers = {
-      ...answers,
-      intake_mood: intakeMood,
-      intake_reason: intakeReason,
-      intake_time: intakeTime,
-      video_watched: videoWatched,
-    };
-    const payload = {
-      checklist_items: checkedItems as unknown as any,
-      answers: allAnswers as unknown as any,
-      ai_conversation: conversation as unknown as any,
-      current_section: currentSection,
-      ...updates,
-    };
-    await supabase
-      .from("journey_progress")
-      .update(payload)
-      .eq("id", progressData.id);
-  }
-
-  /* ── Sections ── */
-  function goToSection(n: number) {
-    setCurrentSection(n);
-    saveProgress({ current_section: n });
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  }
-
-  async function submitAnswers() {
+  async function saveResposta() {
+    if (!user || !resposta.trim()) return;
     setSaving(true);
-    await saveProgress({ current_section: 5 });
-    setCurrentSection(5);
-    await callAI(true);
+    const { error } = await supabase
+      .from("jornada_respostas" as any)
+      .upsert(
+        { user_id: user.id, passo_numero: stepNumber, resposta: resposta.trim(), updated_at: new Date().toISOString() },
+        { onConflict: "user_id,passo_numero" }
+      );
     setSaving(false);
-  }
-
-  async function callAI(isInitial = false, userReply?: string) {
-    setAiLoading(true);
-    try {
-      let updatedConvo = isInitial ? [] : [...conversation];
-
-      if (!isInitial && userReply) {
-        const userMsg: ConvoMsg = { role: "user", content: userReply };
-        updatedConvo = [...updatedConvo, userMsg];
-        setConversation(updatedConvo);
-      }
-
-      const body: any = {
-        answers: {
-          ...answers,
-          intake_mood: intakeMood,
-          intake_reason: intakeReason,
-          intake_time: intakeTime,
-        },
-        stepNumber,
-        conversation: updatedConvo,
-        userName: userName || undefined,
-        isReply: !isInitial,
-      };
-
-      const { data, error } = await supabase.functions.invoke("journey-ai", { body });
-
-      if (error) throw error;
-      if (data?.error) {
-        toast({ variant: "destructive", title: "Erro", description: data.error });
-        return;
-      }
-
-      const aiMsg: ConvoMsg = { role: "assistant", content: data.message };
-      const finalConvo = [...updatedConvo, aiMsg];
-      setConversation(finalConvo);
-      await saveProgress({
-        current_section: 5,
-        ai_conversation: finalConvo as unknown as any,
-      });
-    } catch {
-      toast({ variant: "destructive", title: "Erro", description: "Não foi possível obter resposta da IA." });
-    } finally {
-      setAiLoading(false);
+    if (error) {
+      toast({ variant: "destructive", title: "Erro ao salvar", description: error.message });
+    } else {
+      toast({ title: "Resposta salva", description: "Sua reflexão foi guardada." });
     }
   }
 
   async function completeStep() {
-    if (!canComplete || !user) return;
-    setSaving(true);
-    await saveProgress({
-      is_completed: true,
-      completed_at: new Date().toISOString(),
-      current_section: 6,
-    });
+    if (!user) return;
+    if (!resposta.trim()) {
+      toast({ variant: "destructive", title: "Reflexão necessária", description: "Responda a pergunta antes de concluir." });
+      return;
+    }
+    setCompleting(true);
+    await saveResposta();
+
+    // upsert journey_progress
+    const { data: existing } = await supabase
+      .from("journey_progress")
+      .select("id")
+      .eq("user_id", user.id)
+      .eq("step_number", stepNumber)
+      .maybeSingle();
+
+    if (existing) {
+      await supabase
+        .from("journey_progress")
+        .update({ is_completed: true, completed_at: new Date().toISOString() })
+        .eq("id", existing.id);
+    } else {
+      await supabase.from("journey_progress").insert({
+        user_id: user.id,
+        step_number: stepNumber,
+        is_completed: true,
+        completed_at: new Date().toISOString(),
+      });
+    }
 
     await supabase
       .from("patient_profiles")
       .update({ current_step: stepNumber + 1 })
       .eq("user_id", user.id);
 
-    const { data: stepData } = await supabase
-      .from("journey_steps")
-      .select("id")
-      .eq("step_number", stepNumber)
-      .maybeSingle();
-
-    if (stepData) {
-      await supabase.from("trail_progress").upsert([{
-        user_id: user.id,
-        step_id: stepData.id,
-        is_completed: true,
-        completed_at: new Date().toISOString(),
-        exercises_completed: answers as unknown as any,
-        reflection_answers: conversation as unknown as any,
-        video_watched: true,
-      }], { onConflict: "user_id,step_id" });
-    }
-
     await awardMedal(`journey-${stepNumber}`);
+    setIsCompleted(true);
     setShowCelebration(true);
-    setTimeout(() => navigate("/app/jornada"), 3000);
-    setSaving(false);
+    setCompleting(false);
+    setTimeout(() => navigate("/app/jornada"), 2800);
   }
 
-  /* ── Step indicator ── */
-  const StepIndicator = () => (
-    <div className="flex items-center justify-center gap-1 py-3">
-      {Array.from({ length: TOTAL_SECTIONS }, (_, i) => {
-        const n = i + 1;
-        const isActive = n === currentSection;
-        const isDone = n < currentSection;
-        return (
-          <div key={n} className="flex items-center">
-            <div
-              className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-all"
-              style={{
-                background: isDone
-                  ? "#2D6A4F"
-                  : isActive
-                  ? "linear-gradient(135deg, #C9A84C, #E8D590)"
-                  : "#E5E7EB",
-                color: isDone || isActive ? "#fff" : "#9CA3AF",
-              }}
-            >
-              {isDone ? <CheckCircle className="h-3.5 w-3.5" /> : n}
-            </div>
-            {n < TOTAL_SECTIONS && (
-              <div
-                className="w-4 h-0.5 mx-0.5"
-                style={{ background: isDone ? "#2D6A4F" : "#E5E7EB" }}
-              />
-            )}
-          </div>
-        );
-      })}
-    </div>
-  );
-
-  /* ── Celebration ── */
   if (showCelebration) {
     return (
       <div className="min-h-screen flex items-center justify-center" style={{ background: "linear-gradient(135deg, #1B4332, #2D6A4F)" }}>
         <div className="text-center animate-scale-in px-6">
-          <div className="w-24 h-24 rounded-full mx-auto mb-6 flex items-center justify-center"
-            style={{ background: "linear-gradient(135deg, #C9A84C, #E8D590)", boxShadow: "0 0 40px rgba(201,168,76,0.5)" }}>
+          <div
+            className="w-24 h-24 rounded-full mx-auto mb-6 flex items-center justify-center"
+            style={{ background: "linear-gradient(135deg, #C9A84C, #E8D590)", boxShadow: "0 0 40px rgba(201,168,76,0.5)" }}
+          >
             <Award className="h-12 w-12 text-white" />
           </div>
           <h1 className="text-2xl font-bold text-white mb-2">Parabéns!</h1>
           <p className="text-white/80 text-lg mb-1">Você conquistou a medalha</p>
-          <p className="text-xl font-bold flex items-center justify-center gap-2" style={{ color: "#E8D590" }}><Award className="h-5 w-5" /> {meta.medal}</p>
-          <p className="text-white/50 text-sm mt-6">Redirecionando para a Jornada...</p>
+          <p className="text-xl font-bold flex items-center justify-center gap-2" style={{ color: "#E8D590" }}>
+            <Award className="h-5 w-5" /> {step.medal}
+          </p>
         </div>
       </div>
     );
@@ -390,42 +290,40 @@ export default function JourneyStep() {
 
   return (
     <div className="min-h-screen bg-background pb-24 safe-top">
-      {/* ── Header ── */}
+      {/* Header */}
       <div style={{ background: "linear-gradient(135deg, #1B4332, #2D6A4F)" }}>
         <div className="max-w-2xl mx-auto px-5 py-4">
           <div className="flex items-center gap-3 mb-2">
-            <Button variant="ghost" size="icon" onClick={() => navigate("/app/jornada")} className="text-white hover:bg-white/20 shrink-0">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => navigate("/app/jornada")}
+              className="text-white hover:bg-white/20 shrink-0"
+            >
               <ArrowLeft className="h-5 w-5" />
             </Button>
             <div className="flex-1 min-w-0">
               <p className="text-sm text-white/60">Passo {stepNumber} de 12</p>
-              <h1 className="text-lg font-bold text-white truncate">{meta.name}</h1>
+              <h1 className="text-lg font-bold text-white truncate">{step.name}</h1>
             </div>
-            <span className="text-sm flex items-center gap-1" style={{ color: "#E8D590" }}><Award className="h-4 w-4" /> {meta.medal}</span>
+            <span className="text-sm flex items-center gap-1" style={{ color: "#E8D590" }}>
+              <Award className="h-4 w-4" /> {step.medal}
+            </span>
           </div>
-          <p className="text-sm text-white/70 mb-2">{meta.subtitle}</p>
         </div>
-
       </div>
 
-      {/* Step indicator */}
-      <StepIndicator />
-
-      <div className="max-w-2xl mx-auto px-5 pb-5 space-y-5">
-
-        {/* ═══ ÁUDIO DO PASSO ═══ */}
+      <div className="max-w-2xl mx-auto px-5 pt-5 space-y-5">
+        {/* 1. ÁUDIO */}
         {STEP_AUDIO[stepNumber] && (
-          <div
-            className="rounded-2xl p-4 shadow-md"
-            style={{ background: "linear-gradient(135deg, #1B4332, #2D6A4F)" }}
-          >
+          <div className="rounded-2xl p-4 shadow-md" style={{ background: "linear-gradient(135deg, #1B4332, #2D6A4F)" }}>
             <div className="flex items-center gap-2 mb-3 text-white">
               <Headphones className="h-4 w-4" style={{ color: "#E8D590" }} />
               <div className="flex-1 min-w-0">
                 <p className="text-xs uppercase tracking-widest" style={{ color: "#E8D590" }}>
                   Áudio do Passo {stepNumber}
                 </p>
-                <p className="text-sm font-semibold truncate">{meta.name}</p>
+                <p className="text-sm font-semibold truncate">{step.name}</p>
               </div>
             </div>
             <audio controls preload="none" className="w-full">
@@ -435,228 +333,106 @@ export default function JourneyStep() {
           </div>
         )}
 
-        {/* ═══ ETAPA 1 — FORMULÁRIO DE ENTRADA ═══ */}
-        {currentSection === 1 && (
-          <Card className="border-none shadow-lg">
-            <CardContent className="pt-6 space-y-5">
-              <div className="text-center mb-2">
-                <Leaf className="h-7 w-7 mx-auto mb-2 text-primary" />
-                <h2 className="text-lg font-bold text-foreground">Antes de começar, me conta...</h2>
-              </div>
+        {/* 2. MENSAGEM IMPACTANTE */}
+        <div
+          className="rounded-2xl p-5 shadow-md"
+          style={{ background: "linear-gradient(135deg, #1B4332, #2D6A4F)" }}
+        >
+          <div className="flex items-start gap-3">
+            <Sparkles className="h-5 w-5 shrink-0 mt-0.5" style={{ color: "#E8D590" }} />
+            <p className="text-white text-base font-medium leading-snug">
+              {step.message}
+            </p>
+          </div>
+        </div>
 
-              {/* Mood */}
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Como você está se sentindo agora?</label>
-                <div className="grid grid-cols-4 gap-2">
-                  {MOOD_OPTIONS.map((m) => (
-                    <button
-                      key={m.label}
-                      type="button"
-                      onClick={() => setIntakeMood(m.label)}
-                      className="flex flex-col items-center gap-1 p-3 rounded-xl border-2 transition-all"
-                      style={{
-                        borderColor: intakeMood === m.label ? "#2D6A4F" : "#E5E7EB",
-                        background: intakeMood === m.label ? "#E8F5E9" : "transparent",
-                      }}
-                    >
-                      <m.Icon className="h-6 w-6" style={{ color: intakeMood === m.label ? "#1B4332" : "#6B7280" }} />
-                      <span className="text-xs font-medium" style={{ color: intakeMood === m.label ? "#1B4332" : "#6B7280" }}>
-                        {m.label}
-                      </span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Reason */}
-              <div className="space-y-2">
-                <label className="text-sm font-medium">O que te trouxe até aqui hoje?</label>
-                <Textarea
-                  value={intakeReason}
-                  onChange={(e) => setIntakeReason(e.target.value)}
-                  placeholder="Conte com suas palavras..."
-                  rows={3}
-                  className="resize-none"
-                />
-              </div>
-
-              {/* Time */}
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Há quanto tempo as apostas fazem parte da sua vida?</label>
-                <div className="grid grid-cols-2 gap-2">
-                  {TIME_OPTIONS.map((t) => (
-                    <button
-                      key={t}
-                      type="button"
-                      onClick={() => setIntakeTime(t)}
-                      className="p-3 rounded-xl border-2 text-sm font-medium transition-all"
-                      style={{
-                        borderColor: intakeTime === t ? "#2D6A4F" : "#E5E7EB",
-                        background: intakeTime === t ? "#E8F5E9" : "transparent",
-                        color: intakeTime === t ? "#1B4332" : "#6B7280",
-                      }}
-                    >
-                      {t}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <Button
-                className="w-full text-white"
-                disabled={!intakeComplete}
-                style={intakeComplete ? { background: "linear-gradient(135deg, #1B4332, #2D6A4F)" } : {}}
-                onClick={() => goToSection(3)}
-              >
-                Começar minha jornada →
-              </Button>
-            </CardContent>
-          </Card>
-        )}
-
-
-        {/* ═══ ETAPA 3 — ATIVIDADES EXTERNAS (checklist) ═══ */}
-        {currentSection === 3 && (
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base flex items-center gap-2">
-                <ClipboardList className="h-4 w-4" /> O que você vai fazer FORA do app
-                {allChecked && <CheckCircle className="h-4 w-4 text-green-600" />}
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {CHECKLIST_ITEMS.map((item, i) => (
-                <div key={i} className="flex items-start gap-3">
-                  <Checkbox
-                    id={`check-${i}`}
-                    checked={checkedItems[i]}
-                    onCheckedChange={(checked) => {
-                      const next = [...checkedItems];
-                      next[i] = !!checked;
-                      setCheckedItems(next);
-                      supabase.from("journey_progress").update({ checklist_items: next }).eq("id", progressData?.id);
-                    }}
-                    className="mt-1"
-                  />
-                  <label htmlFor={`check-${i}`} className={`text-sm cursor-pointer leading-relaxed ${checkedItems[i] ? "line-through text-muted-foreground" : ""}`}>
-                    {item}
-                  </label>
-                </div>
-              ))}
-
-              <Button
-                className="w-full mt-2 text-white"
-                disabled={!allChecked}
-                style={allChecked ? { background: "linear-gradient(135deg, #1B4332, #2D6A4F)" } : {}}
-                onClick={() => goToSection(4)}
-              >
-                {allChecked ? "Continuar para reflexões →" : "Complete todas as atividades"}
-              </Button>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* ═══ ETAPA 4 — QUESTÕES INTERNAS ═══ */}
-        {currentSection === 4 && (
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base flex items-center gap-2">
-                <MessageSquare className="h-4 w-4" /> Responda com honestidade
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-5">
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Em uma palavra, como você se sente agora que admitiu esse problema?</label>
-                <Input
-                  value={answers.feeling}
-                  onChange={(e) => setAnswers((p) => ({ ...p, feeling: e.target.value }))}
-                  placeholder="Ex: aliviado, assustado, esperançoso..."
-                  maxLength={50}
-                />
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Qual foi o momento mais difícil que as apostas causaram na sua vida recentemente?</label>
-                <Textarea
-                  value={answers.hardest_moment}
-                  onChange={(e) => setAnswers((p) => ({ ...p, hardest_moment: e.target.value }))}
-                  placeholder="Descreva com sinceridade..."
-                  rows={4}
-                  className="resize-none"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-sm font-medium">O que você está disposto a fazer diferente a partir de hoje?</label>
-                <Textarea
-                  value={answers.commitment}
-                  onChange={(e) => setAnswers((p) => ({ ...p, commitment: e.target.value }))}
-                  placeholder="Seu compromisso consigo mesmo..."
-                  rows={4}
-                  className="resize-none"
-                />
-              </div>
-
-              <Button
-                className="w-full text-white"
-                disabled={!answersComplete || saving}
-                style={answersComplete ? { background: "linear-gradient(135deg, #1B4332, #2D6A4F)" } : {}}
-                onClick={submitAnswers}
-              >
-                {saving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Send className="h-4 w-4 mr-2" />}
-                Enviar respostas
-              </Button>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* ═══ ETAPA 5 — CARTA DA ANA ═══ */}
-        {currentSection === 5 && (
-          <AnaLetter
-            letters={conversation}
-            isLoading={aiLoading}
-            onSendReply={(text) => callAI(false, text)}
-            maxExchanges={2}
+        {/* 3. PERGUNTA REFLEXIVA */}
+        <div className="rounded-2xl p-5 bg-card border border-border shadow-sm">
+          <div className="flex items-center gap-2 mb-3">
+            <MessageSquare className="h-5 w-5" style={{ color: "#1B4332" }} />
+            <h2 className="text-sm font-bold uppercase tracking-wide" style={{ color: "#1B4332" }}>
+              Reflexão
+            </h2>
+          </div>
+          <p className="text-foreground text-sm mb-3 leading-relaxed">
+            {step.question}
+          </p>
+          <Textarea
+            value={resposta}
+            onChange={(e) => setResposta(e.target.value)}
+            placeholder="Escreva aqui sua reflexão..."
+            rows={5}
+            className="resize-none"
           />
-        )}
+          <div className="flex justify-end mt-3">
+            <Button
+              onClick={saveResposta}
+              disabled={saving || !resposta.trim()}
+              variant="outline"
+              size="sm"
+              style={{ borderColor: "#1B4332", color: "#1B4332" }}
+            >
+              {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : "Salvar reflexão"}
+            </Button>
+          </div>
+        </div>
 
-        {/* ═══ ETAPA 6 — CONCLUSÃO ═══ */}
-        {currentSection >= 5 && conversation.length > 0 && (
-          <Card className="border-2" style={{ borderColor: canComplete ? "#2D6A4F" : undefined }}>
-            <CardContent className="pt-6 space-y-4">
-              <div className="text-center">
-                <Award className="h-8 w-8 mx-auto mb-2 text-primary" />
-                <h3 className="font-bold text-lg">Concluir Passo {stepNumber}</h3>
-                <p className="text-sm text-muted-foreground mt-1">Medalha: {meta.medal}</p>
-              </div>
+        {/* 4. ATIVIDADE PRÁTICA */}
+        <div className="rounded-2xl p-5 bg-card border border-border shadow-sm">
+          <div className="flex items-center gap-2 mb-3">
+            <Compass className="h-5 w-5" style={{ color: "#1B4332" }} />
+            <h2 className="text-sm font-bold uppercase tracking-wide" style={{ color: "#1B4332" }}>
+              Atividade prática
+            </h2>
+          </div>
+          <p className="text-foreground text-sm mb-4 leading-relaxed">
+            {step.activity}
+          </p>
+          <Button
+            onClick={() => navigate(step.activityRoute)}
+            className="w-full text-white"
+            style={{ background: "linear-gradient(135deg, #1B4332, #2D6A4F)" }}
+          >
+            {step.activityButton}
+            <ArrowRight className="h-4 w-4 ml-2" />
+          </Button>
+        </div>
 
-              <div className="space-y-2 text-sm">
-                <div className="flex items-center gap-2">
-                  {allChecked ? <CheckCircle className="h-4 w-4 text-green-600" /> : <Clock className="h-4 w-4 text-muted-foreground" />}
-                  <span className={allChecked ? "text-green-700" : "text-muted-foreground"}>Atividades externas completas</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  {answersComplete ? <CheckCircle className="h-4 w-4 text-green-600" /> : <Clock className="h-4 w-4 text-muted-foreground" />}
-                  <span className={answersComplete ? "text-green-700" : "text-muted-foreground"}>Reflexões respondidas</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  {conversation.length > 0 ? <CheckCircle className="h-4 w-4 text-green-600" /> : <Clock className="h-4 w-4 text-muted-foreground" />}
-                  <span className={conversation.length > 0 ? "text-green-700" : "text-muted-foreground"}>Carta da Ana recebida</span>
-                </div>
-              </div>
+        {/* 5. VÍDEO YOUTUBE */}
+        <div className="rounded-2xl overflow-hidden shadow-md bg-black">
+          <iframe
+            src={`https://www.youtube.com/embed/${step.youtubeId}?rel=0&modestbranding=1`}
+            style={{ width: "100%", aspectRatio: "16/9", border: "none" }}
+            allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allowFullScreen
+            title={`Vídeo do Passo ${stepNumber}`}
+          />
+        </div>
 
-              <Button
-                className="w-full"
-                disabled={!canComplete || saving}
-                style={canComplete ? { background: "linear-gradient(135deg, #C9A84C, #E8D590)", color: "#1B4332" } : {}}
-                onClick={completeStep}
-              >
-                {saving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Award className="h-4 w-4 mr-2" />}
-                {canComplete ? "Concluir Passo e Ganhar Medalha" : "Complete os requisitos acima"}
-              </Button>
-            </CardContent>
-          </Card>
-        )}
+        {/* CONCLUIR PASSO */}
+        <Button
+          onClick={completeStep}
+          disabled={completing || !resposta.trim()}
+          className="w-full h-12 text-white font-semibold"
+          style={{
+            background: isCompleted
+              ? "linear-gradient(135deg, #C9A84C, #E8D590)"
+              : "linear-gradient(135deg, #1B4332, #2D6A4F)",
+          }}
+        >
+          {completing ? (
+            <Loader2 className="h-5 w-5 animate-spin" />
+          ) : isCompleted ? (
+            <>
+              <CheckCircle className="h-5 w-5 mr-2" /> Passo concluído — refazer
+            </>
+          ) : (
+            <>
+              Concluir Passo {stepNumber}
+              <Award className="h-5 w-5 ml-2" />
+            </>
+          )}
+        </Button>
       </div>
     </div>
   );
