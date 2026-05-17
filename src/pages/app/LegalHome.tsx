@@ -163,11 +163,12 @@ export default function LegalHome() {
           <h2 className="text-base font-bold mb-3" style={{ color: "#1B4332" }}>
             Entenda seus direitos
           </h2>
-          <div className="aspect-video w-full rounded-xl overflow-hidden shadow-md bg-black">
+          <div className="w-full rounded-xl overflow-hidden shadow-md bg-black">
             <iframe
-              src="https://www.youtube.com/embed/KlXBXPQMz58?rel=0&modestbranding=1&showinfo=0"
-              className="w-full h-full"
-              allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
+              src="https://www.youtube.com/embed/KlXBXPQMz58?rel=0&modestbranding=1&showinfo=0&iv_load_policy=3&fs=1"
+              width="100%"
+              style={{ aspectRatio: "16 / 9", border: "none" }}
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
               allowFullScreen
               title="Entenda seus direitos"
             />
