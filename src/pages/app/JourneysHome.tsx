@@ -284,15 +284,14 @@ export default function JourneysHome() {
                 Uma breve introdução à Jornada dos 12 Passos
               </p>
             </div>
-            <div className="aspect-video w-full bg-black">
-              <iframe
-                src="https://www.youtube.com/embed/1sOmc_iDXn4?rel=0&modestbranding=1&showinfo=0"
-                className="w-full h-full"
-                allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
-                allowFullScreen
-                title="Introdução à Jornada dos 12 Passos"
-              />
-            </div>
+            <iframe
+              src="https://www.youtube.com/embed/1sOmc_iDXn4?rel=0&modestbranding=1&showinfo=0&iv_load_policy=3&fs=1"
+              width="100%"
+              style={{ aspectRatio: "16 / 9", border: "none" }}
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowFullScreen
+              title="Introdução à Jornada dos 12 Passos"
+            />
             <div className="p-5">
               <button
                 onClick={dismissIntro}
