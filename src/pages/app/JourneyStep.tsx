@@ -17,20 +17,21 @@ import {
   CheckCircle, Lock, RefreshCw,
 } from "lucide-react";
 
-/* ── Áudio do passo (Google Drive) ── */
+/* ── Áudio do passo (Supabase Storage) ── */
+const AUDIO_BASE = "https://ufvwzhgfuldwypvwzdic.supabase.co/storage/v1/object/public/audios-jornada";
 const STEP_AUDIO: Record<number, string> = {
-  1: "https://drive.google.com/uc?export=download&id=1vA0l9CZK1CVv2RbP8ohAlv13aAJDSTqS",
-  2: "https://drive.google.com/uc?export=download&id=1vW-vGZgzN2mwtfi9ilbRai0QVa-GYoHx",
-  3: "https://drive.google.com/uc?export=download&id=1Ei49PpIkHzeuFX-xRJEizTQDw4Jd1rih",
-  4: "https://drive.google.com/uc?export=download&id=1Qs-NEAL_rjbs_WvPvHMABc3I2I4W_6PZ",
-  5: "https://drive.google.com/uc?export=download&id=1nTFaHJ3UwP-KG1cuekLojldo5jBkyfDj",
-  6: "https://drive.google.com/uc?export=download&id=1lrj_W5zRksRNwguWvmyGNn-R2CPlb39p",
-  7: "https://drive.google.com/uc?export=download&id=1h6CTkk0_Y-8jr5KOasWvli4JU9EYnhiT",
-  8: "https://drive.google.com/uc?export=download&id=1vNJE3l8sfYxaZgSvnvHxAJ24lsJpgzZI",
-  9: "https://drive.google.com/uc?export=download&id=1vmtwJJqO0Gpoi-JVSYPwFpIYewL0f3X0",
-  10: "https://drive.google.com/uc?export=download&id=1sjv1n9oHmk2JlyXA7rZjSlg64CWbezBT",
-  11: "https://drive.google.com/uc?export=download&id=1UKbokVn_DSNOE-vN-mr1ctkctUyyBnpc",
-  12: "https://drive.google.com/uc?export=download&id=12lLG_MIjaQqnim4yP4FDu9F__nfK1GDb",
+  1: `${AUDIO_BASE}/passo1_reconhecimento.mp3`,
+  2: `${AUDIO_BASE}/passo2_esperanca.mp3`,
+  3: `${AUDIO_BASE}/passo3_entrega.mp3`,
+  4: `${AUDIO_BASE}/passo4_inventario.mp3`,
+  5: `${AUDIO_BASE}/passo5_verdade.mp3`,
+  6: `${AUDIO_BASE}/passo6_disponibilidade.mp3`,
+  7: `${AUDIO_BASE}/passo7_humildade.mp3`,
+  8: `${AUDIO_BASE}/passo8_reparacao.mp3`,
+  9: `${AUDIO_BASE}/passo9_responsabilidade.mp3`,
+  10: `${AUDIO_BASE}/passo10_vigilancia.mp3`,
+  11: `${AUDIO_BASE}/passo11_conexao.mp3`,
+  12: `${AUDIO_BASE}/passo12_repasse.mp3`,
 };
 
 interface StepContent {
