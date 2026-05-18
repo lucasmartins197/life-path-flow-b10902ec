@@ -10,13 +10,19 @@ import { Switch } from "@/components/ui/switch";
 import { toast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 
-type StepId = 1 | 2 | 3 | 4 | 5 | 6 | 7;
+type StepId = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
 
 interface OnboardingData {
   fullName: string;
   city: string;
   gamblingDuration: string;
   recoverySituation: string;
+  totalLossRange: string;
+  gamblingTypes: string[];
+  stopAttempts: string;
+  familyAware: string;
+  mentalHealthRisk: string;
+  mainMotivation: string;
   anchorName: string;
   anchorPhone: string;
   anchorRelation: string;
@@ -24,7 +30,7 @@ interface OnboardingData {
   commitmentSignature: string;
 }
 
-const TOTAL_STEPS = 7;
+const TOTAL_STEPS = 8;
 
 const DURATION_OPTIONS = [
   { value: "menos_1_ano", label: "Menos de 1 ano" },
@@ -47,6 +53,52 @@ const RELATION_OPTIONS = [
   { value: "outro", label: "Outro" },
 ];
 
+const LOSS_RANGE_OPTIONS = [
+  { value: "ate_5k", label: "Até R$ 5.000" },
+  { value: "5k_20k", label: "R$ 5.000 a R$ 20.000" },
+  { value: "20k_50k", label: "R$ 20.000 a R$ 50.000" },
+  { value: "acima_50k", label: "Acima de R$ 50.000" },
+  { value: "prefiro_nao_dizer", label: "Prefiro não informar" },
+];
+
+const GAMBLING_TYPES_OPTIONS = [
+  { value: "apostas_esportivas", label: "Apostas esportivas (bets)" },
+  { value: "cassino_online", label: "Cassino online / slots" },
+  { value: "poker", label: "Poker" },
+  { value: "loteria", label: "Loteria / raspadinha" },
+  { value: "bingo", label: "Bingo" },
+  { value: "outros", label: "Outros" },
+];
+
+const STOP_ATTEMPTS_OPTIONS = [
+  { value: "nunca_tentei", label: "Nunca tentei parar" },
+  { value: "uma_vez", label: "Já tentei 1 vez" },
+  { value: "varias_vezes", label: "Já tentei várias vezes" },
+  { value: "parei_voltei", label: "Parei, mas voltei" },
+];
+
+const FAMILY_AWARE_OPTIONS = [
+  { value: "sim_apoiam", label: "Sim, e me apoiam" },
+  { value: "sim_conflito", label: "Sim, mas há conflitos" },
+  { value: "nao_sabem", label: "Não sabem" },
+  { value: "nao_tenho_apoio", label: "Não tenho apoio familiar" },
+];
+
+const MENTAL_HEALTH_OPTIONS = [
+  { value: "bem", label: "Estou bem emocionalmente" },
+  { value: "ansioso", label: "Ansioso ou estressado" },
+  { value: "deprimido", label: "Me sinto deprimido" },
+  { value: "pensamentos_ruins", label: "Tenho pensamentos ruins às vezes" },
+];
+
+const MOTIVATION_OPTIONS = [
+  { value: "familia", label: "Minha família" },
+  { value: "financeiro", label: "Recuperar minha situação financeira" },
+  { value: "saude", label: "Minha saúde mental" },
+  { value: "eu_mesmo", label: "Por mim mesmo" },
+  { value: "trabalho", label: "Meu trabalho / carreira" },
+];
+
 export function OnboardingFlow({ onComplete }: { onComplete: () => void }) {
   const { user, profile } = useAuth();
   const navigate = useNavigate();
@@ -58,6 +110,12 @@ export function OnboardingFlow({ onComplete }: { onComplete: () => void }) {
     city: "",
     gamblingDuration: "",
     recoverySituation: "",
+    totalLossRange: "",
+    gamblingTypes: [],
+    stopAttempts: "",
+    familyAware: "",
+    mentalHealthRisk: "",
+    mainMotivation: "",
     anchorName: "",
     anchorPhone: "",
     anchorRelation: "",
@@ -106,6 +164,53 @@ export function OnboardingFlow({ onComplete }: { onComplete: () => void }) {
     if (error) {
       toast({ title: "Não foi possível salvar", description: error.message, variant: "destructive" });
       return false;
+    }
+    return true;
+  }
+
+  async function saveClinicalData() {
+    if (!user) return false;
+    setSaving(true);
+    const { error } = await supabase
+      .from("onboarding_clinico")
+      .upsert({
+        user_id: user.id,
+        total_loss_range: data.totalLossRange || null,
+        gambling_types: data.gamblingTypes,
+        stop_attempts: data.stopAttempts || null,
+        family_aware: data.familyAware || null,
+        mental_health_risk: data.mentalHealthRisk || null,
+        main_motivation: data.mainMotivation || null,
+        created_at: new Date().toISOString(),
+      }, { onConflict: "user_id" });
+    setSaving(false);
+    if (error) {
+      toast({ title: "Não foi possível salvar dados clínicos", description: error.message, variant: "destructive" });
+      return false;
+    }
+    // Enviar para N8N gerar prontuário e alertar admin se risco elevado
+    try {
+      await fetch("https://apostandonavida.app.n8n.cloud/webhook/onboarding-clinico", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          user_id: user.id,
+          full_name: data.fullName,
+          city: data.city,
+          gambling_duration: data.gamblingDuration,
+          recovery_situation: data.recoverySituation,
+          total_loss_range: data.totalLossRange,
+          gambling_types: data.gamblingTypes,
+          stop_attempts: data.stopAttempts,
+          family_aware: data.familyAware,
+          mental_health_risk: data.mentalHealthRisk,
+          main_motivation: data.mainMotivation,
+          anchor_name: data.anchorName,
+          anchor_phone: data.anchorPhone,
+        }),
+      });
+    } catch (e) {
+      console.error("N8N webhook error:", e);
     }
     return true;
   }
@@ -168,7 +273,13 @@ export function OnboardingFlow({ onComplete }: { onComplete: () => void }) {
       data.city.trim().length >= 2 &&
       data.gamblingDuration &&
       data.recoverySituation) ||
-    step !== 3;
+    (step === 4 &&
+      data.totalLossRange !== "" &&
+      data.stopAttempts !== "" &&
+      data.familyAware !== "" &&
+      data.mentalHealthRisk !== "" &&
+      data.mainMotivation !== "") ||
+    (step !== 3 && step !== 4);
 
   const slideAnim = direction === "forward" ? "animate-slide-in-right" : "animate-fade-in";
 
@@ -219,8 +330,20 @@ export function OnboardingFlow({ onComplete }: { onComplete: () => void }) {
             saving={saving}
           />
         )}
-        {step === 4 && <MeetAnaScreen firstName={firstName} onContinue={goNext} />}
-        {step === 5 && (
+        {step === 4 && (
+          <ClinicalScreen
+            data={data}
+            update={update}
+            onContinue={async () => {
+              if (!canContinue) return;
+              const ok = await saveClinicalData();
+              if (ok) goNext();
+            }}
+            saving={saving}
+          />
+        )}
+        {step === 5 && <MeetAnaScreen firstName={firstName} onContinue={goNext} />}
+        {step === 6 && (
           <AnchorScreen
             data={data}
             update={update}
@@ -232,7 +355,7 @@ export function OnboardingFlow({ onComplete }: { onComplete: () => void }) {
             saving={saving}
           />
         )}
-        {step === 6 && (
+        {step === 7 && (
           <CommitmentScreen
             firstName={firstName}
             data={data}
@@ -248,7 +371,7 @@ export function OnboardingFlow({ onComplete }: { onComplete: () => void }) {
             saving={saving}
           />
         )}
-        {step === 7 && (
+        {step === 8 && (
           <ReadyScreen
             firstName={firstName}
             onStart={() => finishOnboarding("step1")}
@@ -427,6 +550,195 @@ function AboutYouScreen({
           !data.recoverySituation
         }
         className="w-full h-12 mt-8 text-base font-semibold"
+        style={{ backgroundColor: "#1B4332", color: "white" }}
+      >
+        {saving ? "Salvando..." : "Continuar"}
+      </Button>
+    </div>
+  );
+}
+
+function ClinicalScreen({
+  data,
+  update,
+  onContinue,
+  saving,
+}: {
+  data: OnboardingData;
+  update: <K extends keyof OnboardingData>(k: K, v: OnboardingData[K]) => void;
+  onContinue: () => void;
+  saving: boolean;
+}) {
+  const canContinue =
+    data.totalLossRange !== "" &&
+    data.stopAttempts !== "" &&
+    data.familyAware !== "" &&
+    data.mentalHealthRisk !== "" &&
+    data.mainMotivation !== "";
+
+  function toggleGamblingType(value: string) {
+    const current = data.gamblingTypes;
+    if (current.includes(value)) {
+      update("gamblingTypes", current.filter((v) => v !== value));
+    } else {
+      update("gamblingTypes", [...current, value]);
+    }
+  }
+
+  return (
+    <div className="h-full w-full flex flex-col bg-background px-6 pt-[max(env(safe-area-inset-top),4rem)] pb-[max(env(safe-area-inset-bottom),2rem)] overflow-y-auto">
+      <h2 className="text-2xl font-bold tracking-tight mb-2" style={{ color: "#1B4332" }}>
+        Precisamos entender melhor sua situação
+      </h2>
+      <p className="text-sm text-muted-foreground mb-6">
+        Essas informações são confidenciais e nos ajudam a personalizar sua jornada.
+      </p>
+
+      <div className="space-y-6">
+        {/* Tipos de jogo */}
+        <div>
+          <Label className="block mb-2 font-medium">Quais tipos de jogo você praticava? (pode marcar vários)</Label>
+          <div className="grid grid-cols-2 gap-2">
+            {GAMBLING_TYPES_OPTIONS.map((opt) => (
+              <button
+                key={opt.value}
+                type="button"
+                onClick={() => toggleGamblingType(opt.value)}
+                className={cn(
+                  "min-h-11 px-3 py-2 rounded-lg border text-sm text-left transition",
+                  data.gamblingTypes.includes(opt.value)
+                    ? "border-primary bg-primary/10 text-primary font-medium"
+                    : "border-border bg-card hover:border-primary/50"
+                )}
+              >
+                {opt.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Perdas estimadas */}
+        <div>
+          <Label className="block mb-2 font-medium">Quanto você estima ter perdido com apostas no total?</Label>
+          <div className="space-y-2">
+            {LOSS_RANGE_OPTIONS.map((opt) => (
+              <button
+                key={opt.value}
+                type="button"
+                onClick={() => update("totalLossRange", opt.value)}
+                className={cn(
+                  "w-full min-h-11 px-4 py-2 rounded-lg border text-sm text-left transition",
+                  data.totalLossRange === opt.value
+                    ? "border-primary bg-primary/10 text-primary font-medium"
+                    : "border-border bg-card hover:border-primary/50"
+                )}
+              >
+                {opt.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Tentativas de parar */}
+        <div>
+          <Label className="block mb-2 font-medium">Você já tentou parar de jogar antes?</Label>
+          <div className="grid grid-cols-2 gap-2">
+            {STOP_ATTEMPTS_OPTIONS.map((opt) => (
+              <button
+                key={opt.value}
+                type="button"
+                onClick={() => update("stopAttempts", opt.value)}
+                className={cn(
+                  "min-h-11 px-3 py-2 rounded-lg border text-sm text-left transition",
+                  data.stopAttempts === opt.value
+                    ? "border-primary bg-primary/10 text-primary font-medium"
+                    : "border-border bg-card hover:border-primary/50"
+                )}
+              >
+                {opt.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Família */}
+        <div>
+          <Label className="block mb-2 font-medium">Sua família ou pessoas próximas sabem do seu problema?</Label>
+          <div className="space-y-2">
+            {FAMILY_AWARE_OPTIONS.map((opt) => (
+              <button
+                key={opt.value}
+                type="button"
+                onClick={() => update("familyAware", opt.value)}
+                className={cn(
+                  "w-full min-h-11 px-4 py-2 rounded-lg border text-sm text-left transition",
+                  data.familyAware === opt.value
+                    ? "border-primary bg-primary/10 text-primary font-medium"
+                    : "border-border bg-card hover:border-primary/50"
+                )}
+              >
+                {opt.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Saúde mental */}
+        <div>
+          <Label className="block mb-2 font-medium">Como você está se sentindo emocionalmente agora?</Label>
+          <div className="space-y-2">
+            {MENTAL_HEALTH_OPTIONS.map((opt) => (
+              <button
+                key={opt.value}
+                type="button"
+                onClick={() => update("mentalHealthRisk", opt.value)}
+                className={cn(
+                  "w-full min-h-11 px-4 py-2 rounded-lg border text-sm text-left transition",
+                  data.mentalHealthRisk === opt.value
+                    ? "border-primary bg-primary/10 text-primary font-medium"
+                    : "border-border bg-card hover:border-primary/50"
+                )}
+              >
+                {opt.label}
+              </button>
+            ))}
+          </div>
+          {data.mentalHealthRisk === "pensamentos_ruins" && (
+            <div className="mt-3 p-3 rounded-lg bg-amber-50 border border-amber-200">
+              <p className="text-sm text-amber-800">
+                💛 Obrigado por compartilhar isso. Nossa equipe será notificada para te dar suporte especial. Você não está sozinho.
+              </p>
+            </div>
+          )}
+        </div>
+
+        {/* Motivação */}
+        <div>
+          <Label className="block mb-2 font-medium">O que mais te motiva a se recuperar?</Label>
+          <div className="space-y-2">
+            {MOTIVATION_OPTIONS.map((opt) => (
+              <button
+                key={opt.value}
+                type="button"
+                onClick={() => update("mainMotivation", opt.value)}
+                className={cn(
+                  "w-full min-h-11 px-4 py-2 rounded-lg border text-sm text-left transition",
+                  data.mainMotivation === opt.value
+                    ? "border-primary bg-primary/10 text-primary font-medium"
+                    : "border-border bg-card hover:border-primary/50"
+                )}
+              >
+                {opt.label}
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <Button
+        onClick={onContinue}
+        disabled={saving || !canContinue}
+        className="w-full h-12 mt-8 mb-4 text-base font-semibold"
         style={{ backgroundColor: "#1B4332", color: "white" }}
       >
         {saving ? "Salvando..." : "Continuar"}
