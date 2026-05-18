@@ -82,11 +82,11 @@ export default function Auth() {
       return;
     }
     
-    if (signupPassword.length < 6) {
+    if (signupPassword.length < 8 || !/\d/.test(signupPassword) || !/[a-zA-Z]/.test(signupPassword)) {
       toast({
         variant: "destructive",
-        title: "Erro",
-        description: "A senha deve ter pelo menos 6 caracteres.",
+        title: "Senha fraca",
+        description: "Sua senha é muito fraca. Use pelo menos 8 caracteres, incluindo letras e números.",
       });
       return;
     }
