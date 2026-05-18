@@ -18,7 +18,7 @@ import {
 } from "lucide-react";
 
 /* ── Áudio do passo (Supabase Storage) ── */
-const AUDIO_BASE = "https://ufvwzhgfuldwypvwzdic.supabase.co/storage/v1/object/public/audios-jornada";
+const AUDIO_BASE = "https://dmrlkxwpbwmzpdecsgnw.supabase.co/storage/v1/object/public/audios-jornada";
 const STEP_AUDIO: Record<number, string> = {
   1: `${AUDIO_BASE}/passo1_reconhecimento.mp3`,
   2: `${AUDIO_BASE}/passo2_esperanca.mp3`,
