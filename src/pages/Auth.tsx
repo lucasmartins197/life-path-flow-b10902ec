@@ -107,7 +107,7 @@ export default function Auth() {
     
     // Enviar dados para o webhook do n8n
     try {
-      await fetch("http://localhost:5678/webhook/validate-user", {
+      await fetch("https://apostandonavida.app.n8n.cloud/webhook/validate-user", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
