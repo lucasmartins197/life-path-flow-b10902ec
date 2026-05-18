@@ -293,7 +293,7 @@ export default function Auth() {
                     <Input
                       id="signup-password"
                       type="password"
-                      placeholder="Mínimo 6 caracteres"
+                      placeholder="Mínimo 8 caracteres, com letras e números"
                       value={signupPassword}
                       onChange={(e) => setSignupPassword(e.target.value)}
                       required
