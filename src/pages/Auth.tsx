@@ -48,12 +48,17 @@ export default function Auth() {
     const { error } = await signIn(loginEmail, loginPassword);
     
     if (error) {
+      const msg = error.message?.toLowerCase() || "";
+      const description =
+        msg.includes("invalid login credentials") || msg.includes("invalid_credentials")
+          ? "Senha incorreta. Verifique e tente novamente."
+          : msg.includes("email not confirmed")
+          ? "Confirme seu email antes de entrar."
+          : error.message;
       toast({
         variant: "destructive",
         title: "Erro no login",
-        description: error.message === "Invalid login credentials" 
-          ? "Email ou senha incorretos" 
-          : error.message,
+        description,
       });
     } else {
       toast({
@@ -77,11 +82,11 @@ export default function Auth() {
       return;
     }
     
-    if (signupPassword.length < 6) {
+    if (signupPassword.length < 8 || !/\d/.test(signupPassword) || !/[a-zA-Z]/.test(signupPassword)) {
       toast({
         variant: "destructive",
-        title: "Erro",
-        description: "A senha deve ter pelo menos 6 caracteres.",
+        title: "Senha fraca",
+        description: "Sua senha é muito fraca. Use pelo menos 8 caracteres, incluindo letras e números.",
       });
       return;
     }
@@ -251,24 +256,9 @@ export default function Auth() {
                     )}
                   </Button>
                   
-                  <div className="relative my-4">
-                    <div className="absolute inset-0 flex items-center">
-                      <span className="w-full border-t" />
-                    </div>
-                    <div className="relative flex justify-center text-xs uppercase">
-                      <span className="bg-card px-2 text-muted-foreground">
-                        Ou
-                      </span>
-                    </div>
-                  </div>
-                  
-                  <a href="/auth/professional-register" className="block">
-                    <Button variant="outline" className="w-full" type="button">
-                      Sou profissional de saúde
-                    </Button>
-                  </a>
                 </form>
               </TabsContent>
+
               
               <TabsContent value="signup">
                 <form onSubmit={handleSignup} className="space-y-4">
@@ -303,7 +293,7 @@ export default function Auth() {
                     <Input
                       id="signup-password"
                       type="password"
-                      placeholder="Mínimo 6 caracteres"
+                      placeholder="Mínimo 8 caracteres, com letras e números"
                       value={signupPassword}
                       onChange={(e) => setSignupPassword(e.target.value)}
                       required
