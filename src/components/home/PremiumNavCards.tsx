@@ -196,20 +196,6 @@ const cards: NavCard[] = [
     Illustration: TherapySVG,
   },
   {
-    title: "Rotina",
-    subtitle: "Seu dia com propósito",
-    gradient: "linear-gradient(135deg, #7C3009, #C4530A)",
-    path: "/app/rotina",
-    Illustration: RoutineSVG,
-  },
-  {
-    title: "Histórias",
-    subtitle: "Você não está sozinho",
-    gradient: "linear-gradient(135deg, #3D1A78, #6B3FA0)",
-    path: "/app/comunidade",
-    Illustration: StoriesSVG,
-  },
-  {
     title: "Aulão Semanal",
     subtitle: "Ao vivo com terapeuta",
     gradient: "linear-gradient(135deg, #1A1A2E, #16213E)",
