@@ -1352,7 +1352,7 @@ export default function RoutineHome() {
           )}
 
           {/* Category cards */}
-          {activeCategories.map(catId => {
+          {dailyTasks.length === 0 && activeCategories.map(catId => {
             // Skip academia here — it's handled above with the fitness profile card
             if (catId === "academia") {
               if (!fitnessProfile) {
