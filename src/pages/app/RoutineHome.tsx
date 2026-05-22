@@ -245,7 +245,7 @@ export default function RoutineHome() {
     // Atualizar ou criar reading_progress
     const { data: existing } = await supabase
       .from("reading_progress").select("*")
-      .eq("user_id", user!.id).eq("concluido", false)
+      .eq("user_id", user!.id).eq("ativo", true)
       .order("created_at", { ascending: false }).limit(1).maybeSingle();
     if (existing) {
       const rp = existing as any;
@@ -254,12 +254,11 @@ export default function RoutineHome() {
         updated_at: new Date().toISOString(),
       }).eq("id", rp.id);
     } else {
-      // Extrair titulo do conteudo_ia
       const titulo = readTask.conteudo_ia.match(/"([^"]+)"/)?.[1] || "Livro atual";
       await supabase.from("reading_progress").insert({
         user_id: user!.id, livro_titulo: titulo,
         pagina_atual: pages, paginas_por_dia: pages,
-        total_paginas: 0, iniciado_em: todayLocal(),
+        total_paginas: 0, ativo: true,
       });
     }
     await supabase.from("daily_tasks").update({
