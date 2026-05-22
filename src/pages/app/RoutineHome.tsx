@@ -274,11 +274,11 @@ export default function RoutineHome() {
 
   // Salvar esporte
   async function saveSport() {
-    if (!sportTask || !sportDone) { toast.error("Informe como foi o treino."); return; }
+    if (!sportTask) return;
     setSavingSport(true);
     await supabase.from("daily_tasks").update({
       concluido: true, concluido_em: new Date().toISOString(),
-      progresso: sportDone === "sim" ? "Treino completo!" : "Treino parcial",
+      progresso: sportDesc || "Treino realizado",
     }).eq("id", sportTask.id);
     setTasks(prev => prev.map(t => t.id === sportTask.id ? { ...t, concluido: true } : t));
     toast.success("Treino registrado!");
