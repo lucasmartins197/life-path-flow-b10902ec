@@ -106,7 +106,11 @@ export default function RoutineHome() {
       .eq("user_id", user!.id)
       .eq("data", today())
       .order("created_at", { ascending: true });
-    setTasks((data as DailyTask[]) || []);
+    const normalized = ((data as any[]) || []).map((t) => ({
+      ...t,
+      concluido: t.concluido === true || t.concluido === "true" || t.concluido === "t",
+    })) as DailyTask[];
+    setTasks(normalized);
   };
 
   const loadHistory = async () => {
