@@ -663,6 +663,74 @@ export default function RoutineHome() {
       </main>
 
       <BottomNavigation />
+
+      <Dialog open={!!readingTask} onOpenChange={(o) => !o && setReadingTask(null)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Como foi sua leitura hoje?</DialogTitle>
+            <DialogDescription>
+              Registre seu progresso para continuarmos juntos amanhã.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            {readingTask?.conteudo_ia && (
+              <div className="bg-[#F5F0E8] rounded-xl p-3 flex gap-3">
+                <BookOpen className="h-5 w-5 text-[#1B4332] shrink-0 mt-0.5" />
+                <p className="text-sm text-foreground whitespace-pre-line">
+                  {readingTask.conteudo_ia}
+                </p>
+              </div>
+            )}
+            <div>
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
+                Encontre grátis em:
+              </p>
+              <div className="space-y-1.5">
+                {[
+                  { name: "Project Gutenberg", url: "https://www.gutenberg.org" },
+                  { name: "Biblioteca Digital BN", url: "https://bdlb.bn.gov.br" },
+                  { name: "Open Library", url: "https://openlibrary.org" },
+                ].map((s) => (
+                  <a
+                    key={s.url}
+                    href={s.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center justify-between rounded-lg border border-border px-3 py-2 text-sm hover:bg-muted touch-target"
+                  >
+                    <span className="text-foreground">{s.name}</span>
+                    <ExternalLink className="h-4 w-4 text-muted-foreground" />
+                  </a>
+                ))}
+              </div>
+            </div>
+            <div>
+              <Label htmlFor="reading-pages" className="text-sm">
+                Quantas páginas você leu hoje?
+              </Label>
+              <Input
+                id="reading-pages"
+                type="number"
+                min={1}
+                max={1000}
+                inputMode="numeric"
+                value={readingPages}
+                onChange={(e) => setReadingPages(e.target.value)}
+                placeholder="Ex: 15"
+                className="mt-1.5"
+              />
+            </div>
+            <Button
+              onClick={saveReadingProgress}
+              disabled={savingReading}
+              className="w-full bg-[#1B4332] hover:bg-[#2D6A4F]"
+            >
+              {savingReading && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+              Salvar progresso
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
