@@ -132,7 +132,7 @@ export default function LegalHome() {
           email: user.email,
           price_id: priceMap[priceAlias],
           mode: "payment",
-          success_path: "/app/juridico",
+          success_path: "/app/juridico?success=true",
           cancel_path: "/app/juridico",
         },
       });

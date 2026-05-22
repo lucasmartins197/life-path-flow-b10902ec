@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ChevronLeft, CreditCard, Calendar, Loader2 } from "lucide-react";
+import { ChevronLeft, CreditCard, Calendar, Loader2, CheckCircle2 } from "lucide-react";
 import { BottomNavigation } from "@/components/BottomNavigation";
 import { PortoSeguroButton } from "@/components/PortoSeguroButton";
 import { supabase } from "@/integrations/supabase/client";
@@ -9,6 +9,7 @@ import { toast } from "sonner";
 export default function TherapyHome() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
+  const [dataSelecionada, setDataSelecionada] = useState(false);
 
   const handleCheckout = async () => {
     setLoading(true);
@@ -25,23 +26,16 @@ export default function TherapyHome() {
           email: user.email,
           price_id: "price_1Ta1mr0oEfdN4xGLFJVZsmDT",
           mode: "payment",
-          success_path: "/app/terapia",
+          success_path: "/app/terapia?success=true",
           cancel_path: "/app/terapia",
         },
       });
-      console.log("checkout response:", data, error);
-      if (error) {
-        toast.error("Erro: " + error.message);
-        return;
-      }
-      if (data?.error) {
-        toast.error("Erro: " + data.error);
-        return;
-      }
+      if (error) { toast.error("Erro: " + error.message); return; }
+      if (data?.error) { toast.error("Erro: " + data.error); return; }
       if (data?.url) {
         window.location.href = data.url;
       } else {
-        toast.error("URL de pagamento não retornada");
+        toast.error("Erro ao gerar link de pagamento");
       }
     } catch (e: any) {
       toast.error(e?.message || "Erro ao iniciar pagamento");
@@ -50,36 +44,46 @@ export default function TherapyHome() {
     }
   };
 
+  const params = new URLSearchParams(window.location.search);
+  const paymentSuccess = params.get("success") === "true";
+
   return (
     <div className="min-h-screen bg-background safe-top pb-28">
       <header className="bg-card border-b border-border/60 px-5 pt-8 pb-5">
         <div className="max-w-lg mx-auto">
-          <button
-            onClick={() => navigate("/app")}
-            className="flex items-center gap-1.5 text-muted-foreground hover:text-foreground transition-colors mb-4 text-sm"
-          >
-            <ChevronLeft className="h-4 w-4" />
-            Home
+          <button onClick={() => navigate("/app")}
+            className="flex items-center gap-1.5 text-muted-foreground hover:text-foreground transition-colors mb-4 text-sm">
+            <ChevronLeft className="h-4 w-4" /> Home
           </button>
-          <h1 className="text-2xl font-bold tracking-tight text-foreground" style={{ letterSpacing: "-0.5px" }}>
-            Terapia
-          </h1>
-          <p className="text-sm text-muted-foreground mt-0.5">
-            Especialistas em recuperação de ludopatia
-          </p>
+          <h1 className="text-2xl font-bold tracking-tight text-foreground">Terapia Online</h1>
+          <p className="text-sm text-muted-foreground mt-0.5">Especialistas em recuperação de ludopatia</p>
         </div>
       </header>
 
       <main className="max-w-lg mx-auto px-5 pt-6 space-y-6">
+
+        {/* Sucesso após pagamento */}
+        {paymentSuccess && (
+          <div className="rounded-2xl p-5 flex items-start gap-3"
+            style={{ background: "#F0FDF4", border: "1px solid #BBF7D0" }}>
+            <CheckCircle2 className="h-6 w-6 text-green-600 shrink-0 mt-0.5" />
+            <div>
+              <p className="font-bold text-green-800">Pagamento confirmado!</p>
+              <p className="text-sm text-green-700 mt-1">
+                Você receberá um email de confirmação em instantes. Nossa equipe entrará em contato para confirmar o agendamento.
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* Vídeo */}
         <section>
-          <h2 className="text-base font-bold mb-3" style={{ color: "#1B4332" }}>
-            Acompanhamento Psicológico
-          </h2>
+          <h2 className="text-base font-bold mb-3" style={{ color: "#1B4332" }}>Acompanhamento Psicológico</h2>
           <div className="w-full rounded-xl overflow-hidden shadow-md bg-black">
             <iframe
               src="https://drive.google.com/file/d/1p4L5F5jkiUCltDejhgrK9x54HYU0ErFN/preview"
               width="100%"
-              style={{ aspectRatio: "16 / 9", border: "none" }}
+              style={{ aspectRatio: "16/9", border: "none" }}
               allow="autoplay"
               allowFullScreen
               title="Acompanhamento Psicológico"
@@ -87,73 +91,72 @@ export default function TherapyHome() {
           </div>
         </section>
 
-        {/* Card de agendamento com pagamento */}
-        <section className="card-premium p-5">
-          <div className="flex items-start gap-3 mb-3">
-            <div className="w-11 h-11 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
-              <Calendar className="h-5 w-5 text-primary" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="font-bold text-base text-foreground">Agendar Consulta Terapêutica</p>
-              <p className="text-sm text-muted-foreground mt-1 leading-relaxed">
-                Sessão online com psicólogo especializado em ludopatia — R$ 229,20
-              </p>
-            </div>
+        {/* Valor */}
+        <div className="rounded-2xl p-4 flex items-center justify-between"
+          style={{ background: "#F0FDF4", border: "1px solid #BBF7D0" }}>
+          <div>
+            <p className="font-bold text-green-800">Consulta Terapêutica</p>
+            <p className="text-sm text-green-700">Sessão online — psicólogo especializado</p>
           </div>
-          <button
-            onClick={handleCheckout}
-            disabled={loading}
-            className="btn-cta w-full py-3 text-sm disabled:opacity-60"
-          >
-            {loading ? (
-              <>
-                <Loader2 className="h-4 w-4 animate-spin" />
-                Processando...
-              </>
-            ) : (
-              "Agendar e Pagar — R$ 229,20"
-            )}
-          </button>
-        </section>
+          <p className="text-2xl font-bold text-green-800">R$ 229,20</p>
+        </div>
 
+        {/* Agendamento */}
         <section className="space-y-3">
           <div>
-            <h2 className="text-xl font-bold text-foreground" style={{ letterSpacing: "-0.4px" }}>
-              Agende sua sessão
+            <h2 className="text-base font-bold" style={{ color: "#1B4332" }}>
+              1. Selecione uma data
             </h2>
-            <p className="text-sm text-muted-foreground mt-1">
-              Escolha o profissional e o horário disponível
-            </p>
+            <p className="text-sm text-muted-foreground mt-1">Escolha o profissional e horário disponível</p>
           </div>
 
-          <div className="w-full overflow-hidden shadow-md bg-card" style={{ borderRadius: 12 }}>
+          <div className="w-full overflow-hidden shadow-md bg-card rounded-xl">
             <iframe
               src="https://appagendai.alualab.com/agendar?c=saindodojogo"
               width="100%"
-              height="700px"
-              style={{ border: "none", borderRadius: 12, display: "block" }}
+              height="600px"
+              style={{ border: "none", display: "block" }}
               title="Agendamento"
             />
           </div>
+
+          {/* Confirmação de data selecionada */}
+          <button
+            onClick={() => setDataSelecionada(true)}
+            className="w-full py-3 rounded-xl text-sm font-semibold border-2 transition-all"
+            style={{
+              borderColor: dataSelecionada ? "#1B4332" : "#E5E7EB",
+              background: dataSelecionada ? "#F0FDF4" : "#fff",
+              color: dataSelecionada ? "#1B4332" : "#6B7280"
+            }}>
+            {dataSelecionada ? "✓ Data selecionada — prosseguir para pagamento" : "Já selecionei minha data →"}
+          </button>
         </section>
 
-        <section
-          className="rounded-xl p-5 shadow-md"
-          style={{ background: "linear-gradient(135deg, #1B4332 0%, #2D6A4F 100%)" }}
-        >
-          <div className="flex items-start gap-3">
-            <div className="shrink-0 w-10 h-10 rounded-full bg-white/10 flex items-center justify-center">
-              <CreditCard className="h-5 w-5 text-white" />
+        {/* Pagamento — só aparece após selecionar data */}
+        {dataSelecionada && (
+          <section className="rounded-2xl p-5 space-y-4"
+            style={{ background: "#fff", border: "1px solid #E5E7EB", boxShadow: "0 1px 3px rgba(0,0,0,0.06)" }}>
+            <div className="flex items-center gap-2">
+              <div className="w-7 h-7 rounded-full flex items-center justify-center text-white text-sm font-bold"
+                style={{ background: "#1B4332" }}>2</div>
+              <p className="font-bold" style={{ color: "#1B4332" }}>Confirme o pagamento</p>
             </div>
-            <div>
-              <p className="font-bold text-white text-sm mb-1">Pagamento</p>
-              <p className="text-sm text-white/90" style={{ lineHeight: "1.6" }}>
-                Após confirmar o agendamento, nossa equipe entrará em contato
-                para orientar sobre as formas de pagamento.
-              </p>
-            </div>
-          </div>
-        </section>
+            <p className="text-sm text-muted-foreground">
+              Após o pagamento você receberá confirmação por email e nossa equipe validará o agendamento.
+            </p>
+            <button
+              onClick={handleCheckout}
+              disabled={loading}
+              className="w-full py-3.5 rounded-xl text-white font-bold text-base transition-all active:scale-98 disabled:opacity-60"
+              style={{ background: "linear-gradient(135deg, #1B4332, #2D6A4F)" }}>
+              {loading
+                ? <span className="flex items-center justify-center gap-2"><Loader2 className="h-4 w-4 animate-spin" />Processando...</span>
+                : "Pagar R$ 229,20 →"}
+            </button>
+          </section>
+        )}
+
       </main>
 
       <BottomNavigation />
