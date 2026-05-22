@@ -221,7 +221,7 @@ export default function RoutineHome() {
 
   return (
     <div className="min-h-screen bg-[#F5F0E8] safe-top pb-28">
-      <BackHeader title="Rotina Inteligente" />
+      <BackHeader />
 
       <header
         className="px-5 pt-2 pb-5"
