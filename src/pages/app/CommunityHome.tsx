@@ -60,10 +60,11 @@ function timeAgo(date: string) {
   return formatDistanceToNow(new Date(date), { addSuffix: true, locale: ptBR });
 }
 
-function AnonAvatar({ userId, size = 10 }: { userId: string; size?: number }) {
+function AnonAvatar({ userId, size = 10 }: { userId: string; size?: 8 | 10 }) {
   const initials = userId.slice(0, 2).toUpperCase();
+  const sizeClass = size === 8 ? "h-8 w-8" : "h-10 w-10";
   return (
-    <Avatar className={`h-${size} w-${size} border-2 border-[#1B4332]/10`}>
+    <Avatar className={`${sizeClass} border-2 border-[#1B4332]/10`}>
       <AvatarFallback className={`bg-gradient-to-br ${gradientFor(userId)} text-white text-sm font-bold`}>
         {initials}
       </AvatarFallback>
