@@ -31,14 +31,29 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Resolve named price aliases to actual Stripe price IDs from secrets
+    // Aliases nomeados para conveniência (frontend pode mandar "therapy", "legal_consult"...)
     const PRICE_ALIASES: Record<string, string | undefined> = {
       legal_consult: Deno.env.get("STRIPE_LEGAL_CONSULT_PRICE"),
       legal_full: Deno.env.get("STRIPE_LEGAL_FULL_PRICE"),
       therapy: Deno.env.get("STRIPE_THERAPY_PRICE"),
       subscription: Deno.env.get("STRIPE_PRICE_ID"),
     };
-    const resolvedPrice = PRICE_ALIASES[price_id ?? ""] ?? price_id ?? Deno.env.get("STRIPE_PRICE_ID")!;
+    // Se vier price_id no body e for um ID real do Stripe (price_...), usar direto.
+    // Se for um alias conhecido, resolver via secret. Caso contrário, fallback STRIPE_PRICE_ID.
+    let resolvedPrice: string | undefined;
+    if (price_id && typeof price_id === "string" && price_id.startsWith("price_")) {
+      resolvedPrice = price_id;
+    } else if (price_id && PRICE_ALIASES[price_id]) {
+      resolvedPrice = PRICE_ALIASES[price_id];
+    } else {
+      resolvedPrice = Deno.env.get("STRIPE_PRICE_ID");
+    }
+    if (!resolvedPrice) {
+      return new Response(JSON.stringify({ error: "No price_id resolved" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
     const checkoutMode = mode === "payment" ? "payment" : (price_id && price_id !== "subscription" ? "payment" : "subscription");
 
     const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY")!, { apiVersion: "2023-10-16" });
