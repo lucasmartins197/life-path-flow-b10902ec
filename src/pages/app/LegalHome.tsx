@@ -111,6 +111,36 @@ export default function LegalHome() {
   const [activeTopic, setActiveTopic] = useState<Topic | null>(null);
   const [content, setContent] = useState<string>("");
   const [loading, setLoading] = useState(false);
+  const [checkoutLoading, setCheckoutLoading] = useState<string | null>(null);
+
+  const handleCheckout = async (priceAlias: "legal_consult" | "legal_full") => {
+    setCheckoutLoading(priceAlias);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        toast.error("Faça login para continuar");
+        navigate("/auth");
+        return;
+      }
+      const { data, error } = await supabase.functions.invoke("create-checkout-session", {
+        body: {
+          user_id: user.id,
+          email: user.email,
+          price_id: priceAlias,
+          mode: "payment",
+          success_path: "/app/juridico",
+          cancel_path: "/app/juridico",
+        },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      if (data?.url) window.location.href = data.url;
+    } catch (e: any) {
+      toast.error(e?.message || "Erro ao iniciar pagamento");
+    } finally {
+      setCheckoutLoading(null);
+    }
+  };
 
   const openTopic = async (topic: Topic) => {
     setActiveTopic(topic);
