@@ -152,6 +152,22 @@ function EvolutionSVG() {
   );
 }
 
+function LegalSVG() {
+  return (
+    <svg viewBox="0 0 160 120" fill="none" className="absolute inset-0 w-full h-full opacity-25">
+      <rect x="76" y="80" width="8" height="28" fill="rgba(255,255,255,0.5)" />
+      <rect x="60" y="105" width="40" height="6" rx="2" fill="rgba(255,255,255,0.5)" />
+      <rect x="40" y="42" width="80" height="4" rx="2" fill="rgba(255,255,255,0.55)" />
+      <rect x="76" y="42" width="8" height="40" fill="rgba(255,255,255,0.5)" />
+      <line x1="48" y1="46" x2="48" y2="60" stroke="rgba(255,255,255,0.5)" strokeWidth="1.5" />
+      <path d="M36 60 Q48 74, 60 60 Z" fill="rgba(255,255,255,0.4)" stroke="rgba(255,255,255,0.6)" strokeWidth="1.5" />
+      <line x1="112" y1="46" x2="112" y2="60" stroke="rgba(255,255,255,0.5)" strokeWidth="1.5" />
+      <path d="M100 60 Q112 74, 124 60 Z" fill="rgba(255,255,255,0.4)" stroke="rgba(255,255,255,0.6)" strokeWidth="1.5" />
+      <circle cx="80" cy="38" r="4" fill="rgba(255,255,255,0.6)" />
+    </svg>
+  );
+}
+
 /* ── Card data ── */
 interface NavCard {
   title: string;
