@@ -1,320 +1,430 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useAuth } from "@/contexts/AuthContext";
 import { BottomNavigation } from "@/components/BottomNavigation";
 import { PortoSeguroButton } from "@/components/PortoSeguroButton";
-import {
-  TrendingUp,
-  Flame,
-  Target,
-  Calendar,
-  Award,
-  Activity,
-  Heart,
-  Wallet,
-  CheckCircle,
-  ChevronRight,
-  ChevronLeft,
-  BarChart3,
-} from "lucide-react";
-import { useQuery } from "@tanstack/react-query";
+import { ChevronLeft, Download, FileText, TrendingUp, Calendar, CheckCircle2, Loader2, ChevronRight, Star } from "lucide-react";
+import { toast } from "sonner";
+
+interface WeekSummary {
+  jornada_passos: number;
+  rotina_tarefas: number;
+  rotina_concluidas: number;
+  checkins: number;
+  terapia_sessoes: number;
+  historias: number;
+}
+
+interface Prontuario {
+  id: string;
+  resumo_clinico: string;
+  nivel_risco: string;
+  recomendacoes: string[];
+  gerado_em: string;
+}
+
+interface OnboardingClinico {
+  gambling_duration: string;
+  recovery_situation: string;
+  total_loss_range: string;
+  mental_health_risk: string;
+  main_motivation: string;
+}
+
+const RISK_COLOR: Record<string, string> = {
+  baixo: "#059669",
+  medio: "#D97706",
+  alto: "#DC2626",
+  critico: "#7C2D12",
+};
+
+const RISK_LABEL: Record<string, string> = {
+  baixo: "Baixo",
+  medio: "Médio",
+  alto: "Alto",
+  critico: "Crítico",
+};
+
+const MOTIVATION_LABEL: Record<string, string> = {
+  familia: "Minha família",
+  financeiro: "Recuperação financeira",
+  saude: "Minha saúde mental",
+  eu_mesmo: "Por mim mesmo",
+  trabalho: "Meu trabalho",
+};
+
+const MENTAL_LABEL: Record<string, string> = {
+  bem: "Bem emocionalmente",
+  ansioso: "Ansioso ou estressado",
+  deprimido: "Deprimido",
+  pensamentos_ruins: "Com pensamentos difíceis",
+};
 
 export default function EvolutionHome() {
+  const { user } = useAuth();
   const navigate = useNavigate();
-  const { user, profile } = useAuth();
+  const [loading, setLoading] = useState(true);
+  const [weekSummary, setWeekSummary] = useState<WeekSummary | null>(null);
+  const [prontuarios, setProntuarios] = useState<Prontuario[]>([]);
+  const [onboarding, setOnboarding] = useState<OnboardingClinico | null>(null);
+  const [journeyProgress, setJourneyProgress] = useState(0);
+  const [streakDays, setStreakDays] = useState(0);
+  const [userName, setUserName] = useState("");
+  const [activeTab, setActiveTab] = useState<"semana" | "prontuarios" | "historico">("semana");
 
-  // Fetch patient profile for journey stats
-  const { data: patientProfile } = useQuery({
-    queryKey: ["patient-profile", user?.id],
-    queryFn: async () => {
-      if (!user) return null;
-      const { data } = await supabase
-        .from("patient_profiles")
-        .select("*")
-        .eq("user_id", user.id)
-        .maybeSingle();
-      return data;
-    },
-    enabled: !!user,
-  });
+  const weekStart = new Date();
+  weekStart.setDate(weekStart.getDate() - 7);
+  const weekStartStr = weekStart.toISOString().split("T")[0];
+  const today = new Date().toISOString().split("T")[0];
 
-  // Fetch trail progress
-  const { data: trailProgress } = useQuery({
-    queryKey: ["trail-progress", user?.id],
-    queryFn: async () => {
-      if (!user) return [];
-      const { data } = await supabase
-        .from("trail_progress")
-        .select("*")
-        .eq("user_id", user.id);
-      return data || [];
-    },
-    enabled: !!user,
-  });
+  useEffect(() => { if (user) loadAll(); }, [user]);
 
-  // Fetch exercise stats
-  const { data: exerciseStats } = useQuery({
-    queryKey: ["exercise-stats", user?.id],
-    queryFn: async () => {
-      if (!user) return { totalMinutes: 0, totalCalories: 0 };
-      const { data } = await supabase
-        .from("exercise_logs")
-        .select("duration_minutes, calories_burned")
-        .eq("user_id", user.id);
-      
-      if (!data) return { totalMinutes: 0, totalCalories: 0 };
-      
-      return data.reduce(
-        (acc, log) => ({
-          totalMinutes: acc.totalMinutes + log.duration_minutes,
-          totalCalories: acc.totalCalories + Number(log.calories_burned),
-        }),
-        { totalMinutes: 0, totalCalories: 0 }
-      );
-    },
-    enabled: !!user,
-  });
+  async function loadAll() {
+    setLoading(true);
+    const [profileRes, prontuariosRes, onboardingRes, journeyRes, checkinsRes, tasksRes, therapyRes, storiesRes] = await Promise.all([
+      supabase.from("profiles").select("full_name").eq("user_id", user!.id).maybeSingle(),
+      supabase.from("prontuarios").select("*").eq("user_id", user!.id).order("gerado_em", { ascending: false }),
+      supabase.from("onboarding_clinico").select("*").eq("user_id", user!.id).maybeSingle(),
+      supabase.from("journey_progress").select("step_number, completed").eq("user_id", user!.id),
+      supabase.from("gambling_streak").select("confirmation_date, stayed_clean").eq("user_id", user!.id).eq("stayed_clean", true).gte("confirmation_date", weekStartStr),
+      supabase.from("daily_tasks").select("concluido").eq("user_id", user!.id).gte("data", weekStartStr),
+      supabase.from("appointments").select("id").eq("user_id", user!.id).gte("created_at", weekStart.toISOString()),
+      supabase.from("community_stories").select("id").eq("user_id", user!.id).gte("created_at", weekStart.toISOString()),
+    ]);
 
-  // Fetch nutrition stats
-  const { data: nutritionStats } = useQuery({
-    queryKey: ["nutrition-stats", user?.id],
-    queryFn: async () => {
-      if (!user) return { totalMeals: 0, avgCalories: 0 };
-      const { data } = await supabase
-        .from("nutrition_logs")
-        .select("calories")
-        .eq("user_id", user.id);
-      
-      if (!data || data.length === 0) return { totalMeals: 0, avgCalories: 0 };
-      
-      const totalCalories = data.reduce((sum, log) => sum + Number(log.calories), 0);
-      return {
-        totalMeals: data.length,
-        avgCalories: Math.round(totalCalories / data.length),
-      };
-    },
-    enabled: !!user,
-  });
+    if (profileRes.data?.full_name) setUserName(profileRes.data.full_name.split(" ")[0]);
+    setProntuarios((prontuariosRes.data as Prontuario[]) || []);
+    setOnboarding(onboardingRes.data as OnboardingClinico | null);
 
-  const completedSteps = trailProgress?.filter((p) => p.is_completed).length || 0;
-  const streakDays = patientProfile?.streak_days || 0;
-  const currentStep = patientProfile?.current_step || 1;
+    const completedSteps = (journeyRes.data || []).filter((j: any) => j.completed).length;
+    setJourneyProgress(completedSteps);
 
-  const evolutionCards = [
-    {
-      title: "Dias de Streak",
-      value: streakDays,
-      icon: Flame,
-      color: "text-orange-500",
-      bgColor: "bg-orange-500/10",
-      description: "Sua consistência na jornada",
-    },
-    {
-      title: "Passos Concluídos",
-      value: `${completedSteps}/12`,
-      icon: CheckCircle,
-      color: "text-primary",
-      bgColor: "bg-primary/10",
-      description: "Progresso na jornada dos 12 passos",
-    },
-    {
-      title: "Exercícios",
-      value: `${exerciseStats?.totalMinutes || 0} min`,
-      icon: Activity,
-      color: "text-blue-500",
-      bgColor: "bg-blue-500/10",
-      description: `${exerciseStats?.totalCalories || 0} calorias queimadas`,
-    },
-    {
-      title: "Refeições",
-      value: nutritionStats?.totalMeals || 0,
-      icon: Heart,
-      color: "text-green-500",
-      bgColor: "bg-green-500/10",
-      description: `Média de ${nutritionStats?.avgCalories || 0} kcal/refeição`,
-    },
-  ];
+    const checkinDates = new Set((checkinsRes.data || []).map((c: any) => c.confirmation_date));
+    setStreakDays(checkinDates.size);
 
-  const quickActions = [
-    {
-      title: "Ver Prontuário",
-      description: "Histórico completo de registros",
-      icon: BarChart3,
-      path: "/app/prontuario",
-    },
-    {
-      title: "Relatório Diário",
-      description: "Resumo gerado pela IA",
-      icon: Calendar,
-      path: "/app/relatorio",
-    },
-    {
-      title: "Conquistas",
-      description: "Medalhas e marcos alcançados",
-      icon: Award,
-      path: "/app/conquistas",
-    },
-  ];
+    const allTasks = tasksRes.data || [];
+    const doneTasks = allTasks.filter((t: any) => t.concluido).length;
+
+    setWeekSummary({
+      jornada_passos: completedSteps,
+      rotina_tarefas: allTasks.length,
+      rotina_concluidas: doneTasks,
+      checkins: checkinDates.size,
+      terapia_sessoes: (therapyRes.data || []).length,
+      historias: (storiesRes.data || []).length,
+    });
+
+    setLoading(false);
+  }
+
+  // Calcular índice de recuperação (0-100)
+  function calcRecoveryIndex(): number {
+    if (!weekSummary) return 0;
+    let score = 0;
+    score += Math.min(weekSummary.checkins * 10, 30); // max 30pts
+    if (weekSummary.rotina_tarefas > 0) {
+      score += Math.round((weekSummary.rotina_concluidas / weekSummary.rotina_tarefas) * 25); // max 25pts
+    }
+    score += Math.min(journeyProgress * 3, 25); // max 25pts
+    score += Math.min(weekSummary.terapia_sessoes * 10, 10); // max 10pts
+    score += Math.min(weekSummary.historias * 5, 10); // max 10pts
+    return Math.min(score, 100);
+  }
+
+  const recoveryIndex = calcRecoveryIndex();
+
+  function getIndexColor(score: number): string {
+    if (score >= 70) return "#059669";
+    if (score >= 40) return "#D97706";
+    return "#DC2626";
+  }
+
+  function getIndexLabel(score: number): string {
+    if (score >= 70) return "Excelente";
+    if (score >= 50) return "Bom progresso";
+    if (score >= 30) return "Em desenvolvimento";
+    return "Precisa de atenção";
+  }
+
+  async function gerarProntuario() {
+    toast.info("Gerando prontuário...");
+    try {
+      await fetch("https://apostandonavida.app.n8n.cloud/webhook/gerar-prontuario", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ user_id: user!.id }),
+      });
+      await loadAll();
+      toast.success("Prontuário gerado!");
+    } catch {
+      toast.error("Erro ao gerar prontuário.");
+    }
+  }
+
+  if (loading) return (
+    <div className="min-h-screen flex items-center justify-center bg-background">
+      <Loader2 className="h-8 w-8 animate-spin text-primary" />
+    </div>
+  );
 
   return (
-    <div className="min-h-screen bg-background safe-top pb-24">
+    <div className="min-h-screen bg-background pb-28">
       {/* Header */}
-      <header className="bg-gradient-to-br from-primary to-primary/80 text-primary-foreground">
-        <div className="container px-4 py-6">
-          <button
-            onClick={() => navigate("/app")}
-            className="flex items-center gap-1 text-primary-foreground/70 hover:text-primary-foreground transition-colors text-sm mb-3"
-          >
-            <ChevronLeft className="h-4 w-4" />
-            Home
-          </button>
-          <div className="flex items-center gap-3 mb-2">
-            <TrendingUp className="h-6 w-6" />
-            <h1 className="text-2xl font-display font-bold">Minha Evolução</h1>
+      <header style={{ background: "linear-gradient(135deg, #1B4332, #2D6A4F)" }}
+        className="px-5 pt-[max(env(safe-area-inset-top),2rem)] pb-6">
+        <button onClick={() => navigate("/app")}
+          className="flex items-center gap-1.5 text-white/70 mb-4 text-sm">
+          <ChevronLeft className="h-4 w-4" /> Home
+        </button>
+        <h1 className="text-2xl font-bold text-white mb-1">Minha Evolução</h1>
+        <p className="text-white/60 text-sm">Acompanhe sua jornada de recuperação</p>
+
+        {/* Recovery Index */}
+        <div className="mt-5 bg-white/10 rounded-2xl p-4">
+          <div className="flex items-center justify-between mb-3">
+            <div>
+              <p className="text-white/70 text-xs font-medium uppercase tracking-wide">Índice de Recuperação</p>
+              <p className="text-white text-3xl font-bold mt-0.5">{recoveryIndex}<span className="text-lg font-normal text-white/60">/100</span></p>
+              <p className="text-sm font-medium mt-0.5" style={{ color: getIndexColor(recoveryIndex) === "#059669" ? "#6EE7B7" : "#FCD34D" }}>
+                {getIndexLabel(recoveryIndex)}
+              </p>
+            </div>
+            <div className="relative w-20 h-20">
+              <svg viewBox="0 0 80 80" className="transform -rotate-90">
+                <circle cx="40" cy="40" r="32" fill="none" stroke="rgba(255,255,255,0.15)" strokeWidth="8"/>
+                <circle cx="40" cy="40" r="32" fill="none" stroke="white" strokeWidth="8"
+                  strokeDasharray={`${2 * Math.PI * 32}`}
+                  strokeDashoffset={`${2 * Math.PI * 32 * (1 - recoveryIndex / 100)}`}
+                  strokeLinecap="round"/>
+              </svg>
+              <div className="absolute inset-0 flex items-center justify-center">
+                <TrendingUp className="h-6 w-6 text-white" />
+              </div>
+            </div>
           </div>
-          <p className="text-primary-foreground/80 text-sm">
-            Acompanhe seu progresso e conquistas
-          </p>
+          <div className="grid grid-cols-3 gap-2 mt-2">
+            {[
+              { label: "Check-ins", value: weekSummary?.checkins || 0, max: 7 },
+              { label: "Tarefas", value: weekSummary?.rotina_concluidas || 0, max: weekSummary?.rotina_tarefas || 1 },
+              { label: "Passos", value: journeyProgress, max: 12 },
+            ].map(item => (
+              <div key={item.label} className="bg-white/10 rounded-xl p-2 text-center">
+                <p className="text-white font-bold text-base">{item.value}<span className="text-white/50 text-xs">/{item.max}</span></p>
+                <p className="text-white/60 text-xs">{item.label}</p>
+              </div>
+            ))}
+          </div>
         </div>
       </header>
 
-      <main className="container px-4 -mt-4 pb-6">
-        {/* Main Progress Card */}
-        <Card className="card-premium mb-6">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between mb-4">
-              <div>
-                <p className="text-sm text-muted-foreground">Jornada</p>
-                <h2 className="text-3xl font-bold text-foreground">
-                  Passo {currentStep}
-                </h2>
-              </div>
-              <div className="text-right">
-                <p className="text-sm text-muted-foreground">Progresso</p>
-                <p className="text-2xl font-bold text-primary">
-                  {Math.round((completedSteps / 12) * 100)}%
-                </p>
-              </div>
-            </div>
+      {/* Tabs */}
+      <div className="px-5 pt-4 flex gap-2">
+        {(["semana", "prontuarios", "historico"] as const).map(tab => (
+          <button key={tab}
+            onClick={() => setActiveTab(tab)}
+            className="flex-1 py-2.5 rounded-xl text-xs font-semibold transition-all"
+            style={activeTab === tab
+              ? { background: "#1B4332", color: "#fff" }
+              : { background: "rgba(0,0,0,0.04)", color: "#9CA3AF" }}>
+            {tab === "semana" ? "Esta semana" : tab === "prontuarios" ? "Prontuários" : "Histórico"}
+          </button>
+        ))}
+      </div>
 
-            {/* Progress Bar */}
-            <div className="w-full h-3 bg-secondary rounded-full overflow-hidden">
-              <div
-                className="h-full bg-primary rounded-full transition-all duration-500"
-                style={{ width: `${(completedSteps / 12) * 100}%` }}
-              />
-            </div>
+      <div className="px-5 pt-4 space-y-4">
 
-            <div className="flex justify-between mt-2">
-              {Array.from({ length: 12 }).map((_, i) => (
-                <div
-                  key={i}
-                  className={`w-2 h-2 rounded-full transition-colors ${
-                    i < completedSteps
-                      ? "bg-primary"
-                      : i === currentStep - 1
-                      ? "bg-primary/50"
-                      : "bg-muted"
-                  }`}
-                />
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Stats Grid */}
-        <section className="grid grid-cols-2 gap-4 mb-6">
-          {evolutionCards.map((card, index) => (
-            <Card key={index} className="card-premium">
-              <CardContent className="p-4">
-                <div className={`w-10 h-10 rounded-xl ${card.bgColor} flex items-center justify-center mb-3`}>
-                  <card.icon className={`h-5 w-5 ${card.color}`} />
+        {/* ABA: ESTA SEMANA */}
+        {activeTab === "semana" && (<>
+          {/* Cards da semana */}
+          <div className="grid grid-cols-2 gap-3">
+            {[
+              { label: "Dias de check-in", value: weekSummary?.checkins || 0, suffix: "/ 7", icon: "📅", color: "#1B4332" },
+              { label: "Tarefas concluídas", value: weekSummary?.rotina_concluidas || 0, suffix: `/ ${weekSummary?.rotina_tarefas || 0}`, icon: "✅", color: "#7C3AED" },
+              { label: "Passos da jornada", value: journeyProgress, suffix: "/ 12", icon: "🗺️", color: "#059669" },
+              { label: "Sessões de terapia", value: weekSummary?.terapia_sessoes || 0, suffix: "", icon: "🧠", color: "#2563EB" },
+              { label: "Histórias publicadas", value: weekSummary?.historias || 0, suffix: "", icon: "📖", color: "#D97706" },
+              { label: "Dias sem apostar", value: streakDays, suffix: "", icon: "🔥", color: "#DC2626" },
+            ].map(card => (
+              <div key={card.label}
+                className="bg-white border border-gray-100 rounded-2xl p-4"
+                style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.06)" }}>
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-2xl">{card.icon}</span>
                 </div>
-                <p className="text-2xl font-bold text-foreground">{card.value}</p>
-                <p className="text-sm font-medium text-foreground">{card.title}</p>
-                <p className="text-xs text-muted-foreground mt-1">
-                  {card.description}
+                <p className="text-2xl font-bold" style={{ color: card.color }}>
+                  {card.value}<span className="text-sm font-normal text-gray-400 ml-1">{card.suffix}</span>
                 </p>
-              </CardContent>
-            </Card>
-          ))}
-        </section>
-
-        {/* Quick Actions */}
-        <section>
-          <h2 className="text-lg font-display font-semibold mb-4">
-            Detalhes da Evolução
-          </h2>
-          <div className="space-y-3">
-            {quickActions.map((action, index) => (
-              <Card
-                key={index}
-                className="card-premium cursor-pointer"
-                onClick={() => navigate(action.path)}
-              >
-                <CardContent className="p-4">
-                  <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
-                      <action.icon className="h-6 w-6 text-primary" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <h3 className="font-semibold text-foreground">
-                        {action.title}
-                      </h3>
-                      <p className="text-sm text-muted-foreground">
-                        {action.description}
-                      </p>
-                    </div>
-                    <ChevronRight className="h-5 w-5 text-muted-foreground shrink-0" />
-                  </div>
-                </CardContent>
-              </Card>
+                <p className="text-xs text-gray-500 mt-0.5 leading-tight">{card.label}</p>
+              </div>
             ))}
           </div>
-        </section>
 
-        {/* Weekly Summary */}
-        <section className="mt-6">
-          <Card className="card-premium bg-gradient-to-br from-primary/5 to-primary/10">
-            <CardContent className="p-6">
-              <div className="flex items-center gap-3 mb-4">
-                <Target className="h-6 w-6 text-primary" />
-                <h2 className="text-lg font-display font-semibold">
-                  Meta da Semana
-                </h2>
+          {/* Como eu estava vs como estou */}
+          {onboarding && (
+            <div className="bg-white border border-gray-100 rounded-2xl p-4" style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.06)" }}>
+              <p className="font-semibold text-sm mb-3" style={{ color: "#1B4332" }}>Seu ponto de partida</p>
+              <div className="space-y-3">
+                {onboarding.mental_health_risk && (
+                  <div className="flex items-center justify-between">
+                    <p className="text-xs text-gray-500">Estado emocional inicial</p>
+                    <span className="text-xs font-medium px-2 py-1 rounded-full bg-amber-50 text-amber-700">
+                      {MENTAL_LABEL[onboarding.mental_health_risk] || onboarding.mental_health_risk}
+                    </span>
+                  </div>
+                )}
+                {onboarding.main_motivation && (
+                  <div className="flex items-center justify-between">
+                    <p className="text-xs text-gray-500">Principal motivação</p>
+                    <span className="text-xs font-medium px-2 py-1 rounded-full bg-green-50 text-green-700">
+                      {MOTIVATION_LABEL[onboarding.main_motivation] || onboarding.main_motivation}
+                    </span>
+                  </div>
+                )}
+                {onboarding.gambling_duration && (
+                  <div className="flex items-center justify-between">
+                    <p className="text-xs text-gray-500">Tempo de vício</p>
+                    <span className="text-xs font-medium px-2 py-1 rounded-full bg-blue-50 text-blue-700">
+                      {onboarding.gambling_duration}
+                    </span>
+                  </div>
+                )}
               </div>
-              <p className="text-muted-foreground mb-4">
-                Continue mantendo sua rotina consistente. Você está no caminho certo!
-              </p>
-              <div className="grid grid-cols-3 gap-4 text-center">
-                <div>
-                  <p className="text-2xl font-bold text-primary">5/7</p>
-                  <p className="text-xs text-muted-foreground">Dias ativos</p>
-                </div>
-                <div>
-                  <p className="text-2xl font-bold text-primary">3</p>
-                  <p className="text-xs text-muted-foreground">Exercícios</p>
-                </div>
-                <div>
-                  <p className="text-2xl font-bold text-primary">100%</p>
-                  <p className="text-xs text-muted-foreground">Rotina</p>
-                </div>
+              <div className="mt-3 pt-3 border-t border-gray-100">
+                <p className="text-xs text-gray-400 italic">Você está na semana {Math.ceil(streakDays / 7) || 1} da sua jornada. Continue!</p>
               </div>
-            </CardContent>
-          </Card>
-        </section>
-      </main>
+            </div>
+          )}
+        </>)}
 
-      {/* Bottom Navigation */}
+        {/* ABA: PRONTUÁRIOS */}
+        {activeTab === "prontuarios" && (<>
+          <div className="flex items-center justify-between">
+            <p className="text-sm font-semibold" style={{ color: "#1B4332" }}>Prontuários da IA</p>
+            <button onClick={gerarProntuario}
+              className="text-xs font-semibold px-3 py-1.5 rounded-xl text-white"
+              style={{ background: "#1B4332" }}>
+              + Gerar novo
+            </button>
+          </div>
+
+          {prontuarios.length === 0 ? (
+            <div className="bg-white border border-gray-100 rounded-2xl p-8 text-center" style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.06)" }}>
+              <FileText className="h-10 w-10 text-gray-300 mx-auto mb-3" />
+              <p className="font-medium text-gray-700 mb-1">Nenhum prontuário ainda</p>
+              <p className="text-sm text-gray-400 mb-4">A IA gera um relatório clínico completo baseado no seu progresso</p>
+              <button onClick={gerarProntuario}
+                className="px-6 py-2.5 rounded-xl text-white text-sm font-semibold"
+                style={{ background: "#1B4332" }}>
+                Gerar primeiro prontuário
+              </button>
+            </div>
+          ) : prontuarios.map(p => (
+            <div key={p.id} className="bg-white border border-gray-100 rounded-2xl p-4" style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.06)" }}>
+              <div className="flex items-start justify-between gap-3 mb-3">
+                <div className="flex items-center gap-2">
+                  <div className="w-9 h-9 rounded-xl bg-green-50 flex items-center justify-center">
+                    <FileText className="h-4 w-4 text-green-700" />
+                  </div>
+                  <div>
+                    <p className="font-semibold text-sm">Relatório Clínico</p>
+                    <p className="text-xs text-gray-400">
+                      {new Date(p.gerado_em).toLocaleDateString("pt-BR", { day: "numeric", month: "long", year: "numeric" })}
+                    </p>
+                  </div>
+                </div>
+                {p.nivel_risco && (
+                  <span className="text-xs font-semibold px-2 py-1 rounded-full shrink-0"
+                    style={{
+                      background: `${RISK_COLOR[p.nivel_risco]}15`,
+                      color: RISK_COLOR[p.nivel_risco]
+                    }}>
+                    Risco {RISK_LABEL[p.nivel_risco] || p.nivel_risco}
+                  </span>
+                )}
+              </div>
+
+              {p.resumo_clinico && (
+                <p className="text-sm text-gray-600 leading-relaxed mb-3 line-clamp-3">{p.resumo_clinico}</p>
+              )}
+
+              {p.recomendacoes && p.recomendacoes.length > 0 && (
+                <div className="space-y-1.5 mb-3">
+                  {p.recomendacoes.slice(0, 3).map((rec, i) => (
+                    <div key={i} className="flex items-start gap-2">
+                      <CheckCircle2 className="h-3.5 w-3.5 text-green-600 mt-0.5 shrink-0" />
+                      <p className="text-xs text-gray-500 leading-relaxed">{rec}</p>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              <div className="flex gap-2 pt-2 border-t border-gray-50">
+                <button
+                  onClick={() => {
+                    const content = `PRONTUÁRIO - APOSTANDO NA VIDA\n\nData: ${new Date(p.gerado_em).toLocaleDateString("pt-BR")}\nNível de Risco: ${RISK_LABEL[p.nivel_risco] || p.nivel_risco}\n\nRESUMO CLÍNICO:\n${p.resumo_clinico}\n\nRECOMENDAÇÕES:\n${(p.recomendacoes || []).join("\n")}\n\nGerado pelo app Apostando na Vida`;
+                    const blob = new Blob([content], { type: "text/plain" });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement("a");
+                    a.href = url;
+                    a.download = `prontuario_${new Date(p.gerado_em).toLocaleDateString("pt-BR").replace(/\//g, "-")}.txt`;
+                    a.click();
+                    toast.success("Prontuário baixado!");
+                  }}
+                  className="flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-xl"
+                  style={{ background: "#1B433215", color: "#1B4332" }}>
+                  <Download className="h-3.5 w-3.5" /> Baixar
+                </button>
+                <button
+                  onClick={() => {
+                    const text = `Meu prontuário de recuperação:\n\n${p.resumo_clinico}`;
+                    if (navigator.share) {
+                      navigator.share({ title: "Meu Prontuário", text });
+                    } else {
+                      navigator.clipboard.writeText(text);
+                      toast.success("Copiado para a área de transferência!");
+                    }
+                  }}
+                  className="flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-xl"
+                  style={{ background: "#7C3AED15", color: "#7C3AED" }}>
+                  Compartilhar
+                </button>
+              </div>
+            </div>
+          ))}
+        </>)}
+
+        {/* ABA: HISTÓRICO */}
+        {activeTab === "historico" && (
+          <div className="space-y-3">
+            <p className="text-sm font-semibold" style={{ color: "#1B4332" }}>Marcos da sua jornada</p>
+            {[
+              { label: "Iniciou a jornada", desc: "Deu o primeiro passo corajoso", icon: "🌱", done: true },
+              { label: "Completou o onboarding", desc: "Compartilhou sua história inicial", icon: "📋", done: !!onboarding },
+              { label: `${journeyProgress} passos concluídos`, desc: "Na jornada dos 12 passos", icon: "🗺️", done: journeyProgress > 0 },
+              { label: "Cadastrou contato âncora", desc: "Tem alguém por perto", icon: "⚓", done: false },
+              { label: "Primeira sessão de terapia", desc: "Buscou ajuda profissional", icon: "🧠", done: (weekSummary?.terapia_sessoes || 0) > 0 },
+              { label: "Publicou uma história", desc: "Compartilhou com a comunidade", icon: "📖", done: (weekSummary?.historias || 0) > 0 },
+            ].map((marco, i) => (
+              <div key={i} className="flex items-center gap-3 p-4 rounded-2xl bg-white border border-gray-100"
+                style={{ opacity: marco.done ? 1 : 0.45, boxShadow: "0 1px 3px rgba(0,0,0,0.06)" }}>
+                <span className="text-2xl">{marco.icon}</span>
+                <div className="flex-1">
+                  <p className="font-semibold text-sm">{marco.label}</p>
+                  <p className="text-xs text-gray-400">{marco.desc}</p>
+                </div>
+                {marco.done
+                  ? <CheckCircle2 className="h-5 w-5 shrink-0" style={{ color: "#059669" }} />
+                  : <div className="w-5 h-5 rounded-full border-2 border-gray-200 shrink-0" />
+                }
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
       <BottomNavigation />
-
-      {/* Porto Seguro Button */}
       <PortoSeguroButton />
-
-      {/* AI Chat */}
     </div>
   );
 }
