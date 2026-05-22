@@ -232,9 +232,9 @@ export default function RoutineHome() {
   function openModal(task: DailyTask) {
     if (task.concluido) return;
     if (task.categoria === "leitura") { setReadTask(task); setPagesRead(""); setReadModal(true); }
-    else if (task.categoria === "esporte") { setSportTask(task); setSportDone(""); setSportModal(true); }
+    else if (task.categoria === "esporte") { setSportTask(task); setSportDesc(""); setSportModal(true); }
     else if (task.categoria === "lazer") { setLazerTask(task); setLazerDesc(""); setLazerModal(true); }
-    else if (task.categoria === "espiritualidade") { setEspTask(task); setEspModal(true); }
+    else if (task.categoria === "espiritualidade") { setEspTask(task); setEspDesc(""); setEspModal(true); }
   }
 
   // Salvar leitura
