@@ -95,6 +95,7 @@ export default function EvolutionHome() {
     ]);
 
     if (profileRes.data?.full_name) setUserName(profileRes.data.full_name.split(" ")[0]);
+    console.log("prontuarios carregados:", prontuariosRes.data, "user id:", user!.id, "error:", prontuariosRes.error);
     setProntuarios((prontuariosRes.data as Prontuario[]) || []);
     setOnboarding(onboardingRes.data as unknown as OnboardingClinico | null);
 
@@ -370,6 +371,8 @@ export default function EvolutionHome() {
               + Gerar novo
             </button>
           </div>
+
+          <p className="text-xs text-gray-400">{prontuarios.length} prontuários encontrados</p>
 
           {prontuarios.length === 0 ? (
             <div className="bg-white border border-gray-100 rounded-2xl p-8 text-center" style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.06)" }}>
