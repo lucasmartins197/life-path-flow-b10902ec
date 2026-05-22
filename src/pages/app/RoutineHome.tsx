@@ -251,6 +251,25 @@ export default function RoutineHome() {
     setTasks((prev) => prev.map((t) => (t.id === id ? { ...t, concluido: true } : t)));
   };
 
+  const resetRoutine = async () => {
+    if (!user) return;
+    if (!window.confirm("Tem certeza que deseja resetar sua rotina? Suas preferências e tarefas de hoje serão apagadas.")) return;
+    setSaving(true);
+    const [{ error: e1 }, { error: e2 }] = await Promise.all([
+      supabase.from("routine_preferences").delete().eq("user_id", user.id),
+      supabase.from("daily_tasks").delete().eq("user_id", user.id).eq("data", today()),
+    ]);
+    setSaving(false);
+    if (e1 || e2) {
+      toast.error("Erro ao resetar rotina");
+      return;
+    }
+    setPrefs(DEFAULT_PREFS);
+    setTasks([]);
+    setSettingsOpen(false);
+    toast.success("Rotina resetada. Configure novamente quando quiser.");
+  };
+
   const SettingsSheet = (
     <Sheet open={settingsOpen} onOpenChange={setSettingsOpen}>
       <SheetTrigger asChild>
