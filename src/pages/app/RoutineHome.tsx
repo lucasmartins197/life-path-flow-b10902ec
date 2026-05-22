@@ -65,6 +65,9 @@ export default function RoutineHome() {
   const [generating, setGenerating] = useState(false);
   const [saving, setSaving] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [readingTask, setReadingTask] = useState<DailyTask | null>(null);
+  const [readingPages, setReadingPages] = useState<string>("");
+  const [savingReading, setSavingReading] = useState(false);
 
   useEffect(() => {
     if (!user) return;
