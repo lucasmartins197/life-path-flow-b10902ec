@@ -79,7 +79,7 @@ export default function RoutineHome() {
   // Modal esporte
   const [sportModal, setSportModal] = useState(false);
   const [sportTask, setSportTask] = useState<DailyTask | null>(null);
-  const [sportDone, setSportDone] = useState<"sim"|"parcial"|"">("");
+  const [sportDesc, setSportDesc] = useState("");
   const [savingSport, setSavingSport] = useState(false);
   // Modal lazer
   const [lazerModal, setLazerModal] = useState(false);
@@ -89,6 +89,7 @@ export default function RoutineHome() {
   // Modal espiritualidade
   const [espModal, setEspModal] = useState(false);
   const [espTask, setEspTask] = useState<DailyTask | null>(null);
+  const [espDesc, setEspDesc] = useState("");
   const [savingEsp, setSavingEsp] = useState(false);
 
   useEffect(() => { if (user) loadAll(); }, [user]);
