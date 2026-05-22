@@ -148,6 +148,22 @@ export default function RoutineHome() {
     setGenerating(true);
     const d = today();
 
+    // Evita duplicatas: se já existem tarefas para hoje, não insere novamente
+    const { data: existing } = await supabase
+      .from("daily_tasks")
+      .select("id")
+      .eq("user_id", user.id)
+      .eq("data", d)
+      .limit(1);
+    if (existing && existing.length > 0) {
+      setGenerating(false);
+      toast.info("Suas atividades de hoje já foram geradas.");
+      void loadTasks();
+      return;
+    }
+
+
+
     // Gera sugestão personalizada via IA (edge function -> Lovable AI Gateway)
     async function gerarSugestaoIA(categoria: string): Promise<string> {
       try {
