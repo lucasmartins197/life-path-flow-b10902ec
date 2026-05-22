@@ -40,13 +40,28 @@ export default function JourneysHome() {
   const { user } = useAuth();
   const { isUnlocked, isDone, isLoading: validating, isAdmin, refetch } = useJourneyValidation();
   const [isLoading, setIsLoading] = useState(true);
+  const [showIntro, setShowIntro] = useState(false);
 
   useEffect(() => {
     if (!user) return;
     setIsLoading(false);
     // Re-run validation each time the screen mounts
     refetch();
+    // Daily intro modal
+    const key = `journey_intro_seen_${user.id}`;
+    const today = new Date().toISOString().slice(0, 10);
+    if (localStorage.getItem(key) !== today) {
+      setShowIntro(true);
+    }
   }, [user, refetch]);
+
+  const closeIntro = () => {
+    if (user) {
+      const today = new Date().toISOString().slice(0, 10);
+      localStorage.setItem(`journey_intro_seen_${user.id}`, today);
+    }
+    setShowIntro(false);
+  };
 
   const allSteps = Array.from({ length: 12 }, (_, i) => {
     const num = i + 1;
@@ -253,6 +268,35 @@ export default function JourneysHome() {
       <PortoSeguroButton />
       <AIChatPanel />
 
+      {showIntro && (
+        <div className="fixed inset-0 z-[100] bg-black/80 flex items-center justify-center p-4">
+          <div className="bg-background rounded-2xl max-w-lg w-full overflow-hidden shadow-2xl">
+            <div className="p-5" style={{ background: "linear-gradient(135deg, #1B4332, #2D6A4F)" }}>
+              <h2 className="text-white text-lg font-bold">
+                Antes de começar, assista este vídeo
+              </h2>
+            </div>
+            <div className="aspect-video w-full bg-black">
+              <iframe
+                src="https://www.youtube.com/embed/1sOmc_iDXn4?rel=0&modestbranding=1"
+                className="w-full h-full"
+                allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
+                allowFullScreen
+                title="Introdução à Jornada"
+              />
+            </div>
+            <div className="p-5">
+              <button
+                onClick={closeIntro}
+                className="w-full py-3 rounded-xl font-semibold text-white transition-opacity hover:opacity-90"
+                style={{ background: "#1B4332" }}
+              >
+                Continuar para a Jornada
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
