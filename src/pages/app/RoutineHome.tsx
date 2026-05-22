@@ -146,49 +146,79 @@ export default function RoutineHome() {
   const generateTodayTasks = async () => {
     if (!user) return;
     setGenerating(true);
-    const newTasks: Omit<DailyTask, "id" | "concluido" | "concluido_em">[] = [];
     const d = today();
 
+    // Gerar sugestao personalizada via IA para cada categoria
+    async function gerarSugestaoIA(categoria: string): Promise<string> {
+      const prompts: Record<string, string> = {
+        leitura: `Voce e um assistente de recuperacao de ludopatia. Sugira UM livro especifico para hoje (titulo e autor) relacionado ao tema: ${prefs.leitura_tipo || "autoconhecimento"}. Diga quantas paginas ler hoje (entre 10-20). Seja direto e motivador. Maximo 2 linhas.`,
+        esporte: `Voce e um assistente de recuperacao de ludopatia. Gere um treino especifico para hoje: ${prefs.esporte_tipo === "academia" ? "academia" : "corrida"}, nivel ${prefs.esporte_nivel || "iniciante"}, ${prefs.esporte_tempo || 30} minutos. Liste 3 exercicios com series/reps. Seja objetivo.`,
+        lazer: `Voce e um assistente de recuperacao de ludopatia. Sugira UMA atividade de lazer saudavel e especifica para hoje — algo diferente de apostar. Algo pratico. Maximo 2 linhas.`,
+        espiritualidade: `Voce e um assistente de recuperacao de ludopatia. Sugira uma pratica espiritual especifica para hoje: meditacao, reflexao, leitura espiritual ou video no YouTube. Seja especifico. Maximo 2 linhas.`,
+      };
+      try {
+        const res = await fetch("https://api.anthropic.com/v1/messages", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            model: "claude-sonnet-4-20250514",
+            max_tokens: 150,
+            messages: [{ role: "user", content: prompts[categoria] || "Sugira uma atividade saudavel para hoje." }],
+          }),
+        });
+        const data = await res.json();
+        return data.content?.[0]?.text || "";
+      } catch {
+        return "";
+      }
+    }
+
+    const newTasks: Omit<DailyTask, "id" | "concluido" | "concluido_em">[] = [];
+
     if (prefs.leitura_ativo) {
+      const ia = await gerarSugestaoIA("leitura");
       newTasks.push({
         categoria: "leitura",
-        titulo: "Leitura diária",
-        descricao: `15 minutos de leitura — ${prefs.leitura_tipo}`,
-        conteudo_ia: `Leia 15 minutos de um livro de ${prefs.leitura_tipo}.`,
+        titulo: "Leitura do dia",
+        descricao: `Tema preferido: ${prefs.leitura_tipo || "livre"}`,
+        conteudo_ia: ia,
         data: d,
       });
     }
     if (prefs.esporte_ativo) {
+      const ia = await gerarSugestaoIA("esporte");
       newTasks.push({
         categoria: "esporte",
-        titulo: `Treino de ${prefs.esporte_tipo}`,
-        descricao: `${prefs.esporte_tempo} min — nível ${prefs.esporte_nivel}`,
-        conteudo_ia: `Faça ${prefs.esporte_tempo} minutos de ${prefs.esporte_tipo} no nível ${prefs.esporte_nivel}.`,
+        titulo: prefs.esporte_tipo === "academia" ? "Treino na academia" : "Treino de corrida",
+        descricao: `${prefs.esporte_tipo || "esporte"} — ${prefs.esporte_nivel || "iniciante"} — ${prefs.esporte_tempo || 30}min`,
+        conteudo_ia: ia,
         data: d,
       });
     }
     if (prefs.lazer_ativo) {
+      const ia = await gerarSugestaoIA("lazer");
       newTasks.push({
         categoria: "lazer",
         titulo: "Momento de lazer",
-        descricao: "Dedique tempo a algo que te traga prazer",
-        conteudo_ia: "Reserve 30 minutos para uma atividade de lazer offline.",
+        descricao: "Atividade saudavel de hoje",
+        conteudo_ia: ia,
         data: d,
       });
     }
     if (prefs.espiritualidade_ativo) {
+      const ia = await gerarSugestaoIA("espiritualidade");
       newTasks.push({
         categoria: "espiritualidade",
-        titulo: "Prática espiritual",
-        descricao: "Meditação, oração ou reflexão",
-        conteudo_ia: "Dedique 10 minutos à sua prática espiritual.",
+        titulo: "Pratica espiritual",
+        descricao: "Conexao espiritual de hoje",
+        conteudo_ia: ia,
         data: d,
       });
     }
 
     if (newTasks.length === 0) {
       setGenerating(false);
-      toast.error("Ative ao menos uma categoria nas configurações");
+      toast.error("Ative ao menos uma categoria nas configuracoes");
       return;
     }
 
@@ -201,7 +231,7 @@ export default function RoutineHome() {
       toast.error("Erro ao gerar atividades");
       return;
     }
-    toast.success("Atividades de hoje geradas");
+    toast.success("Atividades de hoje geradas pela IA!");
     void loadTasks();
   };
 
