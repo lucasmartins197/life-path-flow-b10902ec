@@ -411,9 +411,23 @@ export default function RoutineHome() {
                       <div className="flex-1 min-w-0">
                         <p className="font-semibold text-sm">{task.titulo}</p>
                         <p className="text-xs text-muted-foreground mt-0.5">{task.descricao}</p>
-                        {task.conteudo_ia && (
-                          <p className="text-xs mt-2 leading-relaxed" style={{color:"#374151"}}>{task.conteudo_ia}</p>
-                        )}
+                        {task.conteudo_ia && (() => {
+                          const ytMatch = task.conteudo_ia.match(/https?:\/\/(?:www\.)?(?:youtube\.com\/watch\?v=|youtu\.be\/)[A-Za-z0-9_-]+\S*/);
+                          const ytUrl = ytMatch?.[0];
+                          const textOnly = ytUrl ? task.conteudo_ia.replace(ytUrl, "").trim() : task.conteudo_ia;
+                          return (
+                            <>
+                              <p className="text-xs mt-2 leading-relaxed whitespace-pre-line" style={{color:"#374151"}}>{textOnly}</p>
+                              {ytUrl && (
+                                <a href={ytUrl} target="_blank" rel="noreferrer"
+                                  className="mt-2 inline-flex items-center gap-1 text-xs font-semibold px-3 py-1.5 rounded-xl"
+                                  style={{background:`${cfg.color}15`,color:cfg.color}}>
+                                  <ExternalLink className="h-3 w-3"/>Assistir vídeo de hoje →
+                                </a>
+                              )}
+                            </>
+                          );
+                        })()}
                         {task.categoria === "leitura" && !done && (
                           <div className="mt-2 flex gap-2 flex-wrap">
                             <a href="https://www.gutenberg.org" target="_blank" rel="noreferrer"
