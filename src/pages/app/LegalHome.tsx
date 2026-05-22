@@ -136,9 +136,20 @@ export default function LegalHome() {
           cancel_path: "/app/juridico",
         },
       });
-      if (error) throw error;
-      if (data?.error) throw new Error(data.error);
-      if (data?.url) window.location.href = data.url;
+      console.log("checkout response:", data, error);
+      if (error) {
+        toast.error("Erro: " + error.message);
+        return;
+      }
+      if (data?.error) {
+        toast.error("Erro: " + data.error);
+        return;
+      }
+      if (data?.url) {
+        window.location.href = data.url;
+      } else {
+        toast.error("URL de pagamento não retornada");
+      }
     } catch (e: any) {
       toast.error(e?.message || "Erro ao iniciar pagamento");
     } finally {
