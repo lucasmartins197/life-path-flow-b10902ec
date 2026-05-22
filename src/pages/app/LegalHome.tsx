@@ -309,6 +309,7 @@ export default function LegalHome() {
               </div>
             ))}
           </div>
+        </section>
 
         {/* LGPD */}
         <div className="rounded-xl border border-border p-4 flex gap-3">
