@@ -10,12 +10,15 @@ interface ProtectedRouteProps {
   redirectTo?: string;
 }
 
+const ADMIN_BYPASS_ID = "60c8281c-eee0-48f2-9d31-d3002ce4eb14";
+const PAYWALL_EXEMPT = ["/app/assinatura", "/app/onboarding", "/auth"];
+
 export function ProtectedRoute({
   children,
   allowedRoles,
   redirectTo = "/auth",
 }: ProtectedRouteProps) {
-  const { user, roles, isLoading } = useAuth();
+  const { user, roles, isLoading, profile } = useAuth();
   const location = useLocation();
 
   if (isLoading) {
@@ -33,7 +36,6 @@ export function ProtectedRoute({
     return <Navigate to={redirectTo} state={{ from: location }} replace />;
   }
 
-  // Role check
   if (allowedRoles && allowedRoles.length > 0) {
     const hasRequiredRole = allowedRoles.some((role) => roles.includes(role));
     if (!hasRequiredRole) {
@@ -41,6 +43,14 @@ export function ProtectedRoute({
       if (roles.includes("professional")) return <Navigate to="/pro" replace />;
       return <Navigate to="/app" replace />;
     }
+  }
+
+  const isAdminUser = user.id === ADMIN_BYPASS_ID || roles.includes("admin");
+  const isExempt = PAYWALL_EXEMPT.some(p => location.pathname.startsWith(p));
+  const hasSubscription = (profile as any)?.subscription_status === "active";
+
+  if (!isAdminUser && !isExempt && !hasSubscription) {
+    return <Navigate to="/app/assinatura" state={{ from: location }} replace />;
   }
 
   return <>{children}</>;
