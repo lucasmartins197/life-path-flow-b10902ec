@@ -35,11 +35,10 @@ export function PortoSeguroButton() {
     <>
       <button
         onClick={() => setIsOpen(true)}
-        className="porto-seguro-btn"
+        className="w-10 h-10 flex items-center justify-center rounded-full bg-card touch-target"
         aria-label="Contato Âncora"
       >
-        <Anchor className="h-5 w-5" />
-        <span className="text-[10px] font-semibold leading-none mt-0.5">Âncora</span>
+        <Anchor className="h-5 w-5" style={{ color: "hsl(155 47% 18%)" }} />
       </button>
 
       <Dialog open={isOpen} onOpenChange={setIsOpen}>

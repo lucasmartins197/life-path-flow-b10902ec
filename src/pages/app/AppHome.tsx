@@ -115,6 +115,7 @@ export default function AppHome() {
               </span>
             )}
           </button>
+          <PortoSeguroButton />
           <button className="w-10 h-10 flex items-center justify-center rounded-full bg-card touch-target">
             <Bell className="h-5 w-5 text-muted-foreground" />
           </button>
@@ -149,7 +150,6 @@ export default function AppHome() {
       </main>
 
       <BottomNavigation />
-      <PortoSeguroButton />
       <EveningCheckIn />
     </div>
   );
