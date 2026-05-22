@@ -3,11 +3,14 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 
+export type ReactionType = "heart" | "forca" | "gratidao" | "apoio";
+
 export interface CommunityPost {
   id: string;
   user_id: string;
   content: string;
   image_url: string | null;
+  video_url: string | null;
   mood: string | null;
   anonymous: boolean;
   likes_count: number;
@@ -17,6 +20,9 @@ export interface CommunityPost {
   author_avatar?: string;
   author_step?: number;
   has_liked?: boolean;
+  my_reactions?: ReactionType[];
+  reactions_count?: Record<ReactionType, number>;
+  is_following_author?: boolean;
 }
 
 export interface PostComment {
@@ -29,11 +35,18 @@ export interface PostComment {
   author_avatar?: string;
 }
 
+function anonName(userId: string) {
+  // Deterministic anonymous label
+  const n = parseInt(userId.replace(/\D/g, "").slice(0, 4) || "0", 10) % 9999;
+  return `Guerreiro Anônimo #${(n + 1).toString().padStart(4, "0")}`;
+}
+
 export function useCommunityFeed() {
   const { user } = useAuth();
   const { toast } = useToast();
   const [posts, setPosts] = useState<CommunityPost[]>([]);
   const [loading, setLoading] = useState(true);
+  const [followingIds, setFollowingIds] = useState<Set<string>>(new Set());
 
   const fetchPosts = useCallback(async () => {
     if (!user) return;
@@ -52,30 +65,50 @@ export function useCommunityFeed() {
         return;
       }
 
+      const postIds = postsData.map((p) => p.id);
       const userIds = [...new Set(postsData.map((p) => p.user_id))];
 
-      const [{ data: profiles }, { data: publicProfiles }, { data: likes }, { data: patientProfiles }] = await Promise.all([
-        supabase.from("profiles").select("user_id, full_name, avatar_url").in("user_id", userIds),
-        supabase.from("user_public_profiles").select("user_id, display_name, avatar_url, is_anonymous").in("user_id", userIds),
-        supabase.from("post_likes").select("post_id").eq("user_id", user.id),
+      const [
+        { data: patientProfiles },
+        { data: myReacts },
+        { data: allReacts },
+        { data: follows },
+      ] = await Promise.all([
         supabase.from("patient_profiles").select("user_id, current_step").in("user_id", userIds),
+        supabase.from("post_likes").select("post_id, reaction_type").eq("user_id", user.id).in("post_id", postIds),
+        supabase.from("post_likes").select("post_id, reaction_type").in("post_id", postIds),
+        supabase.from("user_follows").select("following_id").eq("follower_id", user.id),
       ]);
 
-      const likedIds = new Set(likes?.map((l) => l.post_id) || []);
-      const profileMap = new Map(profiles?.map((p) => [p.user_id, p]) || []);
-      const publicMap = new Map(publicProfiles?.map((p) => [p.user_id, p]) || []);
       const stepMap = new Map(patientProfiles?.map((p) => [p.user_id, p.current_step]) || []);
+      const followSet = new Set(follows?.map((f) => f.following_id) || []);
+      setFollowingIds(followSet);
 
-      const enriched: CommunityPost[] = postsData.map((p) => {
-        const profile = profileMap.get(p.user_id);
-        const pub = publicMap.get(p.user_id);
-        const isAnon = p.anonymous || pub?.is_anonymous;
+      const myReactMap = new Map<string, ReactionType[]>();
+      myReacts?.forEach((r: any) => {
+        const arr = myReactMap.get(r.post_id) || [];
+        arr.push(r.reaction_type as ReactionType);
+        myReactMap.set(r.post_id, arr);
+      });
+
+      const reactCountMap = new Map<string, Record<ReactionType, number>>();
+      allReacts?.forEach((r: any) => {
+        const cur = reactCountMap.get(r.post_id) || { heart: 0, forca: 0, gratidao: 0, apoio: 0 };
+        cur[r.reaction_type as ReactionType] = (cur[r.reaction_type as ReactionType] || 0) + 1;
+        reactCountMap.set(r.post_id, cur);
+      });
+
+      const enriched: CommunityPost[] = postsData.map((p: any) => {
+        const mine = myReactMap.get(p.id) || [];
         return {
           ...p,
-          author_name: isAnon ? "Guerreiro Anônimo" : (pub?.display_name || profile?.full_name || "Anônimo"),
-          author_avatar: isAnon ? undefined : (pub?.avatar_url || profile?.avatar_url || undefined),
+          author_name: anonName(p.user_id),
+          author_avatar: undefined,
           author_step: stepMap.get(p.user_id) || undefined,
-          has_liked: likedIds.has(p.id),
+          has_liked: mine.includes("heart"),
+          my_reactions: mine,
+          reactions_count: reactCountMap.get(p.id) || { heart: 0, forca: 0, gratidao: 0, apoio: 0 },
+          is_following_author: followSet.has(p.user_id),
         };
       });
       setPosts(enriched);
@@ -89,6 +122,7 @@ export function useCommunityFeed() {
   const createPost = async (data: {
     content: string;
     image_url?: string;
+    video_url?: string;
     mood?: string;
     anonymous?: boolean;
   }) => {
@@ -97,8 +131,9 @@ export function useCommunityFeed() {
       user_id: user.id,
       content: data.content,
       image_url: data.image_url || null,
+      video_url: data.video_url || null,
       mood: data.mood || null,
-      anonymous: data.anonymous || false,
+      anonymous: true, // Always anonymous in this community
     });
     if (error) {
       toast({ title: "Erro ao publicar", description: error.message, variant: "destructive" });
@@ -108,21 +143,48 @@ export function useCommunityFeed() {
     }
   };
 
-  const toggleLike = async (postId: string, currentlyLiked: boolean) => {
+  const toggleReaction = async (postId: string, reaction: ReactionType) => {
     if (!user) return;
-    if (currentlyLiked) {
-      await supabase.from("post_likes").delete().eq("post_id", postId).eq("user_id", user.id);
+    const post = posts.find((p) => p.id === postId);
+    const has = post?.my_reactions?.includes(reaction);
+    if (has) {
+      await supabase
+        .from("post_likes")
+        .delete()
+        .eq("post_id", postId)
+        .eq("user_id", user.id)
+        .eq("reaction_type", reaction);
     } else {
-      await supabase.from("post_likes").insert({ post_id: postId, user_id: user.id });
+      await supabase.from("post_likes").insert({
+        post_id: postId,
+        user_id: user.id,
+        reaction_type: reaction,
+      } as any);
     }
     setPosts((prev) =>
-      prev.map((p) =>
-        p.id === postId
-          ? { ...p, has_liked: !currentlyLiked, likes_count: p.likes_count + (currentlyLiked ? -1 : 1) }
-          : p
-      )
+      prev.map((p) => {
+        if (p.id !== postId) return p;
+        const mine = new Set(p.my_reactions || []);
+        const counts = { ...(p.reactions_count || { heart: 0, forca: 0, gratidao: 0, apoio: 0 }) };
+        if (has) {
+          mine.delete(reaction);
+          counts[reaction] = Math.max(0, counts[reaction] - 1);
+        } else {
+          mine.add(reaction);
+          counts[reaction] = (counts[reaction] || 0) + 1;
+        }
+        return {
+          ...p,
+          my_reactions: Array.from(mine),
+          reactions_count: counts,
+          has_liked: mine.has("heart"),
+          likes_count: p.likes_count + (has ? -1 : 1),
+        };
+      })
     );
   };
+
+  const toggleLike = (postId: string, _liked: boolean) => toggleReaction(postId, "heart");
 
   const fetchComments = async (postId: string): Promise<PostComment[]> => {
     const { data: comments } = await supabase
@@ -130,33 +192,19 @@ export function useCommunityFeed() {
       .select("*")
       .eq("post_id", postId)
       .order("created_at", { ascending: true });
-
-    if (!comments || comments.length === 0) return [];
-
-    const userIds = [...new Set(comments.map((c) => c.user_id))];
-    const { data: profiles } = await supabase
-      .from("profiles")
-      .select("user_id, full_name, avatar_url")
-      .in("user_id", userIds);
-
-    const profileMap = new Map(profiles?.map((p) => [p.user_id, p]) || []);
-    return comments.map((c) => {
-      const profile = profileMap.get(c.user_id);
-      return {
-        ...c,
-        author_name: profile?.full_name || "Anônimo",
-        author_avatar: profile?.avatar_url || undefined,
-      };
-    });
+    if (!comments) return [];
+    return comments.map((c) => ({
+      ...c,
+      author_name: anonName(c.user_id),
+      author_avatar: undefined,
+    }));
   };
 
   const addComment = async (postId: string, content: string) => {
     if (!user) return;
-    const { error } = await supabase.from("post_comments").insert({
-      post_id: postId,
-      user_id: user.id,
-      content,
-    });
+    const { error } = await supabase
+      .from("post_comments")
+      .insert({ post_id: postId, user_id: user.id, content });
     if (error) {
       toast({ title: "Erro", description: error.message, variant: "destructive" });
       return false;
@@ -191,32 +239,50 @@ export function useCommunityFeed() {
     return data.publicUrl;
   };
 
-  const followUser = async (followingId: string) => {
-    if (!user) return;
-    await supabase.from("user_follows").insert({ follower_id: user.id, following_id: followingId });
+  const uploadPostVideo = async (file: File): Promise<string | null> => {
+    if (!user) return null;
+    const ext = file.name.split(".").pop() || "mp4";
+    const path = `${user.id}/${Date.now()}.${ext}`;
+    const { error } = await supabase.storage.from("post-videos").upload(path, file, { upsert: true, contentType: file.type });
+    if (error) {
+      toast({ title: "Erro ao enviar vídeo", description: error.message, variant: "destructive" });
+      return null;
+    }
+    const { data } = supabase.storage.from("post-videos").getPublicUrl(path);
+    return data.publicUrl;
   };
 
-  const unfollowUser = async (followingId: string) => {
-    if (!user) return;
-    await supabase.from("user_follows").delete().eq("follower_id", user.id).eq("following_id", followingId);
-  };
-
-  const checkFollowing = async (followingId: string): Promise<boolean> => {
-    if (!user) return false;
-    const { data } = await supabase
-      .from("user_follows")
-      .select("id")
-      .eq("follower_id", user.id)
-      .eq("following_id", followingId)
-      .maybeSingle();
-    return !!data;
+  const toggleFollow = async (targetUserId: string) => {
+    if (!user || targetUserId === user.id) return;
+    const isFollowing = followingIds.has(targetUserId);
+    if (isFollowing) {
+      await supabase
+        .from("user_follows")
+        .delete()
+        .eq("follower_id", user.id)
+        .eq("following_id", targetUserId);
+      const next = new Set(followingIds);
+      next.delete(targetUserId);
+      setFollowingIds(next);
+    } else {
+      await supabase
+        .from("user_follows")
+        .insert({ follower_id: user.id, following_id: targetUserId });
+      const next = new Set(followingIds);
+      next.add(targetUserId);
+      setFollowingIds(next);
+    }
+    setPosts((prev) =>
+      prev.map((p) =>
+        p.user_id === targetUserId ? { ...p, is_following_author: !isFollowing } : p
+      )
+    );
   };
 
   useEffect(() => {
     fetchPosts();
   }, [fetchPosts]);
 
-  // Realtime subscription
   useEffect(() => {
     const channel = supabase
       .channel("community-posts-realtime")
@@ -230,15 +296,16 @@ export function useCommunityFeed() {
   return {
     posts,
     loading,
+    followingIds,
     createPost,
     toggleLike,
+    toggleReaction,
+    toggleFollow,
     fetchComments,
     addComment,
     reportPost,
     uploadPostImage,
-    followUser,
-    unfollowUser,
-    checkFollowing,
+    uploadPostVideo,
     refreshPosts: fetchPosts,
   };
 }
