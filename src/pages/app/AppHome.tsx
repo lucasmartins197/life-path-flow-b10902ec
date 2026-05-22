@@ -5,7 +5,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { Bell, Flame, Award } from "lucide-react";
 import { BottomNavigation } from "@/components/BottomNavigation";
 import { PortoSeguroButton } from "@/components/PortoSeguroButton";
-import { AIChatPanel } from "@/components/chat/AIChatPanel";
 import { PremiumNavCards } from "@/components/home/PremiumNavCards";
 import { useMedals } from "@/hooks/useMedals";
 import { BlockingBanner } from "@/components/recovery/BlockingBanner";
@@ -151,7 +150,6 @@ export default function AppHome() {
 
       <BottomNavigation />
       <PortoSeguroButton />
-      <AIChatPanel />
       <EveningCheckIn />
     </div>
   );

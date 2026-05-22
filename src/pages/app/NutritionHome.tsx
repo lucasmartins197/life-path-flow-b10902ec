@@ -22,7 +22,6 @@ import {
 } from "@/components/ui/select";
 import { BottomNavigation } from "@/components/BottomNavigation";
 import { PortoSeguroButton } from "@/components/PortoSeguroButton";
-import { AIChatPanel } from "@/components/chat/AIChatPanel";
 import {
   ArrowLeft,
   Plus,
@@ -324,7 +323,6 @@ export default function NutritionHome() {
 
       <BottomNavigation />
       <PortoSeguroButton />
-      <AIChatPanel />
     </div>
   );
 }

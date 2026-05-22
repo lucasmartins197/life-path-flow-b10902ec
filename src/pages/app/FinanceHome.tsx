@@ -7,7 +7,6 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { BottomNavigation } from "@/components/BottomNavigation";
 import { PortoSeguroButton } from "@/components/PortoSeguroButton";
-import { AIChatPanel } from "@/components/chat/AIChatPanel";
 import { FinanceOnboarding } from "@/components/finance/FinanceOnboarding";
 import { FinanceDashboard } from "@/components/finance/FinanceDashboard";
 import { FinancePlan } from "@/components/finance/FinancePlan";
@@ -293,7 +292,6 @@ export default function FinanceHome() {
 
       <BottomNavigation />
       <PortoSeguroButton />
-      <AIChatPanel />
     </div>
   );
 }

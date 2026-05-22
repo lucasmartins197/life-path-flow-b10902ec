@@ -4,7 +4,6 @@ import { useMedals, MEDAL_DEFINITIONS } from "@/hooks/useMedals";
 import { ChevronLeft, Lock, Award, Gift } from "lucide-react";
 import { BottomNavigation } from "@/components/BottomNavigation";
 import { PortoSeguroButton } from "@/components/PortoSeguroButton";
-import { AIChatPanel } from "@/components/chat/AIChatPanel";
 
 export default function MedalsHome() {
   const navigate = useNavigate();
@@ -202,7 +201,6 @@ export default function MedalsHome() {
 
       <BottomNavigation />
       <PortoSeguroButton />
-      <AIChatPanel />
     </div>
   );
 }

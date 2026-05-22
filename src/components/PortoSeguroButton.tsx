@@ -9,21 +9,26 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
-import { Anchor, Phone, AlertTriangle, Heart, Settings } from "lucide-react";
+import { Anchor, Phone, MessageCircle, AlertTriangle, Settings } from "lucide-react";
+
+function digits(p: string) {
+  return p.replace(/\D/g, "");
+}
 
 export function PortoSeguroButton() {
   const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
-  const { primaryContact, contacts } = useAnchorContacts();
+  const { primaryContact } = useAnchorContacts();
 
-  const handleEmergencyCall = () => {
-    if (primaryContact) {
-      window.location.href = `tel:${primaryContact.phone}`;
-    }
+  const phone = primaryContact?.phone || "";
+  const name = primaryContact?.name || "";
+
+  const handleCall = () => {
+    if (phone) window.location.href = `tel:${phone}`;
   };
 
-  const handleCallContact = (phone: string) => {
-    window.location.href = `tel:${phone}`;
+  const handleWhatsapp = () => {
+    if (phone) window.open(`https://wa.me/${digits(phone)}`, "_blank");
   };
 
   return (
@@ -31,38 +36,60 @@ export function PortoSeguroButton() {
       <button
         onClick={() => setIsOpen(true)}
         className="porto-seguro-btn"
-        aria-label="Porto Seguro - Ajuda de Emergência"
+        aria-label="Contato Âncora"
       >
-        <Anchor className="h-6 w-6" />
+        <Anchor className="h-5 w-5" />
+        <span className="text-[10px] font-semibold leading-none mt-0.5">Âncora</span>
       </button>
 
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
         <DialogContent className="max-w-sm mx-auto">
           <DialogHeader className="text-center">
-            <div className="mx-auto w-16 h-16 rounded-full bg-destructive/10 flex items-center justify-center mb-4">
-              <Anchor className="h-8 w-8 text-destructive" />
+            <div className="mx-auto w-14 h-14 rounded-full flex items-center justify-center mb-3" style={{ background: "hsl(155 47% 18% / 0.1)" }}>
+              <Anchor className="h-7 w-7" style={{ color: "hsl(155 47% 18%)" }} />
             </div>
-            <DialogTitle className="text-xl">Porto Seguro</DialogTitle>
+            <DialogTitle className="text-xl">Contato Âncora</DialogTitle>
             <DialogDescription>
-              Sua rede de apoio está a um toque de distância
+              {name ? `Sua rede de apoio: ${name}` : "Sua rede de apoio a um toque"}
             </DialogDescription>
           </DialogHeader>
 
-          <div className="space-y-4 pt-4">
-            {/* Emergency Primary Contact */}
-            {primaryContact ? (
+          {primaryContact ? (
+            <div className="space-y-3 pt-2">
+              <p className="text-center text-lg font-semibold">{name}</p>
+
               <Button
                 size="lg"
-                variant="destructive"
-                className="w-full h-16 text-lg"
-                onClick={handleEmergencyCall}
+                className="w-full h-14 text-base"
+                style={{ background: "hsl(155 47% 18%)", color: "white" }}
+                onClick={handleCall}
               >
-                <Phone className="h-6 w-6 mr-3" />
-                Ligar para {primaryContact.name}
+                <Phone className="h-5 w-5 mr-2" />
+                Ligar agora
               </Button>
-            ) : (
+
+              <Button
+                size="lg"
+                variant="outline"
+                className="w-full h-14 text-base"
+                onClick={handleWhatsapp}
+              >
+                <MessageCircle className="h-5 w-5 mr-2" />
+                Enviar mensagem
+              </Button>
+
+              <Button
+                variant="ghost"
+                className="w-full"
+                onClick={() => setIsOpen(false)}
+              >
+                Cancelar
+              </Button>
+            </div>
+          ) : (
+            <div className="space-y-3 pt-2">
               <div className="p-4 bg-muted rounded-lg text-center">
-                <AlertTriangle className="h-8 w-8 mx-auto text-warning mb-2" />
+                <AlertTriangle className="h-7 w-7 mx-auto text-warning mb-2" />
                 <p className="text-sm text-muted-foreground mb-3">
                   Você ainda não cadastrou um contato âncora
                 </p>
@@ -74,71 +101,14 @@ export function PortoSeguroButton() {
                   }}
                 >
                   <Settings className="h-4 w-4 mr-2" />
-                  Configurar Contatos
+                  Configurar contato
                 </Button>
               </div>
-            )}
-
-            {/* Other Contacts */}
-            {contacts.length > 1 && (
-              <div className="space-y-2">
-                <p className="text-sm text-muted-foreground text-center">
-                  Outros contatos de apoio
-                </p>
-                {contacts
-                  .filter((c) => !c.is_primary)
-                  .slice(0, 3)
-                  .map((contact) => (
-                    <Button
-                      key={contact.id}
-                      variant="outline"
-                      className="w-full justify-start"
-                      onClick={() => handleCallContact(contact.phone)}
-                    >
-                      <Heart className="h-4 w-4 mr-2 text-primary" />
-                      {contact.name}
-                      <Phone className="h-4 w-4 ml-auto" />
-                    </Button>
-                  ))}
-              </div>
-            )}
-
-            {/* Manage Contacts Link */}
-            <Button
-              variant="ghost"
-              className="w-full"
-              onClick={() => {
-                setIsOpen(false);
-                navigate("/app/ancora");
-              }}
-            >
-              <Settings className="h-4 w-4 mr-2" />
-              Gerenciar Rede de Apoio
-            </Button>
-
-            {/* Emergency Services */}
-            <div className="pt-4 border-t">
-              <p className="text-xs text-center text-muted-foreground mb-3">
-                Serviços de emergência
-              </p>
-              <div className="grid grid-cols-2 gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => (window.location.href = "tel:188")}
-                >
-                  CVV - 188
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => (window.location.href = "tel:192")}
-                >
-                  SAMU - 192
-                </Button>
-              </div>
+              <Button variant="ghost" className="w-full" onClick={() => setIsOpen(false)}>
+                Cancelar
+              </Button>
             </div>
-          </div>
+          )}
         </DialogContent>
       </Dialog>
     </>

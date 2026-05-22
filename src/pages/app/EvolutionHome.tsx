@@ -6,7 +6,6 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { BottomNavigation } from "@/components/BottomNavigation";
 import { PortoSeguroButton } from "@/components/PortoSeguroButton";
-import { AIChatPanel } from "@/components/chat/AIChatPanel";
 import {
   TrendingUp,
   Flame,
@@ -316,7 +315,6 @@ export default function EvolutionHome() {
       <PortoSeguroButton />
 
       {/* AI Chat */}
-      <AIChatPanel />
     </div>
   );
 }

@@ -4,7 +4,6 @@ import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { BottomNavigation } from "@/components/BottomNavigation";
 import { PortoSeguroButton } from "@/components/PortoSeguroButton";
-import { AIChatPanel } from "@/components/chat/AIChatPanel";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Input } from "@/components/ui/input";
@@ -496,7 +495,6 @@ export default function RoutineHome() {
 
       <BottomNavigation />
       <PortoSeguroButton />
-      <AIChatPanel />
 
       {/* Modal Leitura */}
       <Sheet open={readModal} onOpenChange={setReadModal}>

@@ -14,7 +14,6 @@ import {
 } from "lucide-react";
 import { BottomNavigation } from "@/components/BottomNavigation";
 import { PortoSeguroButton } from "@/components/PortoSeguroButton";
-import { AIChatPanel } from "@/components/chat/AIChatPanel";
 import { useState } from "react";
 
 const financialProfessionals = [
@@ -219,7 +218,6 @@ export default function FinancialSupportHome() {
 
       <BottomNavigation />
       <PortoSeguroButton />
-      <AIChatPanel />
     </div>
   );
 }

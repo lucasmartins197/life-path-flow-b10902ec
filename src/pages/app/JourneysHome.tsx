@@ -12,7 +12,6 @@ import {
 } from "lucide-react";
 import { BottomNavigation } from "@/components/BottomNavigation";
 import { PortoSeguroButton } from "@/components/PortoSeguroButton";
-import { AIChatPanel } from "@/components/chat/AIChatPanel";
 
 /* ── Hardcoded 12-step names ── */
 const STEP_META: Record<number, { name: string; subtitle: string; medal: string }> = {
@@ -262,7 +261,6 @@ export default function JourneysHome() {
 
       <BottomNavigation />
       <PortoSeguroButton />
-      <AIChatPanel />
 
       {showIntro && (
         <div className="fixed inset-0 z-[100] bg-black/80 flex items-center justify-center p-4">

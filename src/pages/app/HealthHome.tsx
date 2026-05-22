@@ -13,7 +13,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { BottomNavigation } from "@/components/BottomNavigation";
-import { AIChatPanel } from "@/components/chat/AIChatPanel";
 
 export default function HealthHome() {
   const navigate = useNavigate();
@@ -135,7 +134,6 @@ export default function HealthHome() {
       </main>
 
       <BottomNavigation />
-      <AIChatPanel />
     </div>
   );
 }

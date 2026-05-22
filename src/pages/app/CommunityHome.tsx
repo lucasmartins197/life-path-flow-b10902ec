@@ -1,7 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { BottomNavigation } from "@/components/BottomNavigation";
-import { FloatingAIButton } from "@/components/FloatingAIButton";
 import { useCommunityFeed, CommunityPost, PostComment } from "@/hooks/useCommunityFeed";
 import { useAuth } from "@/contexts/AuthContext";
 import {
@@ -573,7 +572,6 @@ export default function CommunityHome() {
         />
       )}
 
-      <FloatingAIButton />
       <BottomNavigation />
     </div>
   );
