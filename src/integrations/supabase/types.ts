@@ -628,6 +628,51 @@ export type Database = {
         }
         Relationships: []
       }
+      daily_tasks: {
+        Row: {
+          categoria: string
+          concluido: boolean
+          concluido_em: string | null
+          conteudo_ia: string
+          created_at: string
+          data: string
+          descricao: string
+          id: string
+          progresso: string | null
+          titulo: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          categoria: string
+          concluido?: boolean
+          concluido_em?: string | null
+          conteudo_ia?: string
+          created_at?: string
+          data?: string
+          descricao?: string
+          id?: string
+          progresso?: string | null
+          titulo: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          categoria?: string
+          concluido?: boolean
+          concluido_em?: string | null
+          conteudo_ia?: string
+          created_at?: string
+          data?: string
+          descricao?: string
+          id?: string
+          progresso?: string | null
+          titulo?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       debt_simulations: {
         Row: {
           ai_result: Json | null
@@ -1351,6 +1396,45 @@ export type Database = {
           },
         ]
       }
+      onboarding_clinico: {
+        Row: {
+          created_at: string
+          family_aware: string | null
+          gambling_types: Json
+          id: string
+          main_motivation: string | null
+          mental_health_risk: string | null
+          stop_attempts: string | null
+          total_loss_range: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          family_aware?: string | null
+          gambling_types?: Json
+          id?: string
+          main_motivation?: string | null
+          mental_health_risk?: string | null
+          stop_attempts?: string | null
+          total_loss_range?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          family_aware?: string | null
+          gambling_types?: Json
+          id?: string
+          main_motivation?: string | null
+          mental_health_risk?: string | null
+          stop_attempts?: string | null
+          total_loss_range?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       patient_professional_links: {
         Row: {
           id: string
@@ -2029,6 +2113,57 @@ export type Database = {
           mood_rating?: number | null
           morning_plan?: Json | null
           notes?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      routine_preferences: {
+        Row: {
+          configurado: boolean
+          created_at: string
+          espiritualidade_ativo: boolean
+          esporte_ativo: boolean
+          esporte_dias: string[]
+          esporte_nivel: string
+          esporte_tempo: number
+          esporte_tipo: string
+          id: string
+          lazer_ativo: boolean
+          leitura_ativo: boolean
+          leitura_tipo: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          configurado?: boolean
+          created_at?: string
+          espiritualidade_ativo?: boolean
+          esporte_ativo?: boolean
+          esporte_dias?: string[]
+          esporte_nivel?: string
+          esporte_tempo?: number
+          esporte_tipo?: string
+          id?: string
+          lazer_ativo?: boolean
+          leitura_ativo?: boolean
+          leitura_tipo?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          configurado?: boolean
+          created_at?: string
+          espiritualidade_ativo?: boolean
+          esporte_ativo?: boolean
+          esporte_dias?: string[]
+          esporte_nivel?: string
+          esporte_tempo?: number
+          esporte_tipo?: string
+          id?: string
+          lazer_ativo?: boolean
+          leitura_ativo?: boolean
+          leitura_tipo?: string
           updated_at?: string
           user_id?: string
         }
