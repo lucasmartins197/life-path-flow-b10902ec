@@ -10,11 +10,15 @@ Deno.serve(async (req) => {
     return new Response("ok", { headers: corsHeaders });
   }
   try {
-    let user_id, email;
+    let user_id, email, price_id, mode, success_path, cancel_path;
     try {
       const body = await req.json();
       user_id = body.user_id;
       email = body.email;
+      price_id = body.price_id;
+      mode = body.mode;
+      success_path = body.success_path;
+      cancel_path = body.cancel_path;
     } catch(e) {
       user_id = null;
       email = null;
@@ -26,14 +30,24 @@ Deno.serve(async (req) => {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+
+    // Resolve named price aliases to actual Stripe price IDs from secrets
+    const PRICE_ALIASES: Record<string, string | undefined> = {
+      legal_consult: Deno.env.get("STRIPE_LEGAL_CONSULT_PRICE"),
+      legal_full: Deno.env.get("STRIPE_LEGAL_FULL_PRICE"),
+      subscription: Deno.env.get("STRIPE_PRICE_ID"),
+    };
+    const resolvedPrice = PRICE_ALIASES[price_id ?? ""] ?? price_id ?? Deno.env.get("STRIPE_PRICE_ID")!;
+    const checkoutMode = mode === "payment" ? "payment" : (price_id && price_id !== "subscription" ? "payment" : "subscription");
+
     const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY")!, { apiVersion: "2023-10-16" });
     const session = await stripe.checkout.sessions.create({
       customer_email: email,
-      mode: "subscription",
+      mode: checkoutMode,
       payment_method_types: ["card"],
-      line_items: [{ price: Deno.env.get("STRIPE_PRICE_ID")!, quantity: 1 }],
-      success_url: "https://life-path-flow.lovable.app/app/assinatura?success=true",
-      cancel_url: "https://life-path-flow.lovable.app/app/assinatura?canceled=true",
+      line_items: [{ price: resolvedPrice, quantity: 1 }],
+      success_url: `https://life-path-flow.lovable.app${success_path || "/app/assinatura"}?success=true`,
+      cancel_url: `https://life-path-flow.lovable.app${cancel_path || "/app/assinatura"}?canceled=true`,
     });
     return new Response(JSON.stringify({ url: session.url }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
