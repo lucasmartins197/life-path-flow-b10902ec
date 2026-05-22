@@ -595,7 +595,7 @@ export default function RoutineHome() {
                     className="bg-white rounded-2xl p-4 shadow-sm space-y-3"
                   >
                     <div className="flex items-start gap-3">
-                      {t.concluido ? (
+                      {t.concluido === true ? (
                         <CheckCircle2 className="h-5 w-5 text-[#1B4332] shrink-0 mt-0.5" />
                       ) : (
                         <Circle className="h-5 w-5 text-muted-foreground shrink-0 mt-0.5" />
@@ -615,7 +615,7 @@ export default function RoutineHome() {
                         </span>
                       </div>
                     </div>
-                    {!t.concluido && (
+                    {t.concluido !== true && (
                       <Button
                         onClick={() => markDone(t.id)}
                         variant="outline"
