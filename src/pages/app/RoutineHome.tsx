@@ -257,6 +257,12 @@ export default function RoutineHome() {
   };
 
   const markDone = async (id: string) => {
+    const task = tasks.find((t) => t.id === id);
+    if (task && task.categoria === "leitura") {
+      setReadingTask(task);
+      setReadingPages("");
+      return;
+    }
     const { error } = await supabase
       .from("daily_tasks")
       .update({ concluido: true, concluido_em: new Date().toISOString() })
@@ -267,6 +273,78 @@ export default function RoutineHome() {
     }
     setTasks((prev) => prev.map((t) => (t.id === id ? { ...t, concluido: true } : t)));
   };
+
+  const extractBookTitle = (text: string): string => {
+    if (!text) return "Livro do dia";
+    const quoted = text.match(/"([^"]+)"|"([^"]+)"|'([^']+)'/);
+    if (quoted) return (quoted[1] || quoted[2] || quoted[3] || "").trim();
+    const firstLine = text.split("\n")[0].split(/[.—–-]/)[0].trim();
+    return firstLine.slice(0, 120) || "Livro do dia";
+  };
+
+  const saveReadingProgress = async () => {
+    if (!user || !readingTask) return;
+    const pages = parseInt(readingPages, 10);
+    if (!pages || pages <= 0) {
+      toast.error("Informe quantas páginas você leu");
+      return;
+    }
+    setSavingReading(true);
+
+    const { data: existing } = await supabase
+      .from("reading_progress")
+      .select("*")
+      .eq("user_id", user.id)
+      .eq("ativo", true)
+      .order("updated_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (existing) {
+      await supabase
+        .from("reading_progress")
+        .update({
+          pagina_atual: (existing.pagina_atual || 0) + pages,
+          paginas_por_dia: pages,
+        })
+        .eq("id", existing.id);
+    } else {
+      const titulo = extractBookTitle(readingTask.conteudo_ia || readingTask.titulo);
+      await supabase.from("reading_progress").insert({
+        user_id: user.id,
+        livro_titulo: titulo,
+        pagina_atual: pages,
+        total_paginas: 0,
+        paginas_por_dia: pages,
+        ativo: true,
+      });
+    }
+
+    const { error } = await supabase
+      .from("daily_tasks")
+      .update({
+        concluido: true,
+        concluido_em: new Date().toISOString(),
+        progresso: `Leu ${pages} páginas`,
+      })
+      .eq("id", readingTask.id);
+
+    setSavingReading(false);
+    if (error) {
+      toast.error("Erro ao salvar progresso");
+      return;
+    }
+    setTasks((prev) =>
+      prev.map((t) =>
+        t.id === readingTask.id
+          ? { ...t, concluido: true, progresso: `Leu ${pages} páginas` }
+          : t,
+      ),
+    );
+    setReadingTask(null);
+    toast.success("Progresso de leitura salvo!");
+  };
+
 
   const resetRoutine = async () => {
     if (!user) return;
