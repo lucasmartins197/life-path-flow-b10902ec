@@ -6,6 +6,7 @@ import { BottomNavigation } from "@/components/BottomNavigation";
 import { PortoSeguroButton } from "@/components/PortoSeguroButton";
 import { ChevronLeft, Download, FileText, TrendingUp, Calendar, CheckCircle2, Loader2, ChevronRight, Star } from "lucide-react";
 import { toast } from "sonner";
+import jsPDF from "jspdf";
 
 interface WeekSummary {
   jornada_passos: number;
@@ -155,11 +156,73 @@ export default function EvolutionHome() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ user_id: user!.id }),
       });
-      await loadAll();
-      toast.success("Prontuário gerado!");
+      setTimeout(async () => {
+        await loadAll();
+        toast.success("Prontuário gerado!");
+      }, 3000);
     } catch {
       toast.error("Erro ao gerar prontuário.");
     }
+  }
+
+  function baixarPDF(p: Prontuario) {
+    const doc = new jsPDF();
+    const margin = 15;
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const maxWidth = pageWidth - margin * 2;
+    let y = 20;
+
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(18);
+    doc.setTextColor(27, 67, 50);
+    doc.text("Relatório Clínico", margin, y);
+    y += 8;
+
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(10);
+    doc.setTextColor(120, 120, 120);
+    doc.text("Apostando na Vida", margin, y);
+    y += 10;
+
+    doc.setTextColor(60, 60, 60);
+    doc.setFontSize(11);
+    doc.text(`Data: ${new Date(p.gerado_em).toLocaleDateString("pt-BR", { day: "numeric", month: "long", year: "numeric" })}`, margin, y);
+    y += 6;
+    doc.text(`Nível de risco: ${RISK_LABEL[p.nivel_risco] || p.nivel_risco}`, margin, y);
+    y += 10;
+
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(13);
+    doc.setTextColor(27, 67, 50);
+    doc.text("Resumo clínico", margin, y);
+    y += 7;
+
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(11);
+    doc.setTextColor(40, 40, 40);
+    const resumoLines = doc.splitTextToSize(p.resumo_clinico || "—", maxWidth);
+    doc.text(resumoLines, margin, y);
+    y += resumoLines.length * 6 + 8;
+
+    if (p.recomendacoes && p.recomendacoes.length > 0) {
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(13);
+      doc.setTextColor(27, 67, 50);
+      doc.text("Recomendações", margin, y);
+      y += 7;
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(11);
+      doc.setTextColor(40, 40, 40);
+      p.recomendacoes.forEach((rec) => {
+        const lines = doc.splitTextToSize(`• ${rec}`, maxWidth);
+        if (y + lines.length * 6 > 280) { doc.addPage(); y = 20; }
+        doc.text(lines, margin, y);
+        y += lines.length * 6 + 2;
+      });
+    }
+
+    doc.save(`prontuario_${new Date(p.gerado_em).toLocaleDateString("pt-BR").replace(/\//g, "-")}.pdf`);
+    toast.success("PDF baixado!");
   }
 
   if (loading) return (
@@ -361,19 +424,10 @@ export default function EvolutionHome() {
 
               <div className="flex gap-2 pt-2 border-t border-gray-50">
                 <button
-                  onClick={() => {
-                    const content = `PRONTUÁRIO - APOSTANDO NA VIDA\n\nData: ${new Date(p.gerado_em).toLocaleDateString("pt-BR")}\nNível de Risco: ${RISK_LABEL[p.nivel_risco] || p.nivel_risco}\n\nRESUMO CLÍNICO:\n${p.resumo_clinico}\n\nRECOMENDAÇÕES:\n${(p.recomendacoes || []).join("\n")}\n\nGerado pelo app Apostando na Vida`;
-                    const blob = new Blob([content], { type: "text/plain" });
-                    const url = URL.createObjectURL(blob);
-                    const a = document.createElement("a");
-                    a.href = url;
-                    a.download = `prontuario_${new Date(p.gerado_em).toLocaleDateString("pt-BR").replace(/\//g, "-")}.txt`;
-                    a.click();
-                    toast.success("Prontuário baixado!");
-                  }}
+                  onClick={() => baixarPDF(p)}
                   className="flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-xl"
                   style={{ background: "#1B433215", color: "#1B4332" }}>
-                  <Download className="h-3.5 w-3.5" /> Baixar
+                  <Download className="h-3.5 w-3.5" /> Baixar PDF
                 </button>
                 <button
                   onClick={() => {
