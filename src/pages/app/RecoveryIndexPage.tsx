@@ -23,7 +23,6 @@ import {
 } from "recharts";
 import { BottomNavigation } from "@/components/BottomNavigation";
 import { PortoSeguroButton } from "@/components/PortoSeguroButton";
-import { AIChatPanel } from "@/components/chat/AIChatPanel";
 import { useRecoveryIndex, PillarScore } from "@/hooks/useRecoveryIndex";
 
 // ── Pillar detail card ───────────────────────────
@@ -282,7 +281,6 @@ export default function RecoveryIndexPage() {
 
       <BottomNavigation />
       <PortoSeguroButton />
-      <AIChatPanel />
     </div>
   );
 }

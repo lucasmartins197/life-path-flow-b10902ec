@@ -2,7 +2,6 @@ import { useNavigate } from "react-router-dom";
 import { ChevronLeft, CreditCard } from "lucide-react";
 import { BottomNavigation } from "@/components/BottomNavigation";
 import { PortoSeguroButton } from "@/components/PortoSeguroButton";
-import { AIChatPanel } from "@/components/chat/AIChatPanel";
 
 export default function TherapyHome() {
   const navigate = useNavigate();
@@ -104,7 +103,6 @@ export default function TherapyHome() {
 
       <BottomNavigation />
       <PortoSeguroButton />
-      <AIChatPanel />
     </div>
   );
 }

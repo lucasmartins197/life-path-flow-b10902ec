@@ -15,7 +15,6 @@ import {
   X,
 } from "lucide-react";
 import { BottomNavigation } from "@/components/BottomNavigation";
-import { AIChatPanel } from "@/components/chat/AIChatPanel";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -282,7 +281,6 @@ export default function LegalHome() {
       </Dialog>
 
       <BottomNavigation />
-      <AIChatPanel />
     </div>
   );
 }

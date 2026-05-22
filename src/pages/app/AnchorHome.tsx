@@ -42,7 +42,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { BottomNavigation } from "@/components/BottomNavigation";
-import { AIChatPanel } from "@/components/chat/AIChatPanel";
 import { useAnchorContacts, AnchorContact } from "@/hooks/useAnchorContacts";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -592,7 +591,6 @@ export default function AnchorHome() {
       </AlertDialog>
 
       <BottomNavigation />
-      <AIChatPanel />
     </div>
   );
 }

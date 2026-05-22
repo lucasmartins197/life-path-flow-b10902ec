@@ -15,7 +15,6 @@ import {
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { BottomNavigation } from "@/components/BottomNavigation";
-import { AIChatPanel } from "@/components/chat/AIChatPanel";
 import { DebtSimulator } from "@/components/legal/DebtSimulator";
 import { LawyerBookingDialog } from "@/components/legal/LawyerBookingDialog";
 import { supabase } from "@/integrations/supabase/client";
@@ -231,7 +230,6 @@ export default function LegalLawyersHome() {
       )}
 
       <BottomNavigation />
-      <AIChatPanel />
     </div>
   );
 }
