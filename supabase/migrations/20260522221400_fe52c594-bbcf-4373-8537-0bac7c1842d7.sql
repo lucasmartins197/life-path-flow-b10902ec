@@ -1,0 +1,1 @@
+ALTER TABLE public.prontuarios ADD COLUMN IF NOT EXISTS pontos_atencao JSONB NOT NULL DEFAULT '[]'::jsonb;
