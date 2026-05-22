@@ -13,6 +13,7 @@ import {
   Users,
   Loader2,
   X,
+  Sparkles,
 } from "lucide-react";
 import { BottomNavigation } from "@/components/BottomNavigation";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
