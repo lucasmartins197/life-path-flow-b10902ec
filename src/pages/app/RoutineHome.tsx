@@ -148,30 +148,23 @@ export default function RoutineHome() {
     setGenerating(true);
     const d = today();
 
-    // Gerar sugestao personalizada via IA para cada categoria
+    // Gera sugestão personalizada via IA (edge function -> Lovable AI Gateway)
     async function gerarSugestaoIA(categoria: string): Promise<string> {
-      const prompts: Record<string, string> = {
-        leitura: `Voce e um assistente de recuperacao de ludopatia. Sugira UM livro especifico para hoje (titulo e autor) relacionado ao tema: ${prefs.leitura_tipo || "autoconhecimento"}. Diga quantas paginas ler hoje (entre 10-20). Seja direto e motivador. Maximo 2 linhas.`,
-        esporte: `Voce e um assistente de recuperacao de ludopatia. Gere um treino especifico para hoje: ${prefs.esporte_tipo === "academia" ? "academia" : "corrida"}, nivel ${prefs.esporte_nivel || "iniciante"}, ${prefs.esporte_tempo || 30} minutos. Liste 3 exercicios com series/reps. Seja objetivo.`,
-        lazer: `Voce e um assistente de recuperacao de ludopatia. Sugira UMA atividade de lazer saudavel e especifica para hoje — algo diferente de apostar. Algo pratico. Maximo 2 linhas.`,
-        espiritualidade: `Voce e um assistente de recuperacao de ludopatia. Sugira uma pratica espiritual especifica para hoje: meditacao, reflexao, leitura espiritual ou video no YouTube. Seja especifico. Maximo 2 linhas.`,
-      };
       try {
-        const res = await fetch("https://api.anthropic.com/v1/messages", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            model: "claude-sonnet-4-20250514",
-            max_tokens: 150,
-            messages: [{ role: "user", content: prompts[categoria] || "Sugira uma atividade saudavel para hoje." }],
-          }),
+        const { data, error } = await supabase.functions.invoke("routine-suggestion", {
+          body: { categoria, prefs },
         });
-        const data = await res.json();
-        return data.content?.[0]?.text || "";
-      } catch {
+        if (error) {
+          console.error("routine-suggestion error", error);
+          return "";
+        }
+        return (data?.sugestao as string) || "";
+      } catch (e) {
+        console.error(e);
         return "";
       }
     }
+
 
     const newTasks: Omit<DailyTask, "id" | "concluido" | "concluido_em">[] = [];
 
