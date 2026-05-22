@@ -38,15 +38,15 @@ interface DailyTask {
 }
 
 const DEFAULT_PREFS: RoutinePreferences = {
-  leitura_ativo: true,
-  leitura_tipo: "autoajuda",
-  esporte_ativo: true,
-  esporte_tipo: "corrida",
-  esporte_nivel: "iniciante",
-  esporte_dias: 3,
+  leitura_ativo: false,
+  leitura_tipo: "",
+  esporte_ativo: false,
+  esporte_tipo: "",
+  esporte_nivel: "",
+  esporte_dias: 0,
   esporte_tempo: 30,
-  lazer_ativo: true,
-  espiritualidade_ativo: true,
+  lazer_ativo: false,
+  espiritualidade_ativo: false,
   configurado: false,
 };
 
