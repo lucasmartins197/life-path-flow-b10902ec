@@ -86,19 +86,78 @@ export default function RoutineHome() {
     if (!prefs) return;
     setGenerating(true);
     try {
-      const res = await fetch("https://apostandonavida.app.n8n.cloud/webhook/gerar-tarefas-diarias", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ user_id: user!.id, data: today, preferences: prefs }),
-      });
-      if (res.ok) {
-        await loadData();
-        toast.success("Tarefas do dia geradas!");
-      } else {
-        toast.error("Erro ao gerar tarefas. Tente novamente.");
+      const diasSemana = ["dom", "seg", "ter", "qua", "qui", "sex", "sab"];
+      const hoje = diasSemana[new Date().getDay()];
+      const newTasks: any[] = [];
+
+      if (prefs.leitura_ativo) {
+        newTasks.push({
+          user_id: user!.id,
+          categoria: "leitura",
+          titulo: "Leitura do dia",
+          descricao: `Hoje é dia de leitura! Tema preferido: ${prefs.leitura_tipo || "livre"}`,
+          conteudo_ia: "Separe um momento tranquilo, desligue as notificacoes e mergulhe na leitura. Cada pagina e um passo na sua jornada de recuperacao.",
+          data: today,
+          concluido: false,
+        });
       }
-    } catch {
-      toast.error("Erro de conexão.");
+
+      if (prefs.esporte_ativo && prefs.esporte_dias?.includes(hoje)) {
+        newTasks.push({
+          user_id: user!.id,
+          categoria: "esporte",
+          titulo: prefs.esporte_tipo === "academia" ? "Treino na academia" : "Treino de corrida",
+          descricao: `${prefs.esporte_tipo === "academia" ? "Academia" : "Corrida"} - Nivel ${prefs.esporte_nivel || "iniciante"} - ${prefs.esporte_tempo || 30} minutos`,
+          conteudo_ia: "O exercicio libera endorfinas que combatem a ansiedade e o impulso de apostar. Cada treino e uma vitoria dupla!",
+          data: today,
+          concluido: false,
+        });
+      }
+
+      if (prefs.lazer_ativo) {
+        newTasks.push({
+          user_id: user!.id,
+          categoria: "lazer",
+          titulo: "Momento de lazer",
+          descricao: "Reserve um tempo para uma atividade que te da prazer hoje.",
+          conteudo_ia: "O lazer saudavel preenche o espaco que o jogo ocupava. Curta sem culpa - voce merece!",
+          data: today,
+          concluido: false,
+        });
+      }
+
+      if (prefs.espiritualidade_ativo) {
+        newTasks.push({
+          user_id: user!.id,
+          categoria: "espiritualidade",
+          titulo: "Reflexao espiritual",
+          descricao: "Assista um video de conexao espiritual e reflita sobre seu dia.",
+          conteudo_ia: "A conexao espiritual fortalece seu centro interno e reduz a vulnerabilidade a recaida.",
+          data: today,
+          concluido: false,
+        });
+      }
+
+      if (newTasks.length === 0) {
+        toast.error("Nenhuma atividade configurada para hoje.");
+        setGenerating(false);
+        return;
+      }
+
+      const { error } = await supabase.from("daily_tasks").insert(newTasks);
+      if (error) {
+        console.error("Erro daily_tasks:", error);
+        toast.error(`Erro: ${error.message}`);
+        setGenerating(false);
+        return;
+      }
+
+      await loadData();
+      toast.success("Atividades do dia geradas!");
+
+    } catch (e) {
+      console.error(e);
+      toast.error("Erro inesperado. Tente novamente.");
     }
     setGenerating(false);
   }

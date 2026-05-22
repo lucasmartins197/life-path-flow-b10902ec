@@ -47,12 +47,8 @@ export default function JourneysHome() {
     setIsLoading(false);
     // Re-run validation each time the screen mounts
     refetch();
-    // Daily intro modal
-    const key = `journey_intro_seen_${user.id}`;
-    const today = new Date().toISOString().slice(0, 10);
-    if (localStorage.getItem(key) !== today) {
-      setShowIntro(true);
-    }
+    // Intro modal sempre aparece ao abrir a tela
+    setShowIntro(true);
   }, [user, refetch]);
 
   const closeIntro = () => {
