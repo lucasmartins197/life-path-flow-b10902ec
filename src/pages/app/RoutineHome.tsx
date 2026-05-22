@@ -198,6 +198,11 @@ export default function RoutineHome() {
   const [reflectionLoading, setReflectionLoading] = useState(false);
   const [reflectionSent, setReflectionSent] = useState(false);
 
+  // Daily AI tasks
+  const [dailyTasks, setDailyTasks] = useState<any[]>([]);
+  const [generatingTasks, setGeneratingTasks] = useState(false);
+  const today = new Date().toISOString().split("T")[0];
+
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const greeting = useMemo(() => {
@@ -226,7 +231,7 @@ export default function RoutineHome() {
     return () => { if (timerRef.current) clearInterval(timerRef.current); };
   }, [timerRunning]);
 
-  useEffect(() => { if (user) loadData(); }, [user]);
+  useEffect(() => { if (user) { loadData(); loadDailyTasks(); } }, [user]);
 
   async function loadData() {
     setLoading(true);
@@ -264,6 +269,67 @@ export default function RoutineHome() {
       await loadTodayWorkout(fpData as any);
     }
     setLoading(false);
+  }
+
+  async function loadDailyTasks() {
+    const { data } = await supabase
+      .from('daily_tasks')
+      .select('*')
+      .eq('user_id', user!.id)
+      .eq('data', new Date().toISOString().split('T')[0])
+      .order('categoria');
+    setDailyTasks((data as any[]) || []);
+  }
+
+  async function generateDailyTasks() {
+    if (activeCategories.length === 0) {
+      toast.error('Configure sua rotina primeiro.');
+      return;
+    }
+    setGeneratingTasks(true);
+    const todayDate = new Date().toISOString().split('T')[0];
+    const diasSemana = ['dom','seg','ter','qua','qui','sex','sab'];
+    const hoje = diasSemana[new Date().getDay()];
+    const newTasks: any[] = [];
+
+    if (activeCategories.includes('leitura') || activeCategories.includes('espiritualidade') || activeCategories.includes('social') || activeCategories.includes('esporte') || activeCategories.includes('academia')) {
+      const catMap: Record<string, {titulo: string; descricao: string; msg: string}> = {
+        leitura: { titulo: 'Leitura do dia', descricao: 'Tema: ' + (preferences.leitura?.theme || 'livre'), msg: 'Separe 30 minutos, desligue notificacoes e mergulhe na leitura. Cada pagina e um passo na sua recuperacao.' },
+        espiritualidade: { titulo: 'Reflexao espiritual', descricao: 'Assista um video de conexao espiritual e reflita.', msg: 'A conexao espiritual fortalece seu centro interno e reduz a vulnerabilidade a recaida.' },
+        social: { titulo: 'Conexao social', descricao: 'Conecte-se com alguem importante: ' + (preferences.social?.with || 'familia ou amigos'), msg: 'Conexoes humanas genuinas sao o antidoto mais poderoso contra o vicio.' },
+        esporte: { titulo: 'Atividade fisica', descricao: 'Modalidade: ' + (preferences.esporte?.type || 'a definir'), msg: 'O exercicio libera endorfinas que combatem a ansiedade. Cada treino e uma vitoria!' },
+        academia: { titulo: 'Treino na academia', descricao: 'Siga seu plano de treino de hoje.', msg: 'Disciplina na academia e disciplina na vida. Voce consegue!' },
+      };
+      for (const cat of activeCategories) {
+        if (cat === 'esporte' && !preferences.esporte?.type) continue;
+        const cfg = catMap[cat];
+        if (!cfg) continue;
+        newTasks.push({ user_id: user!.id, categoria: cat, titulo: cfg.titulo, descricao: cfg.descricao, conteudo_ia: cfg.msg, data: todayDate, concluido: false });
+      }
+    }
+
+    if (newTasks.length === 0) {
+      toast.error('Nenhuma atividade para hoje.');
+      setGeneratingTasks(false);
+      return;
+    }
+
+    const { error } = await supabase.from('daily_tasks').insert(newTasks);
+    if (error) {
+      console.error('daily_tasks error:', error);
+      toast.error('Erro ao gerar: ' + error.message);
+      setGeneratingTasks(false);
+      return;
+    }
+    await loadDailyTasks();
+    toast.success('Atividades do dia geradas!');
+    setGeneratingTasks(false);
+  }
+
+  async function completeDailyTask(taskId: string) {
+    await supabase.from('daily_tasks').update({ concluido: true, concluido_em: new Date().toISOString() }).eq('id', taskId);
+    setDailyTasks(prev => prev.map(t => t.id === taskId ? { ...t, concluido: true } : t));
+    toast.success('Atividade concluida!');
   }
 
   async function loadTodayWorkout(fp: FitnessProfile) {
@@ -1199,6 +1265,43 @@ export default function RoutineHome() {
                 <button onClick={() => fetchSuggestionAuto(activeCategories, preferences, userName)}
                   className="text-white/50 text-sm font-medium hover:text-white/70 transition-colors">Ver sugestão</button>
               )}
+            </div>
+          )}
+
+          {/* Daily AI Tasks */}
+          {activeCategories.length > 0 && (
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <p className="text-sm font-bold" style={{ color: '#1B4332' }}>Atividades de hoje</p>
+                {dailyTasks.length === 0 && (
+                  <button
+                    onClick={generateDailyTasks}
+                    disabled={generatingTasks}
+                    className="text-xs font-semibold px-3 py-1.5 rounded-xl text-white transition-all active:scale-95"
+                    style={{ background: 'linear-gradient(135deg, #1B4332, #2D6A4F)' }}>
+                    {generatingTasks ? 'Gerando...' : '+ Gerar com IA'}
+                  </button>
+                )}
+              </div>
+              {dailyTasks.map((task: any) => (
+                <div key={task.id} className="p-4 rounded-2xl border transition-all" style={{ borderColor: task.concluido ? '#E5E7EB' : '#2D6A4F30', background: task.concluido ? '#F9FAF8' : '#fff', opacity: task.concluido ? 0.7 : 1 }}>
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="flex-1">
+                      <p className="text-sm font-semibold">{task.titulo}</p>
+                      <p className="text-xs text-muted-foreground mt-0.5">{task.descricao}</p>
+                      {task.conteudo_ia && <p className="text-xs mt-2 leading-relaxed" style={{ color: '#1B4332' }}>{task.conteudo_ia}</p>}
+                    </div>
+                    {!task.concluido && (
+                      <button onClick={() => completeDailyTask(task.id)}
+                        className="shrink-0 w-8 h-8 rounded-xl flex items-center justify-center transition-all active:scale-95"
+                        style={{ background: '#1B433215' }}>
+                        <CheckCircle className="h-4 w-4" style={{ color: '#1B4332' }} />
+                      </button>
+                    )}
+                    {task.concluido && <span className="text-xs font-semibold" style={{ color: '#059669' }}>Feito!</span>}
+                  </div>
+                </div>
+              ))}
             </div>
           )}
 
