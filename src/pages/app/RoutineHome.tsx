@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { Settings, CheckCircle2, Circle, Loader2, History, ListTodo } from "lucide-react";
+import { Settings, CheckCircle2, Circle, Loader2, History, ListTodo, BookOpen, ExternalLink } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { BottomNavigation } from "@/components/BottomNavigation";
 import { BackHeader } from "@/components/BackHeader";
 import { Button } from "@/components/ui/button";
