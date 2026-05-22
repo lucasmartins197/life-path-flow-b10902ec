@@ -35,6 +35,7 @@ Deno.serve(async (req) => {
     const PRICE_ALIASES: Record<string, string | undefined> = {
       legal_consult: Deno.env.get("STRIPE_LEGAL_CONSULT_PRICE"),
       legal_full: Deno.env.get("STRIPE_LEGAL_FULL_PRICE"),
+      therapy: Deno.env.get("STRIPE_THERAPY_PRICE"),
       subscription: Deno.env.get("STRIPE_PRICE_ID"),
     };
     const resolvedPrice = PRICE_ALIASES[price_id ?? ""] ?? price_id ?? Deno.env.get("STRIPE_PRICE_ID")!;
