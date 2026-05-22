@@ -40,13 +40,28 @@ export default function JourneysHome() {
   const { user } = useAuth();
   const { isUnlocked, isDone, isLoading: validating, isAdmin, refetch } = useJourneyValidation();
   const [isLoading, setIsLoading] = useState(true);
+  const [showIntro, setShowIntro] = useState(false);
 
   useEffect(() => {
     if (!user) return;
     setIsLoading(false);
     // Re-run validation each time the screen mounts
     refetch();
+    // Daily intro modal
+    const key = `journey_intro_seen_${user.id}`;
+    const today = new Date().toISOString().slice(0, 10);
+    if (localStorage.getItem(key) !== today) {
+      setShowIntro(true);
+    }
   }, [user, refetch]);
+
+  const closeIntro = () => {
+    if (user) {
+      const today = new Date().toISOString().slice(0, 10);
+      localStorage.setItem(`journey_intro_seen_${user.id}`, today);
+    }
+    setShowIntro(false);
+  };
 
   const allSteps = Array.from({ length: 12 }, (_, i) => {
     const num = i + 1;
