@@ -528,16 +528,9 @@ export default function RoutineHome() {
           <div className="px-6 pt-6 pb-10 space-y-4">
             <SheetTitle className="text-lg font-bold">Como foi o treino?</SheetTitle>
             {sportTask?.conteudo_ia && <p className="text-sm text-muted-foreground">{sportTask.conteudo_ia}</p>}
-            <div className="space-y-2">
-              {[{v:"sim",l:"Completei o treino todo! 💪"},{v:"parcial",l:"Fiz uma parte do treino"}].map(opt => (
-                <button key={opt.v} onClick={() => setSportDone(opt.v as any)}
-                  className="w-full p-4 rounded-2xl border text-left text-sm font-medium transition-all"
-                  style={sportDone===opt.v ? {background:"#05966915",borderColor:"#059669",color:"#059669"} : {borderColor:"#E5E7EB"}}>
-                  {opt.l}
-                </button>
-              ))}
-            </div>
-            <Button onClick={saveSport} disabled={savingSport || !sportDone}
+            <Input placeholder="Ex: Fiz o treino completo, me senti bem..." value={sportDesc}
+              onChange={e => setSportDesc(e.target.value)} className="h-12" />
+            <Button onClick={saveSport} disabled={savingSport}
               className="w-full h-12 text-base font-bold rounded-2xl text-white"
               style={{background:"linear-gradient(135deg,#1B4332,#2D6A4F)"}}>
               {savingSport ? <Loader2 className="h-4 w-4 animate-spin" /> : "Salvar"}
@@ -550,14 +543,14 @@ export default function RoutineHome() {
       <Sheet open={lazerModal} onOpenChange={setLazerModal}>
         <SheetContent side="bottom" className="rounded-t-3xl p-0">
           <div className="px-6 pt-6 pb-10 space-y-4">
-            <SheetTitle className="text-lg font-bold">O que você fez de lazer?</SheetTitle>
+            <SheetTitle className="text-lg font-bold">Como foi seu momento de lazer?</SheetTitle>
             {lazerTask?.conteudo_ia && <p className="text-sm text-muted-foreground">{lazerTask.conteudo_ia}</p>}
             <Input placeholder="Ex: Assisti um filme, joguei com meu filho..." value={lazerDesc}
               onChange={e => setLazerDesc(e.target.value)} className="h-12" />
             <Button onClick={saveLazer} disabled={savingLazer}
               className="w-full h-12 text-base font-bold rounded-2xl text-white"
               style={{background:"linear-gradient(135deg,#1B4332,#2D6A4F)"}}>
-              {savingLazer ? <Loader2 className="h-4 w-4 animate-spin" /> : "Registrar"}
+              {savingLazer ? <Loader2 className="h-4 w-4 animate-spin" /> : "Salvar"}
             </Button>
           </div>
         </SheetContent>
@@ -567,13 +560,14 @@ export default function RoutineHome() {
       <Sheet open={espModal} onOpenChange={setEspModal}>
         <SheetContent side="bottom" className="rounded-t-3xl p-0">
           <div className="px-6 pt-6 pb-10 space-y-4">
-            <SheetTitle className="text-lg font-bold">Prática espiritual</SheetTitle>
+            <SheetTitle className="text-lg font-bold">Como foi sua prática espiritual?</SheetTitle>
             {espTask?.conteudo_ia && <p className="text-sm text-muted-foreground">{espTask.conteudo_ia}</p>}
-            <p className="text-sm">Após realizar sua prática espiritual, confirme abaixo:</p>
+            <Input placeholder="Ex: Meditei 10 minutos, orei pela manhã..." value={espDesc}
+              onChange={e => setEspDesc(e.target.value)} className="h-12" />
             <Button onClick={saveEsp} disabled={savingEsp}
               className="w-full h-12 text-base font-bold rounded-2xl text-white"
               style={{background:"linear-gradient(135deg,#1B4332,#2D6A4F)"}}>
-              {savingEsp ? <Loader2 className="h-4 w-4 animate-spin" /> : "Confirmei minha prática ✓"}
+              {savingEsp ? <Loader2 className="h-4 w-4 animate-spin" /> : "Salvar"}
             </Button>
           </div>
         </SheetContent>
