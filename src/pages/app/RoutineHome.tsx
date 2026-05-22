@@ -156,7 +156,7 @@ export default function RoutineHome() {
     if (prefs.leitura_ativo) {
       const { data: readProg } = await supabase
         .from("reading_progress").select("*")
-        .eq("user_id", user!.id).eq("concluido", false)
+        .eq("user_id", user!.id).eq("ativo", true)
         .order("created_at", { ascending: false }).limit(1).maybeSingle();
       if (readProg) {
         const rp = readProg as any;
