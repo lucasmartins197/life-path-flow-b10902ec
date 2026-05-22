@@ -13,6 +13,7 @@ import {
   Users,
   Loader2,
   X,
+  Sparkles,
 } from "lucide-react";
 import { BottomNavigation } from "@/components/BottomNavigation";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
@@ -110,6 +111,36 @@ export default function LegalHome() {
   const [activeTopic, setActiveTopic] = useState<Topic | null>(null);
   const [content, setContent] = useState<string>("");
   const [loading, setLoading] = useState(false);
+  const [checkoutLoading, setCheckoutLoading] = useState<string | null>(null);
+
+  const handleCheckout = async (priceAlias: "legal_consult" | "legal_full") => {
+    setCheckoutLoading(priceAlias);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        toast.error("Faça login para continuar");
+        navigate("/auth");
+        return;
+      }
+      const { data, error } = await supabase.functions.invoke("create-checkout-session", {
+        body: {
+          user_id: user.id,
+          email: user.email,
+          price_id: priceAlias,
+          mode: "payment",
+          success_path: "/app/juridico",
+          cancel_path: "/app/juridico",
+        },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      if (data?.url) window.location.href = data.url;
+    } catch (e: any) {
+      toast.error(e?.message || "Erro ao iniciar pagamento");
+    } finally {
+      setCheckoutLoading(null);
+    }
+  };
 
   const openTopic = async (topic: Topic) => {
     setActiveTopic(topic);
@@ -227,6 +258,57 @@ export default function LegalHome() {
               </p>
             </div>
           </button>
+        </section>
+
+        {/* Pacotes de atendimento jurídico */}
+        <section>
+          <p className="section-title flex items-center gap-2">
+            <Sparkles className="h-3.5 w-3.5" />
+            Pacotes de atendimento
+          </p>
+          <div className="space-y-3">
+            {[
+              {
+                alias: "legal_consult" as const,
+                title: "Primeira Consulta",
+                desc: "Avaliação inicial com advogado especializado",
+                price: "R$ 199,90",
+              },
+              {
+                alias: "legal_full" as const,
+                title: "Atendimento Completo",
+                desc: "Acompanhamento jurídico completo do seu caso",
+                price: "R$ 229,20",
+              },
+            ].map((p) => (
+              <div key={p.alias} className="card-premium p-4">
+                <div className="flex items-start gap-3">
+                  <div className="w-11 h-11 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+                    <Scale className="h-5 w-5 text-primary" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-semibold text-sm text-foreground">{p.title}</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">{p.desc}</p>
+                    <p className="text-base font-bold text-foreground mt-2">{p.price}</p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => handleCheckout(p.alias)}
+                  disabled={checkoutLoading === p.alias}
+                  className="btn-cta w-full mt-3 py-2.5 text-sm disabled:opacity-60"
+                >
+                  {checkoutLoading === p.alias ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      Processando...
+                    </>
+                  ) : (
+                    "Contratar"
+                  )}
+                </button>
+              </div>
+            ))}
+          </div>
         </section>
 
         {/* LGPD */}
