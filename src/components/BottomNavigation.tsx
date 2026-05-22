@@ -1,51 +1,15 @@
-import { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import {
-  House,
-  Compass,
-  Heart,
-  Calendar,
-  LayoutGrid,
-  Users,
-  PlayCircle,
-  Wallet,
-  Scale,
-  Anchor,
-  User,
-  CreditCard,
-  Award,
-  Shield,
-  ShieldCheck,
-  X,
-} from "lucide-react";
-import { useShield } from "@/hooks/useShield";
+import { House, Users, Calendar } from "lucide-react";
 
 const mainItems = [
-  { id: "home",    label: "Home",    icon: House,    path: "/app" },
-  { id: "jornada", label: "Jornada", icon: Compass,  path: "/app/jornada" },
-  { id: "terapia", label: "Terapia", icon: Heart,    path: "/app/terapia" },
-  { id: "rotina",  label: "Rotina",  icon: Calendar, path: "/app/rotina" },
-];
-
-const drawerItems: { label: string; icon: any; path: string; key?: string }[] = [
-  { label: "Meu Escudo",        icon: ShieldCheck, path: "/app/escudo", key: "shield" },
-  { label: "Histórias",         icon: Users,       path: "/app/comunidade" },
-  { label: "Aulão Semanal",     icon: PlayCircle,  path: "/app/aulao" },
-  { label: "Medalhas",          icon: Award,       path: "/app/medalhas" },
-  { label: "Minhas Finanças",   icon: Wallet,      path: "/app/financas" },
-  { label: "Apoio Jurídico",    icon: Scale,       path: "/app/juridico" },
-
-  { label: "Contato Âncora",    icon: Anchor,      path: "/app/ancora" },
-  { label: "Perfil",            icon: User,        path: "/app/perfil" },
-  { label: "Assinatura",        icon: CreditCard,  path: "/app/assinatura" },
+  { id: "home",      label: "Início",    icon: House,    path: "/app" },
+  { id: "historias", label: "Histórias", icon: Users,    path: "/app/comunidade" },
+  { id: "rotina",    label: "Rotina",    icon: Calendar, path: "/app/rotina" },
 ];
 
 export function BottomNavigation() {
   const navigate = useNavigate();
   const location = useLocation();
-  const [drawerOpen, setDrawerOpen] = useState(false);
-  const { configured: shieldConfigured, loading: shieldLoading } = useShield();
-  const shieldNeedsSetup = !shieldLoading && !shieldConfigured;
 
   const isActive = (path: string) => {
     if (path === "/app") return location.pathname === "/app";
@@ -53,98 +17,32 @@ export function BottomNavigation() {
   };
 
   return (
-    <>
-      {/* Drawer overlay */}
-      {drawerOpen && (
-        <div
-          className="fixed inset-0 z-50 bg-black/30 backdrop-blur-sm animate-fade-in"
-          onClick={() => setDrawerOpen(false)}
-        >
-          <div
-            className="absolute bottom-0 left-0 right-0 bg-card rounded-t-3xl p-6 pb-10 safe-bottom animate-slide-up"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="text-lg font-bold text-foreground">Mais opções</h3>
-              <button
-                onClick={() => setDrawerOpen(false)}
-                className="w-10 h-10 rounded-2xl bg-secondary flex items-center justify-center touch-target"
+    <nav className="bottom-nav">
+      <div className="bottom-nav-content">
+        {mainItems.map((item) => {
+          const active = isActive(item.path);
+          return (
+            <button
+              key={item.id}
+              onClick={() => navigate(item.path)}
+              className={`bottom-nav-item ${active ? "active" : ""}`}
+            >
+              <div className="nav-icon-bg">
+                <item.icon
+                  className={`h-5 w-5 ${active ? "stroke-[2.2]" : "stroke-[1.6]"}`}
+                />
+              </div>
+              <span
+                className={`text-[10px] font-semibold tracking-tight ${
+                  active ? "text-primary" : "text-muted-foreground"
+                }`}
               >
-                <X className="h-5 w-5 text-muted-foreground" />
-              </button>
-            </div>
-
-            <div className="grid grid-cols-3 gap-3">
-              {drawerItems.map((item) => {
-                const showShieldBadge = item.key === "shield" && shieldNeedsSetup;
-                return (
-                  <button
-                    key={item.path}
-                    onClick={() => {
-                      navigate(item.path);
-                      setDrawerOpen(false);
-                    }}
-                    className="relative flex flex-col items-center gap-2 p-4 rounded-2xl bg-secondary/50 hover:bg-secondary active:scale-95 transition-all touch-target"
-                  >
-                    <item.icon className="h-6 w-6 text-primary" />
-                    <span className="text-xs font-medium text-foreground text-center leading-tight">
-                      {item.label}
-                    </span>
-                    {showShieldBadge && (
-                      <span className="absolute top-2 right-2 w-2.5 h-2.5 rounded-full bg-destructive ring-2 ring-card" />
-                    )}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Bottom nav bar */}
-      <nav className="bottom-nav">
-        <div className="bottom-nav-content">
-          {mainItems.map((item) => {
-            const active = isActive(item.path);
-            return (
-              <button
-                key={item.id}
-                onClick={() => navigate(item.path)}
-                className={`bottom-nav-item ${active ? "active" : ""}`}
-              >
-                <div className="nav-icon-bg">
-                  <item.icon
-                    className={`h-5 w-5 ${active ? "stroke-[2.2]" : "stroke-[1.6]"}`}
-                  />
-                </div>
-                <span
-                  className={`text-[10px] font-semibold tracking-tight ${
-                    active ? "text-primary" : "text-muted-foreground"
-                  }`}
-                >
-                  {item.label}
-                </span>
-              </button>
-            );
-          })}
-
-          {/* "Mais" button */}
-          <button
-            onClick={() => setDrawerOpen(true)}
-            className="bottom-nav-item relative"
-          >
-            <div className="nav-icon-bg">
-              <LayoutGrid className="h-5 w-5 stroke-[1.6]" />
-            </div>
-            <span className="text-[10px] font-semibold tracking-tight text-muted-foreground">
-              Mais
-            </span>
-            {shieldNeedsSetup && (
-              <span className="absolute top-1 right-3 w-2 h-2 rounded-full bg-destructive ring-2 ring-background" />
-            )}
-          </button>
-        </div>
-      </nav>
-    </>
+                {item.label}
+              </span>
+            </button>
+          );
+        })}
+      </div>
+    </nav>
   );
 }
