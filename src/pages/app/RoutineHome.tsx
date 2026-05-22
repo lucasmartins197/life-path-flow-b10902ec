@@ -50,7 +50,10 @@ const DEFAULT_PREFS: RoutinePreferences = {
   configurado: false,
 };
 
-const today = () => new Date().toISOString().split("T")[0];
+const today = () => {
+  const d = new Date();
+  return ;
+};
 
 export default function RoutineHome() {
   const { user } = useAuth();
