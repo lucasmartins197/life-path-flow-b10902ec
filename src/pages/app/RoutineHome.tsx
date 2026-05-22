@@ -79,7 +79,7 @@ export default function RoutineHome() {
   // Modal esporte
   const [sportModal, setSportModal] = useState(false);
   const [sportTask, setSportTask] = useState<DailyTask | null>(null);
-  const [sportDone, setSportDone] = useState<"sim"|"parcial"|"">("");
+  const [sportDesc, setSportDesc] = useState("");
   const [savingSport, setSavingSport] = useState(false);
   // Modal lazer
   const [lazerModal, setLazerModal] = useState(false);
@@ -89,6 +89,7 @@ export default function RoutineHome() {
   // Modal espiritualidade
   const [espModal, setEspModal] = useState(false);
   const [espTask, setEspTask] = useState<DailyTask | null>(null);
+  const [espDesc, setEspDesc] = useState("");
   const [savingEsp, setSavingEsp] = useState(false);
 
   useEffect(() => { if (user) loadAll(); }, [user]);
@@ -155,7 +156,7 @@ export default function RoutineHome() {
     if (prefs.leitura_ativo) {
       const { data: readProg } = await supabase
         .from("reading_progress").select("*")
-        .eq("user_id", user!.id).eq("concluido", false)
+        .eq("user_id", user!.id).eq("ativo", true)
         .order("created_at", { ascending: false }).limit(1).maybeSingle();
       if (readProg) {
         const rp = readProg as any;
@@ -231,9 +232,9 @@ export default function RoutineHome() {
   function openModal(task: DailyTask) {
     if (task.concluido) return;
     if (task.categoria === "leitura") { setReadTask(task); setPagesRead(""); setReadModal(true); }
-    else if (task.categoria === "esporte") { setSportTask(task); setSportDone(""); setSportModal(true); }
+    else if (task.categoria === "esporte") { setSportTask(task); setSportDesc(""); setSportModal(true); }
     else if (task.categoria === "lazer") { setLazerTask(task); setLazerDesc(""); setLazerModal(true); }
-    else if (task.categoria === "espiritualidade") { setEspTask(task); setEspModal(true); }
+    else if (task.categoria === "espiritualidade") { setEspTask(task); setEspDesc(""); setEspModal(true); }
   }
 
   // Salvar leitura
@@ -244,7 +245,7 @@ export default function RoutineHome() {
     // Atualizar ou criar reading_progress
     const { data: existing } = await supabase
       .from("reading_progress").select("*")
-      .eq("user_id", user!.id).eq("concluido", false)
+      .eq("user_id", user!.id).eq("ativo", true)
       .order("created_at", { ascending: false }).limit(1).maybeSingle();
     if (existing) {
       const rp = existing as any;
@@ -253,12 +254,11 @@ export default function RoutineHome() {
         updated_at: new Date().toISOString(),
       }).eq("id", rp.id);
     } else {
-      // Extrair titulo do conteudo_ia
       const titulo = readTask.conteudo_ia.match(/"([^"]+)"/)?.[1] || "Livro atual";
       await supabase.from("reading_progress").insert({
         user_id: user!.id, livro_titulo: titulo,
         pagina_atual: pages, paginas_por_dia: pages,
-        total_paginas: 0, iniciado_em: todayLocal(),
+        total_paginas: 0, ativo: true,
       });
     }
     await supabase.from("daily_tasks").update({
@@ -273,11 +273,11 @@ export default function RoutineHome() {
 
   // Salvar esporte
   async function saveSport() {
-    if (!sportTask || !sportDone) { toast.error("Informe como foi o treino."); return; }
+    if (!sportTask) return;
     setSavingSport(true);
     await supabase.from("daily_tasks").update({
       concluido: true, concluido_em: new Date().toISOString(),
-      progresso: sportDone === "sim" ? "Treino completo!" : "Treino parcial",
+      progresso: sportDesc || "Treino realizado",
     }).eq("id", sportTask.id);
     setTasks(prev => prev.map(t => t.id === sportTask.id ? { ...t, concluido: true } : t));
     toast.success("Treino registrado!");
@@ -527,16 +527,9 @@ export default function RoutineHome() {
           <div className="px-6 pt-6 pb-10 space-y-4">
             <SheetTitle className="text-lg font-bold">Como foi o treino?</SheetTitle>
             {sportTask?.conteudo_ia && <p className="text-sm text-muted-foreground">{sportTask.conteudo_ia}</p>}
-            <div className="space-y-2">
-              {[{v:"sim",l:"Completei o treino todo! 💪"},{v:"parcial",l:"Fiz uma parte do treino"}].map(opt => (
-                <button key={opt.v} onClick={() => setSportDone(opt.v as any)}
-                  className="w-full p-4 rounded-2xl border text-left text-sm font-medium transition-all"
-                  style={sportDone===opt.v ? {background:"#05966915",borderColor:"#059669",color:"#059669"} : {borderColor:"#E5E7EB"}}>
-                  {opt.l}
-                </button>
-              ))}
-            </div>
-            <Button onClick={saveSport} disabled={savingSport || !sportDone}
+            <Input placeholder="Ex: Fiz o treino completo, me senti bem..." value={sportDesc}
+              onChange={e => setSportDesc(e.target.value)} className="h-12" />
+            <Button onClick={saveSport} disabled={savingSport}
               className="w-full h-12 text-base font-bold rounded-2xl text-white"
               style={{background:"linear-gradient(135deg,#1B4332,#2D6A4F)"}}>
               {savingSport ? <Loader2 className="h-4 w-4 animate-spin" /> : "Salvar"}
@@ -549,14 +542,14 @@ export default function RoutineHome() {
       <Sheet open={lazerModal} onOpenChange={setLazerModal}>
         <SheetContent side="bottom" className="rounded-t-3xl p-0">
           <div className="px-6 pt-6 pb-10 space-y-4">
-            <SheetTitle className="text-lg font-bold">O que você fez de lazer?</SheetTitle>
+            <SheetTitle className="text-lg font-bold">Como foi seu momento de lazer?</SheetTitle>
             {lazerTask?.conteudo_ia && <p className="text-sm text-muted-foreground">{lazerTask.conteudo_ia}</p>}
             <Input placeholder="Ex: Assisti um filme, joguei com meu filho..." value={lazerDesc}
               onChange={e => setLazerDesc(e.target.value)} className="h-12" />
             <Button onClick={saveLazer} disabled={savingLazer}
               className="w-full h-12 text-base font-bold rounded-2xl text-white"
               style={{background:"linear-gradient(135deg,#1B4332,#2D6A4F)"}}>
-              {savingLazer ? <Loader2 className="h-4 w-4 animate-spin" /> : "Registrar"}
+              {savingLazer ? <Loader2 className="h-4 w-4 animate-spin" /> : "Salvar"}
             </Button>
           </div>
         </SheetContent>
@@ -566,13 +559,14 @@ export default function RoutineHome() {
       <Sheet open={espModal} onOpenChange={setEspModal}>
         <SheetContent side="bottom" className="rounded-t-3xl p-0">
           <div className="px-6 pt-6 pb-10 space-y-4">
-            <SheetTitle className="text-lg font-bold">Prática espiritual</SheetTitle>
+            <SheetTitle className="text-lg font-bold">Como foi sua prática espiritual?</SheetTitle>
             {espTask?.conteudo_ia && <p className="text-sm text-muted-foreground">{espTask.conteudo_ia}</p>}
-            <p className="text-sm">Após realizar sua prática espiritual, confirme abaixo:</p>
+            <Input placeholder="Ex: Meditei 10 minutos, orei pela manhã..." value={espDesc}
+              onChange={e => setEspDesc(e.target.value)} className="h-12" />
             <Button onClick={saveEsp} disabled={savingEsp}
               className="w-full h-12 text-base font-bold rounded-2xl text-white"
               style={{background:"linear-gradient(135deg,#1B4332,#2D6A4F)"}}>
-              {savingEsp ? <Loader2 className="h-4 w-4 animate-spin" /> : "Confirmei minha prática ✓"}
+              {savingEsp ? <Loader2 className="h-4 w-4 animate-spin" /> : "Salvar"}
             </Button>
           </div>
         </SheetContent>
