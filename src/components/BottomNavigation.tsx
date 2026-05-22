@@ -34,7 +34,7 @@ const drawerItems: { label: string; icon: any; path: string; key?: string }[] = 
   { label: "Medalhas",          icon: Award,       path: "/app/medalhas" },
   { label: "Minhas Finanças",   icon: Wallet,      path: "/app/financas" },
   { label: "Apoio Jurídico",    icon: Scale,       path: "/app/juridico" },
-  { label: "Bloqueio Apostas",  icon: Shield,      path: "/app/bloqueio" },
+
   { label: "Contato Âncora",    icon: Anchor,      path: "/app/ancora" },
   { label: "Perfil",            icon: User,        path: "/app/perfil" },
   { label: "Assinatura",        icon: CreditCard,  path: "/app/assinatura" },
