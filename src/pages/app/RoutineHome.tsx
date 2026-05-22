@@ -79,7 +79,16 @@ export default function RoutineHome() {
       .select("*")
       .eq("user_id", user!.id)
       .maybeSingle();
-    if (data) setPrefs({ ...DEFAULT_PREFS, ...data });
+    if (data) {
+      const d: any = data;
+      setPrefs({
+        ...DEFAULT_PREFS,
+        ...d,
+        esporte_dias: Array.isArray(d.esporte_dias)
+          ? d.esporte_dias.length || DEFAULT_PREFS.esporte_dias
+          : Number(d.esporte_dias) || DEFAULT_PREFS.esporte_dias,
+      });
+    }
   };
 
   const loadTasks = async () => {
@@ -107,12 +116,23 @@ export default function RoutineHome() {
   const savePrefs = async () => {
     if (!user) return;
     setSaving(true);
+    const payload: any = {
+      user_id: user.id,
+      leitura_ativo: prefs.leitura_ativo,
+      leitura_tipo: prefs.leitura_tipo,
+      esporte_ativo: prefs.esporte_ativo,
+      esporte_tipo: prefs.esporte_tipo,
+      esporte_nivel: prefs.esporte_nivel,
+      esporte_dias: Array.from({ length: prefs.esporte_dias }, (_, i) => String(i)),
+      esporte_tempo: prefs.esporte_tempo,
+      lazer_ativo: prefs.lazer_ativo,
+      espiritualidade_ativo: prefs.espiritualidade_ativo,
+      configurado: true,
+    };
     const { error } = await supabase
       .from("routine_preferences")
-      .upsert(
-        { ...prefs, user_id: user.id, configurado: true },
-        { onConflict: "user_id" }
-      );
+      .upsert(payload, { onConflict: "user_id" });
+
     setSaving(false);
     if (error) {
       toast.error("Erro ao salvar preferências");
