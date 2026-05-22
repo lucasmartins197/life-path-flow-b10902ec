@@ -122,11 +122,15 @@ export default function LegalHome() {
         navigate("/auth");
         return;
       }
+      const priceMap = {
+        legal_consult: "price_1Ta1p00oEfdN4xGLiElxDceu",
+        legal_full: "price_1Ta1p00oEfdN4xGLiElxDceu",
+      };
       const { data, error } = await supabase.functions.invoke("create-checkout-session", {
         body: {
           user_id: user.id,
           email: user.email,
-          price_id: priceAlias,
+          price_id: priceMap[priceAlias],
           mode: "payment",
           success_path: "/app/juridico",
           cancel_path: "/app/juridico",
