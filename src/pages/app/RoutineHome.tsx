@@ -153,8 +153,20 @@ export default function RoutineHome() {
 
   async function gerarSugestaoIA(categoria: string): Promise<string> {
     try {
+      let context: any = {};
+      if (categoria === "leitura" && user) {
+        const { data: lp } = await supabase
+          .from("reading_progress")
+          .select("*")
+          .eq("user_id", user.id)
+          .eq("ativo", true)
+          .order("updated_at", { ascending: false })
+          .limit(1)
+          .maybeSingle();
+        if (lp) context.livroAtual = lp;
+      }
       const { data, error } = await supabase.functions.invoke("routine-suggestion", {
-        body: { categoria, prefs },
+        body: { categoria, prefs, context },
       });
       if (error) {
         console.error("routine-suggestion error", error);
@@ -166,6 +178,7 @@ export default function RoutineHome() {
       return "";
     }
   }
+
 
   const generateTodayTasks = async () => {
     if (!user) return;
