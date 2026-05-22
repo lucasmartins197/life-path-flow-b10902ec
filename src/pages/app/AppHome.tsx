@@ -150,7 +150,6 @@ export default function AppHome() {
       </main>
 
       <BottomNavigation />
-      <PortoSeguroButton />
       <EveningCheckIn />
     </div>
   );
