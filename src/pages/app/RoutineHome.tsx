@@ -382,6 +382,15 @@ export default function RoutineHome() {
             {saving && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
             Salvar rotina
           </Button>
+
+          <Button
+            onClick={resetRoutine}
+            disabled={saving}
+            variant="outline"
+            className="w-full border-destructive text-destructive hover:bg-destructive hover:text-destructive-foreground"
+          >
+            Resetar rotina (começar do zero)
+          </Button>
         </div>
       </SheetContent>
     </Sheet>
