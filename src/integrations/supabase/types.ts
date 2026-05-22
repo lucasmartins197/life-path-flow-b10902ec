@@ -461,6 +461,7 @@ export type Database = {
           mood: string | null
           report_count: number
           user_id: string
+          video_url: string | null
         }
         Insert: {
           anonymous?: boolean
@@ -474,6 +475,7 @@ export type Database = {
           mood?: string | null
           report_count?: number
           user_id: string
+          video_url?: string | null
         }
         Update: {
           anonymous?: boolean
@@ -487,6 +489,7 @@ export type Database = {
           mood?: string | null
           report_count?: number
           user_id?: string
+          video_url?: string | null
         }
         Relationships: []
       }
@@ -1649,18 +1652,21 @@ export type Database = {
           created_at: string
           id: string
           post_id: string
+          reaction_type: string
           user_id: string
         }
         Insert: {
           created_at?: string
           id?: string
           post_id: string
+          reaction_type?: string
           user_id: string
         }
         Update: {
           created_at?: string
           id?: string
           post_id?: string
+          reaction_type?: string
           user_id?: string
         }
         Relationships: [

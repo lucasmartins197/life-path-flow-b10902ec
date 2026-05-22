@@ -1,16 +1,15 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { BottomNavigation } from "@/components/BottomNavigation";
-import { useCommunityFeed, CommunityPost, PostComment } from "@/hooks/useCommunityFeed";
+import { useCommunityFeed, CommunityPost, PostComment, ReactionType } from "@/hooks/useCommunityFeed";
 import { useAuth } from "@/contexts/AuthContext";
 import {
   Heart, MessageCircle, Send, Plus, Users, ChevronLeft,
-  Camera, MoreHorizontal, Flag, X, Image as ImageIcon
+  Camera, MoreHorizontal, Flag, X, Image as ImageIcon, Video, UserPlus, UserCheck
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription
 } from "@/components/ui/dialog";
@@ -35,8 +34,42 @@ const MOOD_CONFIG: Record<string, { label: string; color: string }> = {
   reflexivo: { label: "Reflexivo", color: "bg-sky-100 text-sky-800" },
 };
 
+const REACTIONS: { key: ReactionType; emoji: string; label: string }[] = [
+  { key: "forca", emoji: "💪", label: "Força" },
+  { key: "gratidao", emoji: "🙏", label: "Gratidão" },
+  { key: "apoio", emoji: "❤️", label: "Apoio" },
+];
+
+const AVATAR_GRADIENTS = [
+  "from-emerald-500 to-teal-700",
+  "from-amber-500 to-orange-700",
+  "from-violet-500 to-fuchsia-700",
+  "from-sky-500 to-blue-700",
+  "from-rose-500 to-pink-700",
+  "from-lime-500 to-green-700",
+  "from-cyan-500 to-indigo-700",
+  "from-yellow-500 to-amber-700",
+];
+
+function gradientFor(userId: string) {
+  const sum = userId.split("").reduce((a, c) => a + c.charCodeAt(0), 0);
+  return AVATAR_GRADIENTS[sum % AVATAR_GRADIENTS.length];
+}
+
 function timeAgo(date: string) {
   return formatDistanceToNow(new Date(date), { addSuffix: true, locale: ptBR });
+}
+
+function AnonAvatar({ userId, size = 10 }: { userId: string; size?: 8 | 10 }) {
+  const initials = userId.slice(0, 2).toUpperCase();
+  const sizeClass = size === 8 ? "h-8 w-8" : "h-10 w-10";
+  return (
+    <Avatar className={`${sizeClass} border-2 border-[#1B4332]/10`}>
+      <AvatarFallback className={`bg-gradient-to-br ${gradientFor(userId)} text-white text-sm font-bold`}>
+        {initials}
+      </AvatarFallback>
+    </Avatar>
+  );
 }
 
 function RulesAcceptance({ onAccept }: { onAccept: () => void }) {
@@ -69,20 +102,22 @@ function RulesAcceptance({ onAccept }: { onAccept: () => void }) {
 }
 
 function CreatePostDialog({
-  open, onClose, onCreate, onUploadImage
+  open, onClose, onCreate, onUploadImage, onUploadVideo,
 }: {
   open: boolean;
   onClose: () => void;
-  onCreate: (data: { content: string; image_url?: string; mood?: string; anonymous?: boolean }) => void;
+  onCreate: (data: { content: string; image_url?: string; video_url?: string; mood?: string; anonymous?: boolean }) => void;
   onUploadImage: (file: File) => Promise<string | null>;
+  onUploadVideo: (file: File) => Promise<string | null>;
 }) {
   const [content, setContent] = useState("");
   const [mood, setMood] = useState<string | null>(null);
-  const [anonymous, setAnonymous] = useState(false);
   const [imageUrl, setImageUrl] = useState<string | null>(null);
+  const [videoUrl, setVideoUrl] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const fileRef = useRef<HTMLInputElement>(null);
+  const imgRef = useRef<HTMLInputElement>(null);
+  const vidRef = useRef<HTMLInputElement>(null);
 
   const handleImageSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -93,7 +128,20 @@ function CreatePostDialog({
     }
     setUploading(true);
     const url = await onUploadImage(file);
-    if (url) setImageUrl(url);
+    if (url) { setImageUrl(url); setVideoUrl(null); }
+    setUploading(false);
+  };
+
+  const handleVideoSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 30 * 1024 * 1024) {
+      alert("Vídeo deve ter no máximo 30MB");
+      return;
+    }
+    setUploading(true);
+    const url = await onUploadVideo(file);
+    if (url) { setVideoUrl(url); setImageUrl(null); }
     setUploading(false);
   };
 
@@ -103,13 +151,11 @@ function CreatePostDialog({
     await onCreate({
       content: content.trim(),
       image_url: imageUrl || undefined,
+      video_url: videoUrl || undefined,
       mood: mood || undefined,
-      anonymous,
+      anonymous: true,
     });
-    setContent("");
-    setMood(null);
-    setAnonymous(false);
-    setImageUrl(null);
+    setContent(""); setMood(null); setImageUrl(null); setVideoUrl(null);
     setSubmitting(false);
     onClose();
   };
@@ -119,48 +165,46 @@ function CreatePostDialog({
       <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto pb-20">
         <DialogHeader>
           <DialogTitle className="text-lg font-bold tracking-tight">Novo post</DialogTitle>
-          <DialogDescription className="text-sm">Compartilhe com a comunidade</DialogDescription>
+          <DialogDescription className="text-sm">Compartilhe com a comunidade (anônimo)</DialogDescription>
         </DialogHeader>
         <div className="space-y-4 mt-2">
-          <div>
-            <Textarea
-              value={content}
-              onChange={(e) => setContent(e.target.value.slice(0, 500))}
-              placeholder="O que você quer compartilhar hoje?"
-              rows={5}
-              className="resize-none text-base"
-            />
-            <p className="text-xs text-muted-foreground mt-1 text-right">{content.length}/500</p>
-          </div>
+          <Textarea
+            value={content}
+            onChange={(e) => setContent(e.target.value.slice(0, 500))}
+            placeholder="O que você quer compartilhar hoje?"
+            rows={5}
+            className="resize-none text-base"
+          />
+          <p className="text-xs text-muted-foreground -mt-3 text-right">{content.length}/500</p>
 
           {imageUrl && (
             <div className="relative">
               <img src={imageUrl} alt="Preview" className="w-full rounded-xl aspect-[4/3] object-cover" />
-              <button
-                onClick={() => setImageUrl(null)}
-                className="absolute top-2 right-2 w-8 h-8 rounded-full bg-black/60 flex items-center justify-center"
-              >
+              <button onClick={() => setImageUrl(null)} className="absolute top-2 right-2 w-8 h-8 rounded-full bg-black/60 flex items-center justify-center">
                 <X className="h-4 w-4 text-white" />
               </button>
             </div>
           )}
 
-          <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => fileRef.current?.click()}
-              disabled={uploading}
-              className="gap-1.5"
-            >
-              {uploading ? (
-                <div className="h-4 w-4 border-2 border-muted-foreground/30 border-t-muted-foreground rounded-full animate-spin" />
-              ) : (
-                <Camera className="h-4 w-4" />
-              )}
-              {uploading ? "Enviando..." : "Foto"}
+          {videoUrl && (
+            <div className="relative">
+              <video src={videoUrl} controls className="w-full rounded-xl aspect-video bg-black" />
+              <button onClick={() => setVideoUrl(null)} className="absolute top-2 right-2 w-8 h-8 rounded-full bg-black/60 flex items-center justify-center">
+                <X className="h-4 w-4 text-white" />
+              </button>
+            </div>
+          )}
+
+          <div className="flex items-center gap-2 flex-wrap">
+            <Button variant="outline" size="sm" onClick={() => imgRef.current?.click()} disabled={uploading} className="gap-1.5">
+              <Camera className="h-4 w-4" /> Foto
             </Button>
-            <input ref={fileRef} type="file" accept="image/*" onChange={handleImageSelect} className="hidden" />
+            <Button variant="outline" size="sm" onClick={() => vidRef.current?.click()} disabled={uploading} className="gap-1.5">
+              <Video className="h-4 w-4" /> Vídeo
+            </Button>
+            {uploading && <span className="text-xs text-muted-foreground">Enviando...</span>}
+            <input ref={imgRef} type="file" accept="image/*" onChange={handleImageSelect} className="hidden" />
+            <input ref={vidRef} type="file" accept="video/mp4,video/quicktime,video/webm" onChange={handleVideoSelect} className="hidden" />
           </div>
 
           <div>
@@ -180,20 +224,12 @@ function CreatePostDialog({
             </div>
           </div>
 
-          <div className="flex items-center justify-between py-2">
-            <div>
-              <p className="text-sm font-medium">Postar anonimamente</p>
-              <p className="text-xs text-muted-foreground">Seu nome aparecerá como "Guerreiro Anônimo"</p>
-            </div>
-            <Switch checked={anonymous} onCheckedChange={setAnonymous} />
-          </div>
-
           <Button
             onClick={handleSubmit}
-            disabled={!content.trim() || submitting}
+            disabled={!content.trim() || submitting || uploading}
             className="w-full bg-[#1B4332] hover:bg-[#1B4332]/90 text-white h-12 text-base font-semibold"
           >
-            {submitting ? "Publicando..." : "Publicar"}
+            {submitting ? "Publicando..." : "Publicar anonimamente"}
           </Button>
         </div>
       </DialogContent>
@@ -259,10 +295,7 @@ function CommentsDrawer({
           ) : (
             comments.map((c) => (
               <div key={c.id} className="flex gap-3">
-                <Avatar className="h-8 w-8 shrink-0">
-                  <AvatarImage src={c.author_avatar} />
-                  <AvatarFallback className="text-xs bg-muted">{(c.author_name || "A")[0]}</AvatarFallback>
-                </Avatar>
+                <AnonAvatar userId={c.user_id} size={8} />
                 <div className="flex-1 min-w-0">
                   <div className="flex items-baseline gap-2">
                     <span className="text-sm font-semibold">{c.author_name}</span>
@@ -278,7 +311,7 @@ function CommentsDrawer({
           <input
             value={text}
             onChange={(e) => setText(e.target.value.slice(0, 200))}
-            placeholder="Escreva um comentário..."
+            placeholder="Comentar anonimamente..."
             className="flex-1 h-10 px-3 rounded-full border bg-muted/50 text-sm outline-none focus:ring-2 focus:ring-[#1B4332]/30"
           />
           <Button
@@ -296,41 +329,26 @@ function CommentsDrawer({
 }
 
 function PostCard({
-  post,
-  onLike,
-  onComment,
-  onReport,
-  onMessage,
+  post, currentUserId, onReact, onComment, onReport, onToggleFollow,
 }: {
   post: CommunityPost;
-  onLike: () => void;
+  currentUserId?: string;
+  onReact: (r: ReactionType) => void;
   onComment: () => void;
   onReport: () => void;
-  onMessage: () => void;
+  onToggleFollow: () => void;
 }) {
-  const [likeAnimating, setLikeAnimating] = useState(false);
-
-  const handleLike = () => {
-    if (!post.has_liked) {
-      setLikeAnimating(true);
-      setTimeout(() => setLikeAnimating(false), 400);
-    }
-    onLike();
-  };
+  const isOwn = post.user_id === currentUserId;
+  const totalReactions =
+    (post.reactions_count?.heart || 0) +
+    (post.reactions_count?.forca || 0) +
+    (post.reactions_count?.gratidao || 0) +
+    (post.reactions_count?.apoio || 0);
 
   return (
     <Card className="border-0 shadow-[0_1px_3px_rgba(0,0,0,0.06)] rounded-2xl overflow-hidden bg-white">
-      {/* Header */}
       <div className="px-4 pt-4 pb-2 flex items-start gap-3">
-        <Avatar className="h-10 w-10 border-2 border-[#1B4332]/10">
-          {post.author_avatar ? (
-            <AvatarImage src={post.author_avatar} />
-          ) : (
-            <AvatarFallback className="bg-gradient-to-br from-[#1B4332] to-[#2D6A4F] text-white text-sm font-bold">
-              {(post.author_name || "G")[0]}
-            </AvatarFallback>
-          )}
-        </Avatar>
+        <AnonAvatar userId={post.user_id} />
         <div className="flex-1 min-w-0">
           <p className="text-sm font-bold text-foreground truncate">{post.author_name}</p>
           <div className="flex items-center gap-2 mt-0.5">
@@ -342,6 +360,22 @@ function PostCard({
             )}
           </div>
         </div>
+        {!isOwn && (
+          <button
+            onClick={onToggleFollow}
+            className={`text-xs font-semibold px-3 py-1.5 rounded-full transition-colors flex items-center gap-1 ${
+              post.is_following_author
+                ? "bg-[#1B4332]/10 text-[#1B4332]"
+                : "bg-[#1B4332] text-white hover:bg-[#1B4332]/90"
+            }`}
+          >
+            {post.is_following_author ? (
+              <><UserCheck className="h-3 w-3" /> Seguindo</>
+            ) : (
+              <><UserPlus className="h-3 w-3" /> Seguir</>
+            )}
+          </button>
+        )}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <button className="p-1 rounded-full hover:bg-muted transition-colors">
@@ -356,7 +390,6 @@ function PostCard({
         </DropdownMenu>
       </div>
 
-      {/* Mood badge */}
       {post.mood && MOOD_CONFIG[post.mood] && (
         <div className="px-4 pb-2">
           <span className={`text-[11px] px-2.5 py-1 rounded-full font-medium ${MOOD_CONFIG[post.mood].color}`}>
@@ -365,53 +398,63 @@ function PostCard({
         </div>
       )}
 
-      {/* Content */}
       <div className="px-4 pb-3">
         <p className="text-sm text-foreground leading-relaxed whitespace-pre-line">{post.content}</p>
       </div>
 
-      {/* Image */}
       {post.image_url && (
         <div className="px-4 pb-3">
-          <img
-            src={post.image_url}
-            alt="Post"
-            className="w-full rounded-xl aspect-[4/3] object-cover"
-            loading="lazy"
-          />
+          <img src={post.image_url} alt="Post" className="w-full rounded-xl aspect-[4/3] object-cover" loading="lazy" />
         </div>
       )}
 
-      {/* Actions */}
-      <div className="px-4 pb-3 pt-1 flex items-center gap-1 border-t border-border/20 mx-4">
+      {post.video_url && (
+        <div className="px-4 pb-3">
+          <video src={post.video_url} controls playsInline className="w-full rounded-xl aspect-video bg-black" preload="metadata" />
+        </div>
+      )}
+
+      {/* Reactions row */}
+      <div className="px-4 pt-1 pb-2 flex items-center gap-1.5 flex-wrap">
         <button
-          onClick={handleLike}
-          className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm transition-all active:scale-95 ${
-            post.has_liked ? "text-red-500 font-semibold" : "text-muted-foreground hover:text-foreground"
+          onClick={() => onReact("heart")}
+          className={`flex items-center gap-1 px-2.5 py-1.5 rounded-full text-xs transition-all active:scale-95 ${
+            post.my_reactions?.includes("heart") ? "bg-red-50 text-red-500 font-semibold" : "bg-muted/60 text-muted-foreground"
           }`}
         >
-          <Heart
-            className={`h-[18px] w-[18px] transition-transform ${
-              post.has_liked ? "fill-red-500" : ""
-            } ${likeAnimating ? "animate-[pulse_0.4s_ease-in-out]" : ""}`}
-          />
-          {post.likes_count > 0 && post.likes_count}
+          <Heart className={`h-3.5 w-3.5 ${post.my_reactions?.includes("heart") ? "fill-red-500" : ""}`} />
+          {(post.reactions_count?.heart || 0) > 0 && (post.reactions_count?.heart || 0)}
         </button>
+        {REACTIONS.map((r) => {
+          const active = post.my_reactions?.includes(r.key);
+          const count = post.reactions_count?.[r.key] || 0;
+          return (
+            <button
+              key={r.key}
+              onClick={() => onReact(r.key)}
+              className={`flex items-center gap-1 px-2.5 py-1.5 rounded-full text-xs transition-all active:scale-95 ${
+                active ? "bg-[#1B4332]/10 text-[#1B4332] font-semibold ring-1 ring-[#1B4332]/30" : "bg-muted/60 text-muted-foreground"
+              }`}
+              aria-label={r.label}
+            >
+              <span className="text-sm leading-none">{r.emoji}</span>
+              {count > 0 && count}
+            </button>
+          );
+        })}
+      </div>
+
+      <div className="px-4 pb-3 pt-1 flex items-center gap-1 border-t border-border/20 mx-4">
+        <span className="text-xs text-muted-foreground pl-1">
+          {totalReactions} {totalReactions === 1 ? "reação" : "reações"}
+        </span>
         <button
           onClick={onComment}
-          className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm text-muted-foreground hover:text-foreground transition-colors active:scale-95"
+          className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm text-muted-foreground hover:text-foreground transition-colors active:scale-95 ml-auto"
         >
           <MessageCircle className="h-[18px] w-[18px]" />
           {post.comments_count > 0 && post.comments_count}
         </button>
-        {!post.anonymous && (
-          <button
-            onClick={onMessage}
-            className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm text-muted-foreground hover:text-foreground transition-colors active:scale-95 ml-auto"
-          >
-            <Send className="h-[18px] w-[18px]" />
-          </button>
-        )}
       </div>
     </Card>
   );
@@ -421,11 +464,13 @@ export default function CommunityHome() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const {
-    posts, loading, createPost, toggleLike, addComment, reportPost, uploadPostImage, fetchComments
+    posts, loading, createPost, toggleReaction, toggleFollow,
+    addComment, reportPost, uploadPostImage, uploadPostVideo, fetchComments,
   } = useCommunityFeed();
   const [showCreate, setShowCreate] = useState(false);
   const [commentsPostId, setCommentsPostId] = useState<string | null>(null);
   const [hasAcceptedRules, setHasAcceptedRules] = useState<boolean | null>(null);
+  const [tab, setTab] = useState<"all" | "following">("all");
 
   useEffect(() => {
     if (!user) return;
@@ -443,6 +488,11 @@ export default function CommunityHome() {
     setHasAcceptedRules(true);
   };
 
+  const visiblePosts = useMemo(() => {
+    if (tab === "following") return posts.filter((p) => p.is_following_author);
+    return posts;
+  }, [posts, tab]);
+
   if (hasAcceptedRules === null) {
     return (
       <div className="min-h-screen flex items-center justify-center" style={{ background: "#F8F6F2" }}>
@@ -457,7 +507,6 @@ export default function CommunityHome() {
 
   return (
     <div className="min-h-screen pb-28" style={{ background: "#F8F6F2" }}>
-      {/* Header */}
       <header className="sticky top-0 z-30 bg-[#F8F6F2]/95 backdrop-blur-md border-b border-black/5">
         <div className="max-w-lg mx-auto px-4 py-3">
           <div className="flex items-center justify-between">
@@ -468,44 +517,53 @@ export default function CommunityHome() {
               >
                 <ChevronLeft className="h-5 w-5 text-[#1B4332]" />
               </button>
-              <div>
-                <h1 className="text-lg font-bold text-[#1B4332] tracking-tight" style={{ letterSpacing: "-0.5px" }}>
-                  Histórias que Conectam
-                </h1>
-              </div>
+              <h1 className="text-lg font-bold text-[#1B4332] tracking-tight" style={{ letterSpacing: "-0.5px" }}>
+                Histórias que Conectam
+              </h1>
             </div>
+          </div>
+
+          {/* Tabs */}
+          <div className="flex gap-1 mt-3 bg-black/5 p-1 rounded-xl">
             <button
-              onClick={() => navigate("/app/mensagens")}
-              className="p-2 rounded-lg hover:bg-black/5 transition-colors relative"
+              onClick={() => setTab("all")}
+              className={`flex-1 py-2 text-sm font-semibold rounded-lg transition-all ${
+                tab === "all" ? "bg-white text-[#1B4332] shadow-sm" : "text-muted-foreground"
+              }`}
             >
-              <Send className="h-5 w-5 text-[#1B4332]" />
+              Todos
+            </button>
+            <button
+              onClick={() => setTab("following")}
+              className={`flex-1 py-2 text-sm font-semibold rounded-lg transition-all ${
+                tab === "following" ? "bg-white text-[#1B4332] shadow-sm" : "text-muted-foreground"
+              }`}
+            >
+              Seguindo
             </button>
           </div>
         </div>
       </header>
 
       <main className="max-w-lg mx-auto px-4 pt-4 space-y-3">
-        {/* Create Post CTA */}
         <Card
           className="p-4 rounded-2xl border-0 shadow-[0_1px_3px_rgba(0,0,0,0.06)] bg-white cursor-pointer active:scale-[0.98] transition-transform"
           onClick={() => setShowCreate(true)}
         >
           <div className="flex items-center gap-3">
-            <Avatar className="h-10 w-10 border-2 border-[#1B4332]/10">
-              <AvatarFallback className="bg-gradient-to-br from-[#1B4332] to-[#2D6A4F] text-white text-sm font-bold">
-                {user?.email?.[0]?.toUpperCase() || "U"}
-              </AvatarFallback>
-            </Avatar>
+            {user && <AnonAvatar userId={user.id} />}
             <p className="text-sm text-muted-foreground flex-1">O que você quer compartilhar hoje?</p>
             <div className="flex gap-1.5">
               <div className="w-8 h-8 rounded-full bg-[#1B4332]/5 flex items-center justify-center">
                 <ImageIcon className="h-4 w-4 text-[#1B4332]" />
               </div>
+              <div className="w-8 h-8 rounded-full bg-[#1B4332]/5 flex items-center justify-center">
+                <Video className="h-4 w-4 text-[#1B4332]" />
+              </div>
             </div>
           </div>
         </Card>
 
-        {/* Feed */}
         {loading ? (
           <div className="space-y-3">
             {[1, 2, 3].map((i) => (
@@ -520,36 +578,39 @@ export default function CommunityHome() {
                 <div className="space-y-2">
                   <Skeleton className="h-3.5 w-full" />
                   <Skeleton className="h-3.5 w-4/5" />
-                  <Skeleton className="h-3.5 w-2/3" />
                 </div>
               </Card>
             ))}
           </div>
-        ) : posts.length === 0 ? (
+        ) : visiblePosts.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 px-6 text-center">
             <div className="w-16 h-16 rounded-full bg-[#1B4332]/10 flex items-center justify-center mb-4">
               <Users className="h-8 w-8 text-[#1B4332]" />
             </div>
-            <h3 className="text-lg font-bold text-foreground mb-2">Nenhuma história ainda</h3>
+            <h3 className="text-lg font-bold text-foreground mb-2">
+              {tab === "following" ? "Nenhum post de quem você segue" : "Nenhuma história ainda"}
+            </h3>
             <p className="text-sm text-muted-foreground mb-6 max-w-xs">
-              Seja o primeiro a compartilhar. Sua experiência pode inspirar alguém.
+              {tab === "following"
+                ? "Siga outros guerreiros para ver as histórias deles aqui."
+                : "Seja o primeiro a compartilhar. Sua experiência pode inspirar alguém."}
             </p>
-            <Button
-              onClick={() => setShowCreate(true)}
-              className="bg-[#1B4332] hover:bg-[#1B4332]/90 text-white gap-2 rounded-xl"
-            >
-              <Plus className="h-4 w-4" /> Compartilhar
-            </Button>
+            {tab !== "following" && (
+              <Button onClick={() => setShowCreate(true)} className="bg-[#1B4332] hover:bg-[#1B4332]/90 text-white gap-2 rounded-xl">
+                <Plus className="h-4 w-4" /> Compartilhar
+              </Button>
+            )}
           </div>
         ) : (
-          posts.map((post) => (
+          visiblePosts.map((post) => (
             <PostCard
               key={post.id}
               post={post}
-              onLike={() => toggleLike(post.id, !!post.has_liked)}
+              currentUserId={user?.id}
+              onReact={(r) => toggleReaction(post.id, r)}
               onComment={() => setCommentsPostId(post.id)}
               onReport={() => reportPost(post.id, "Conteúdo inadequado")}
-              onMessage={() => navigate(`/app/mensagens?to=${post.user_id}`)}
+              onToggleFollow={() => toggleFollow(post.user_id)}
             />
           ))
         )}
@@ -560,6 +621,7 @@ export default function CommunityHome() {
         onClose={() => setShowCreate(false)}
         onCreate={createPost}
         onUploadImage={uploadPostImage}
+        onUploadVideo={uploadPostVideo}
       />
 
       {commentsPostId && (
