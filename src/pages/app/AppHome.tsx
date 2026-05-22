@@ -144,28 +144,6 @@ export default function AppHome() {
           </p>
         </section>
 
-        {/* ── Streak Card ── */}
-        <section
-          className="flex items-center gap-3 p-3.5 bg-card border border-border/30"
-          style={{ borderRadius: 16 }}
-        >
-          <div
-            className="w-10 h-10 rounded-2xl flex items-center justify-center shrink-0"
-            style={{ background: "linear-gradient(135deg, #C4530A, #E8750A)" }}
-          >
-            <Flame className="h-5 w-5 text-white" />
-          </div>
-          <div className="flex-1">
-            <p className="text-sm font-bold text-foreground">
-              {streakDays} {streakDays === 1 ? "dia seguido" : "dias seguidos"}
-            </p>
-            <p className="text-xs text-muted-foreground mt-0.5">
-              {streakDays > 0
-                ? "Continue assim! Cada dia conta."
-                : "Preencha a rotina de hoje para começar!"}
-            </p>
-          </div>
-        </section>
 
         {/* ── Premium Navigation Cards ── */}
         <PremiumNavCards />
