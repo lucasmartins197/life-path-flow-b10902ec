@@ -1903,6 +1903,7 @@ export type Database = {
           gerado_em: string
           id: string
           nivel_risco: string
+          pontos_atencao: Json
           recomendacoes: Json
           resumo_clinico: string
           user_id: string
@@ -1912,6 +1913,7 @@ export type Database = {
           gerado_em?: string
           id?: string
           nivel_risco?: string
+          pontos_atencao?: Json
           recomendacoes?: Json
           resumo_clinico?: string
           user_id: string
@@ -1921,6 +1923,7 @@ export type Database = {
           gerado_em?: string
           id?: string
           nivel_risco?: string
+          pontos_atencao?: Json
           recomendacoes?: Json
           resumo_clinico?: string
           user_id?: string

@@ -150,19 +150,18 @@ export default function EvolutionHome() {
   }
 
   async function gerarProntuario() {
-    toast.info("Gerando prontuário...");
+    toast.info("Gerando prontuário com IA...");
     try {
-      await fetch("https://apostandonavida.app.n8n.cloud/webhook/gerar-prontuario", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ user_id: user!.id }),
+      const { data, error } = await supabase.functions.invoke("gerar-prontuario", {
+        body: { user_id: user!.id },
       });
-      setTimeout(async () => {
-        await loadAll();
-        toast.success("Prontuário gerado!");
-      }, 3000);
-    } catch {
-      toast.error("Erro ao gerar prontuário.");
+      if (error) throw error;
+      if (!data?.success) throw new Error(data?.error || "Falha ao gerar prontuário");
+      await loadAll();
+      toast.success("Prontuário gerado!");
+    } catch (e: any) {
+      console.error("Erro ao gerar prontuário:", e);
+      toast.error(e?.message || "Erro ao gerar prontuário.");
     }
   }
 
