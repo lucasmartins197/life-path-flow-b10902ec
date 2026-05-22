@@ -1897,6 +1897,36 @@ export type Database = {
         }
         Relationships: []
       }
+      prontuarios: {
+        Row: {
+          created_at: string
+          gerado_em: string
+          id: string
+          nivel_risco: string
+          recomendacoes: Json
+          resumo_clinico: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          gerado_em?: string
+          id?: string
+          nivel_risco?: string
+          recomendacoes?: Json
+          resumo_clinico?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          gerado_em?: string
+          id?: string
+          nivel_risco?: string
+          recomendacoes?: Json
+          resumo_clinico?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       reading_progress: {
         Row: {
           ativo: boolean
