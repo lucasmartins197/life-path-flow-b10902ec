@@ -25,11 +25,11 @@ interface Prontuario {
 }
 
 interface OnboardingClinico {
-  gambling_duration: string;
-  recovery_situation: string;
-  total_loss_range: string;
-  mental_health_risk: string;
-  main_motivation: string;
+  gambling_duration?: string;
+  recovery_situation?: string;
+  total_loss_range?: string;
+  mental_health_risk?: string;
+  main_motivation?: string;
 }
 
 const RISK_COLOR: Record<string, string> = {
@@ -95,7 +95,7 @@ export default function EvolutionHome() {
 
     if (profileRes.data?.full_name) setUserName(profileRes.data.full_name.split(" ")[0]);
     setProntuarios((prontuariosRes.data as Prontuario[]) || []);
-    setOnboarding(onboardingRes.data as OnboardingClinico | null);
+    setOnboarding(onboardingRes.data as unknown as OnboardingClinico | null);
 
     const completedSteps = (journeyRes.data || []).filter((j: any) => j.completed).length;
     setJourneyProgress(completedSteps);
