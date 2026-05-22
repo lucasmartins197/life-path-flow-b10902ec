@@ -223,8 +223,15 @@ const cards: NavCard[] = [
     gradient: "linear-gradient(135deg, #1B4332, #40916C)",
     path: "/app/evolucao",
     Illustration: EvolutionSVG,
-    wide: true,
   },
+  {
+    title: "Apoio Jurídico",
+    subtitle: "Advogados e simulador de dívidas",
+    gradient: "linear-gradient(135deg, #2C2A4A, #4F518C)",
+    path: "/app/juridico",
+    Illustration: LegalSVG,
+  },
+
 ];
 
 export function PremiumNavCards() {
