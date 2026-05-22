@@ -1891,6 +1891,42 @@ export type Database = {
         }
         Relationships: []
       }
+      reading_progress: {
+        Row: {
+          ativo: boolean
+          created_at: string
+          id: string
+          livro_titulo: string
+          pagina_atual: number
+          paginas_por_dia: number
+          total_paginas: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          ativo?: boolean
+          created_at?: string
+          id?: string
+          livro_titulo: string
+          pagina_atual?: number
+          paginas_por_dia?: number
+          total_paginas?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          ativo?: boolean
+          created_at?: string
+          id?: string
+          livro_titulo?: string
+          pagina_atual?: number
+          paginas_por_dia?: number
+          total_paginas?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       recovery_commitments: {
         Row: {
           blocking_configured: boolean
