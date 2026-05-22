@@ -1,8 +1,13 @@
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 
-const PROMPTS: Record<string, (p: any) => string> = {
-  leitura: (p) =>
-    `Você é assistente de recuperação de ludopatia. Sugira UM livro específico hoje (título e autor) tema: ${p.leitura_tipo || "autoconhecimento"}. Diga quantas páginas ler (10-20). Máximo 2 linhas.`,
+const PROMPTS: Record<string, (p: any, ctx?: any) => string> = {
+  leitura: (p, ctx) => {
+    if (ctx?.livroAtual?.livro_titulo) {
+      const proxPag = (ctx.livroAtual.pagina_atual || 0) + (ctx.livroAtual.paginas_por_dia || 15);
+      return `Você é assistente de recuperação de ludopatia. O usuário está lendo "${ctx.livroAtual.livro_titulo}" e está na página ${ctx.livroAtual.pagina_atual}. Escreva exatamente: "Continue lendo ${ctx.livroAtual.livro_titulo} — você está na página ${ctx.livroAtual.pagina_atual}, leia até a página ${proxPag} hoje". Máximo 2 linhas.`;
+    }
+    return `Você é assistente de recuperação de ludopatia. Sugira UM livro específico hoje (título e autor) tema: ${p.leitura_tipo || "autoconhecimento"}. Diga quantas páginas ler (10-20). Máximo 2 linhas.`;
+  },
   esporte: (p) =>
     `Você é assistente de recuperação de ludopatia. Gere treino específico: ${p.esporte_tipo || "corrida"}, nível ${p.esporte_nivel || "iniciante"}, ${p.esporte_tempo || 30} minutos. Liste 3 exercícios. Seja objetivo.`,
   lazer: () =>
@@ -10,6 +15,7 @@ const PROMPTS: Record<string, (p: any) => string> = {
   espiritualidade: () =>
     `Você é assistente de recuperação de ludopatia. Sugira prática espiritual específica hoje. Máximo 2 linhas.`,
 };
+
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
