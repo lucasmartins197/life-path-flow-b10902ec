@@ -33,7 +33,7 @@ export default function TherapyHome() {
       if (error) { toast.error("Erro: " + error.message); return; }
       if (data?.error) { toast.error("Erro: " + data.error); return; }
       if (data?.url) {
-        window.location.href = data.url;
+        window.open(data.url, "_blank");
       } else {
         toast.error("Erro ao gerar link de pagamento");
       }

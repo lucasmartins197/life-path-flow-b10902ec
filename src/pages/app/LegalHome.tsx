@@ -146,7 +146,7 @@ export default function LegalHome() {
         return;
       }
       if (data?.url) {
-        window.location.href = data.url;
+        window.open(data.url, "_blank");
       } else {
         toast.error("URL de pagamento não retornada");
       }
