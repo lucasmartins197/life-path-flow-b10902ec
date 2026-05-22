@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { Settings, CheckCircle2, Circle, Loader2, History, ListTodo } from "lucide-react";
+import { Settings, CheckCircle2, Circle, Loader2, History, ListTodo, BookOpen, ExternalLink } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { BottomNavigation } from "@/components/BottomNavigation";
 import { BackHeader } from "@/components/BackHeader";
 import { Button } from "@/components/ui/button";
@@ -64,6 +65,9 @@ export default function RoutineHome() {
   const [generating, setGenerating] = useState(false);
   const [saving, setSaving] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [readingTask, setReadingTask] = useState<DailyTask | null>(null);
+  const [readingPages, setReadingPages] = useState<string>("");
+  const [savingReading, setSavingReading] = useState(false);
 
   useEffect(() => {
     if (!user) return;
@@ -149,8 +153,20 @@ export default function RoutineHome() {
 
   async function gerarSugestaoIA(categoria: string): Promise<string> {
     try {
+      let context: any = {};
+      if (categoria === "leitura" && user) {
+        const { data: lp } = await supabase
+          .from("reading_progress")
+          .select("*")
+          .eq("user_id", user.id)
+          .eq("ativo", true)
+          .order("updated_at", { ascending: false })
+          .limit(1)
+          .maybeSingle();
+        if (lp) context.livroAtual = lp;
+      }
       const { data, error } = await supabase.functions.invoke("routine-suggestion", {
-        body: { categoria, prefs },
+        body: { categoria, prefs, context },
       });
       if (error) {
         console.error("routine-suggestion error", error);
@@ -162,6 +178,7 @@ export default function RoutineHome() {
       return "";
     }
   }
+
 
   const generateTodayTasks = async () => {
     if (!user) return;
@@ -240,6 +257,12 @@ export default function RoutineHome() {
   };
 
   const markDone = async (id: string) => {
+    const task = tasks.find((t) => t.id === id);
+    if (task && task.categoria === "leitura") {
+      setReadingTask(task);
+      setReadingPages("");
+      return;
+    }
     const { error } = await supabase
       .from("daily_tasks")
       .update({ concluido: true, concluido_em: new Date().toISOString() })
@@ -250,6 +273,78 @@ export default function RoutineHome() {
     }
     setTasks((prev) => prev.map((t) => (t.id === id ? { ...t, concluido: true } : t)));
   };
+
+  const extractBookTitle = (text: string): string => {
+    if (!text) return "Livro do dia";
+    const quoted = text.match(/"([^"]+)"|"([^"]+)"|'([^']+)'/);
+    if (quoted) return (quoted[1] || quoted[2] || quoted[3] || "").trim();
+    const firstLine = text.split("\n")[0].split(/[.—–-]/)[0].trim();
+    return firstLine.slice(0, 120) || "Livro do dia";
+  };
+
+  const saveReadingProgress = async () => {
+    if (!user || !readingTask) return;
+    const pages = parseInt(readingPages, 10);
+    if (!pages || pages <= 0) {
+      toast.error("Informe quantas páginas você leu");
+      return;
+    }
+    setSavingReading(true);
+
+    const { data: existing } = await supabase
+      .from("reading_progress")
+      .select("*")
+      .eq("user_id", user.id)
+      .eq("ativo", true)
+      .order("updated_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (existing) {
+      await supabase
+        .from("reading_progress")
+        .update({
+          pagina_atual: (existing.pagina_atual || 0) + pages,
+          paginas_por_dia: pages,
+        })
+        .eq("id", existing.id);
+    } else {
+      const titulo = extractBookTitle(readingTask.conteudo_ia || readingTask.titulo);
+      await supabase.from("reading_progress").insert({
+        user_id: user.id,
+        livro_titulo: titulo,
+        pagina_atual: pages,
+        total_paginas: 0,
+        paginas_por_dia: pages,
+        ativo: true,
+      });
+    }
+
+    const { error } = await supabase
+      .from("daily_tasks")
+      .update({
+        concluido: true,
+        concluido_em: new Date().toISOString(),
+        progresso: `Leu ${pages} páginas`,
+      })
+      .eq("id", readingTask.id);
+
+    setSavingReading(false);
+    if (error) {
+      toast.error("Erro ao salvar progresso");
+      return;
+    }
+    setTasks((prev) =>
+      prev.map((t) =>
+        t.id === readingTask.id
+          ? { ...t, concluido: true, progresso: `Leu ${pages} páginas` }
+          : t,
+      ),
+    );
+    setReadingTask(null);
+    toast.success("Progresso de leitura salvo!");
+  };
+
 
   const resetRoutine = async () => {
     if (!user) return;
@@ -568,6 +663,74 @@ export default function RoutineHome() {
       </main>
 
       <BottomNavigation />
+
+      <Dialog open={!!readingTask} onOpenChange={(o) => !o && setReadingTask(null)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Como foi sua leitura hoje?</DialogTitle>
+            <DialogDescription>
+              Registre seu progresso para continuarmos juntos amanhã.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            {readingTask?.conteudo_ia && (
+              <div className="bg-[#F5F0E8] rounded-xl p-3 flex gap-3">
+                <BookOpen className="h-5 w-5 text-[#1B4332] shrink-0 mt-0.5" />
+                <p className="text-sm text-foreground whitespace-pre-line">
+                  {readingTask.conteudo_ia}
+                </p>
+              </div>
+            )}
+            <div>
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
+                Encontre grátis em:
+              </p>
+              <div className="space-y-1.5">
+                {[
+                  { name: "Project Gutenberg", url: "https://www.gutenberg.org" },
+                  { name: "Biblioteca Digital BN", url: "https://bdlb.bn.gov.br" },
+                  { name: "Open Library", url: "https://openlibrary.org" },
+                ].map((s) => (
+                  <a
+                    key={s.url}
+                    href={s.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center justify-between rounded-lg border border-border px-3 py-2 text-sm hover:bg-muted touch-target"
+                  >
+                    <span className="text-foreground">{s.name}</span>
+                    <ExternalLink className="h-4 w-4 text-muted-foreground" />
+                  </a>
+                ))}
+              </div>
+            </div>
+            <div>
+              <Label htmlFor="reading-pages" className="text-sm">
+                Quantas páginas você leu hoje?
+              </Label>
+              <Input
+                id="reading-pages"
+                type="number"
+                min={1}
+                max={1000}
+                inputMode="numeric"
+                value={readingPages}
+                onChange={(e) => setReadingPages(e.target.value)}
+                placeholder="Ex: 15"
+                className="mt-1.5"
+              />
+            </div>
+            <Button
+              onClick={saveReadingProgress}
+              disabled={savingReading}
+              className="w-full bg-[#1B4332] hover:bg-[#2D6A4F]"
+            >
+              {savingReading && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+              Salvar progresso
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
