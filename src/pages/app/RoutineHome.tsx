@@ -346,7 +346,11 @@ function SetupSheet({ open, onOpenChange, userId, onSaved, existingPrefs }: {
     };
     const { error } = await supabase.from("routine_preferences").upsert(payload, { onConflict: "user_id" });
     setSaving(false);
-    if (error) { toast.error("Erro ao salvar. Tente novamente."); return; }
+    if (error) { 
+      console.error("Erro routine_preferences:", error);
+      toast.error(`Erro ao salvar: ${error.message}`); 
+      return; 
+    }
     toast.success("Rotina salva!");
     onOpenChange(false);
     onSaved();
