@@ -18,6 +18,12 @@ jobs:
           node-version: '20'
           cache: 'npm'
 
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+
       - name: Install dependencies
         run: npm install
 
@@ -28,40 +34,21 @@ jobs:
           VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY }}
 
       - name: Install Capacitor
-        run: |
-          npm install @capacitor/core @capacitor/cli @capacitor/android
+        run: npm install @capacitor/core @capacitor/cli @capacitor/android
 
       - name: Init Capacitor
-        run: |
-          npx cap init "Apostando na Vida" "com.apostandonavida.app" --web-dir dist
+        run: npx cap init "Apostando na Vida" "com.apostandonavida.app" --web-dir dist
 
       - name: Add Android platform
         run: npx cap add android
 
+      - name: Fix Kotlin duplicates
+        run: |
+          echo "" >> android/build.gradle
+          echo "subprojects { configurations.all { resolutionStrategy { force 'org.jetbrains.kotlin:kotlin-stdlib:1.8.22'; force 'org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.8.22'; force 'org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.8.22' } } }" >> android/build.gradle
+
       - name: Sync Capacitor
         run: npx cap sync android
-
-      - name: Setup Java
-        uses: actions/setup-java@v4
-        with:
-          distribution: 'temurin'
-          java-version: '21'
-
-      - name: Fix Kotlin duplicate classes
-        run: |
-          cd android
-          cat >> build.gradle << 'EOF'
-
-subprojects {
-    configurations.all {
-        resolutionStrategy {
-            force 'org.jetbrains.kotlin:kotlin-stdlib:1.8.22'
-            force 'org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.8.22'
-            force 'org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.8.22'
-        }
-    }
-}
-EOF
 
       - name: Build APK
         run: |
@@ -72,6 +59,6 @@ EOF
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: apostando-na-vida-debug.apk
+          name: apostando-na-vida.apk
           path: android/app/build/outputs/apk/debug/app-debug.apk
           retention-days: 30
