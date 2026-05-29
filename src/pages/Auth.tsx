@@ -299,15 +299,21 @@ export default function Auth() {
                   
                   <div className="space-y-2">
                     <Label htmlFor="signup-password">Senha</Label>
-                    <Input
-                      id="signup-password"
-                      type={showSignupPassword ? "text" : "password"}
-                      placeholder="Mínimo 8 caracteres, com letras e números"
-                      value={signupPassword}
-                      onChange={(e) => setSignupPassword(e.target.value)}
-                      required
-                      className="input-premium"
-                    />
+                    <div className="relative">
+                      <Input
+                        id="signup-password"
+                        type={showSignupPassword ? "text" : "password"}
+                        placeholder="Mínimo 8 caracteres, com letras e números"
+                        value={signupPassword}
+                        onChange={(e) => setSignupPassword(e.target.value)}
+                        required
+                        className="input-premium pr-10"
+                      />
+                      <button type="button" onClick={() => setShowSignupPassword(p => !p)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
+                        {showSignupPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                      </button>
+                    </div>
                   </div>
                   
                   <div className="space-y-2">
