@@ -19,7 +19,7 @@ export default function ForgotPassword() {
     setIsLoading(true);
 
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/auth/reset-password`,
+      redirectTo: "https://app.apostandonavida.com.br/auth/reset-password",
     });
 
     if (error) {
