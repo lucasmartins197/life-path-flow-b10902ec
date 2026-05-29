@@ -47,7 +47,29 @@ export function ProtectedRoute({
 
   const isAdminUser = user.id === ADMIN_BYPASS_ID || roles.includes("admin");
   const isExempt = PAYWALL_EXEMPT.some(p => location.pathname.startsWith(p));
+
+  // Wait for profile to load before evaluating subscription (avoids false redirect to /assinatura)
+  if (!isAdminUser && !isExempt && profile === null) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="flex flex-col items-center gap-4">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <p className="text-muted-foreground">Carregando perfil...</p>
+        </div>
+      </div>
+    );
+  }
+
   const hasSubscription = (profile as any)?.subscription_status === "active";
+
+  console.log("[ProtectedRoute]", {
+    userId: user.id,
+    subscriptionStatus: (profile as any)?.subscription_status,
+    isAdminUser,
+    isExempt,
+    hasSubscription,
+    path: location.pathname,
+  });
 
   if (!isAdminUser && !isExempt && !hasSubscription) {
     return <Navigate to="/app/assinatura" state={{ from: location }} replace />;
@@ -55,3 +77,4 @@ export function ProtectedRoute({
 
   return <>{children}</>;
 }
+
