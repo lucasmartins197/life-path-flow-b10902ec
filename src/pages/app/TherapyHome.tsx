@@ -181,6 +181,47 @@ export default function TherapyHome() {
             <p className="text-sm text-muted-foreground">
               Após o pagamento você receberá confirmação por email e nossa equipe validará o agendamento.
             </p>
+
+            {/* Cupom de desconto */}
+            <div className="space-y-2">
+              <label className="text-sm font-semibold" style={{ color: "#1B4332" }}>
+                Tem um cupom de desconto?
+              </label>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={coupon}
+                  onChange={(e) => { setCoupon(e.target.value); setCouponError(""); }}
+                  disabled={!!appliedCoupon}
+                  placeholder="Digite seu cupom"
+                  className="flex-1 px-3 py-2 rounded-lg border text-sm outline-none focus:ring-2"
+                  style={{ borderColor: "#E5E7EB" }}
+                />
+                <button
+                  onClick={handleApplyCoupon}
+                  disabled={couponLoading || !coupon.trim() || !!appliedCoupon}
+                  className="px-4 py-2 rounded-lg text-sm font-semibold text-white disabled:opacity-50"
+                  style={{ background: "#1B4332" }}>
+                  {couponLoading ? "..." : "Aplicar"}
+                </button>
+              </div>
+              {appliedCoupon && (
+                <p className="text-sm font-semibold text-green-700">
+                  ✓ Cupom aplicado!{appliedCoupon.percent_off ? ` ${appliedCoupon.percent_off}% de desconto` : ""}
+                </p>
+              )}
+              {couponError && (
+                <p className="text-sm font-semibold text-red-600">{couponError}</p>
+              )}
+            </div>
+
+            {appliedCoupon && (
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-muted-foreground line-through">R$ {formatBRL(BASE_PRICE)}</span>
+                <span className="font-bold text-green-700">Novo total: R$ {formatBRL(finalPrice)}</span>
+              </div>
+            )}
+
             <button
               onClick={handleCheckout}
               disabled={loading}
@@ -188,7 +229,7 @@ export default function TherapyHome() {
               style={{ background: "linear-gradient(135deg, #1B4332, #2D6A4F)" }}>
               {loading
                 ? <span className="flex items-center justify-center gap-2"><Loader2 className="h-4 w-4 animate-spin" />Processando...</span>
-                : "Pagar R$ 229,20 →"}
+                : `Pagar R$ ${formatBRL(finalPrice)} →`}
             </button>
           </section>
         )}
