@@ -1,4 +1,6 @@
 import { useNavigate } from "react-router-dom";
+import { LogOut } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
 /* ── SVG Illustrations ── */
 
@@ -223,43 +225,62 @@ const cards: NavCard[] = [
 export function PremiumNavCards() {
   const navigate = useNavigate();
 
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    navigate("/auth");
+  };
+
   return (
-    <div className="grid grid-cols-2 gap-3">
-      {cards.map((card) => (
-        <button
-          key={card.path}
-          onClick={() => navigate(card.path)}
-          className={`relative overflow-hidden text-left transition-transform duration-200 active:scale-[0.97] hover:scale-[1.02] ${
-            card.wide ? "col-span-2" : "col-span-1"
-          }`}
-          style={{
-            background: card.gradient,
-            borderRadius: 20,
-            height: card.wide ? 160 : 140,
-            maxHeight: card.wide ? 160 : 140,
-            boxShadow: "0 8px 24px rgba(0,0,0,0.15)",
-          }}
-        >
-          <card.Illustration />
+    <div className="space-y-3">
+      <div className="grid grid-cols-2 gap-3">
+        {cards.map((card) => (
+          <button
+            key={card.path}
+            onClick={() => navigate(card.path)}
+            className={`relative overflow-hidden text-left transition-transform duration-200 active:scale-[0.97] hover:scale-[1.02] ${
+              card.wide ? "col-span-2" : "col-span-1"
+            }`}
+            style={{
+              background: card.gradient,
+              borderRadius: 20,
+              height: card.wide ? 160 : 140,
+              maxHeight: card.wide ? 160 : 140,
+              boxShadow: "0 8px 24px rgba(0,0,0,0.15)",
+            }}
+          >
+            <card.Illustration />
 
-          {/* Badge */}
-          {card.badge && (
-            <span className="absolute top-3 right-3 bg-red-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full tracking-wider">
-              {card.badge}
-            </span>
-          )}
+            {/* Badge */}
+            {card.badge && (
+              <span className="absolute top-3 right-3 bg-red-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full tracking-wider">
+                {card.badge}
+              </span>
+            )}
 
-          {/* Text overlay */}
-          <div className="absolute bottom-0 left-0 right-0 p-4">
-            <h3 className="text-white font-bold text-base leading-tight drop-shadow-md">
-              {card.title}
-            </h3>
-            <p className="text-white/75 text-xs mt-0.5 drop-shadow-sm">
-              {card.subtitle}
-            </p>
-          </div>
-        </button>
-      ))}
+            {/* Text overlay */}
+            <div className="absolute bottom-0 left-0 right-0 p-4">
+              <h3 className="text-white font-bold text-base leading-tight drop-shadow-md">
+                {card.title}
+              </h3>
+              <p className="text-white/75 text-xs mt-0.5 drop-shadow-sm">
+                {card.subtitle}
+              </p>
+            </div>
+          </button>
+        ))}
+      </div>
+
+      <button
+        onClick={handleLogout}
+        className="w-full flex items-center justify-center gap-2 py-3.5 rounded-2xl text-white font-semibold text-sm transition-transform duration-200 active:scale-[0.98]"
+        style={{
+          background: "linear-gradient(135deg, #B91C1C, #DC2626)",
+          boxShadow: "0 6px 18px rgba(220,38,38,0.25)",
+        }}
+      >
+        <LogOut className="h-4 w-4" />
+        Sair
+      </button>
     </div>
   );
 }
