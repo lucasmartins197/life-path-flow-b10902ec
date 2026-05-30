@@ -58,7 +58,7 @@ serve(async (req) => {
           user_id: userId,
           payment_type,
           amount,
-          status: "paid",
+          status: "completed",
           stripe_payment_id: session.id,
         });
       }
