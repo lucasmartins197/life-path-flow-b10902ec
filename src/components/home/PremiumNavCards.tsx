@@ -1,6 +1,4 @@
 import { useNavigate } from "react-router-dom";
-import { LogOut } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
 
 /* ── SVG Illustrations ── */
 
