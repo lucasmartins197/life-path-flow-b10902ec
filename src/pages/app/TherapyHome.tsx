@@ -10,6 +10,41 @@ export default function TherapyHome() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [dataSelecionada, setDataSelecionada] = useState(false);
+  const [coupon, setCoupon] = useState("");
+  const [appliedCoupon, setAppliedCoupon] = useState<{ id: string; percent_off: number | null; amount_off: number | null } | null>(null);
+  const [couponError, setCouponError] = useState("");
+  const [couponLoading, setCouponLoading] = useState(false);
+
+  const BASE_PRICE = 229.20;
+  const finalPrice = appliedCoupon
+    ? appliedCoupon.percent_off
+      ? BASE_PRICE * (1 - appliedCoupon.percent_off / 100)
+      : appliedCoupon.amount_off
+        ? Math.max(0, BASE_PRICE - appliedCoupon.amount_off / 100)
+        : BASE_PRICE
+    : BASE_PRICE;
+  const formatBRL = (v: number) => v.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+  const handleApplyCoupon = async () => {
+    if (!coupon.trim()) return;
+    setCouponLoading(true);
+    setCouponError("");
+    setAppliedCoupon(null);
+    try {
+      const { data, error } = await supabase.functions.invoke("validate-coupon", {
+        body: { coupon_id: coupon.trim() },
+      });
+      if (error || !data?.valid) {
+        setCouponError(data?.error || "Cupom inválido");
+      } else {
+        setAppliedCoupon(data.coupon);
+      }
+    } catch (e: any) {
+      setCouponError("Cupom inválido");
+    } finally {
+      setCouponLoading(false);
+    }
+  };
 
   const handleCheckout = async () => {
     setLoading(true);
@@ -28,6 +63,7 @@ export default function TherapyHome() {
           mode: "payment",
           success_path: "/app/terapia?success=true",
           cancel_path: "/app/terapia",
+          ...(appliedCoupon ? { coupon_id: appliedCoupon.id } : {}),
         },
       });
       if (error) { toast.error("Erro: " + error.message); return; }
