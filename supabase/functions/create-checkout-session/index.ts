@@ -65,6 +65,8 @@ Deno.serve(async (req) => {
       line_items: [{ price: resolvedPrice, quantity: 1 }],
       success_url: `https://life-path-flow.lovable.app${success_path || "/app/assinatura"}?success=true`,
       cancel_url: `https://life-path-flow.lovable.app${cancel_path || "/app/assinatura"}?canceled=true`,
+      client_reference_id: user_id,
+      metadata: { user_id, price_id: resolvedPrice },
     };
     if (coupon_id) {
       sessionParams.discounts = [{ coupon: coupon_id }];

@@ -90,10 +90,13 @@ async function validateStep(stepNumber: number, userId: string): Promise<StepVal
       return { done: (count ?? 0) >= 1 };
     }
     case 7: {
+      // Only counts if there's a confirmed payment for therapy
       const { count } = await supabase
-        .from("appointments")
+        .from("payments")
         .select("id", { count: "exact", head: true })
-        .eq("user_id", userId);
+        .eq("user_id", userId)
+        .eq("payment_type", "therapy")
+        .eq("status", "completed");
       return { done: (count ?? 0) >= 1 };
     }
     case 8: {
@@ -141,10 +144,13 @@ async function validateStep(stepNumber: number, userId: string): Promise<StepVal
       return { done: (count ?? 0) >= 1 };
     }
     case 11: {
+      // Only counts if there's a confirmed payment for legal
       const { count } = await supabase
-        .from("legal_consultations")
+        .from("payments")
         .select("id", { count: "exact", head: true })
-        .eq("patient_id", userId);
+        .eq("user_id", userId)
+        .eq("payment_type", "legal")
+        .eq("status", "completed");
       return { done: (count ?? 0) >= 1 };
     }
     case 12: {
