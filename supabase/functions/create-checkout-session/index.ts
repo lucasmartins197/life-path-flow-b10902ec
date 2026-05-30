@@ -10,7 +10,7 @@ Deno.serve(async (req) => {
     return new Response("ok", { headers: corsHeaders });
   }
   try {
-    let user_id, email, price_id, mode, success_path, cancel_path;
+    let user_id, email, price_id, mode, success_path, cancel_path, coupon_id;
     try {
       const body = await req.json();
       user_id = body.user_id;
@@ -19,6 +19,7 @@ Deno.serve(async (req) => {
       mode = body.mode;
       success_path = body.success_path;
       cancel_path = body.cancel_path;
+      coupon_id = body.coupon_id;
     } catch(e) {
       user_id = null;
       email = null;
@@ -57,14 +58,18 @@ Deno.serve(async (req) => {
     const checkoutMode = mode === "payment" ? "payment" : (price_id && price_id !== "subscription" ? "payment" : "subscription");
 
     const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY")!, { apiVersion: "2023-10-16" });
-    const session = await stripe.checkout.sessions.create({
+    const sessionParams: any = {
       customer_email: email,
       mode: checkoutMode,
       payment_method_types: ["card"],
       line_items: [{ price: resolvedPrice, quantity: 1 }],
       success_url: `https://life-path-flow.lovable.app${success_path || "/app/assinatura"}?success=true`,
       cancel_url: `https://life-path-flow.lovable.app${cancel_path || "/app/assinatura"}?canceled=true`,
-    });
+    };
+    if (coupon_id) {
+      sessionParams.discounts = [{ coupon: coupon_id }];
+    }
+    const session = await stripe.checkout.sessions.create(sessionParams);
     return new Response(JSON.stringify({ url: session.url }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
