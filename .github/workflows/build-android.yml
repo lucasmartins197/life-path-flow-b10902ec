@@ -47,8 +47,8 @@ jobs:
 
       - name: Update version code
         run: |
-          VERSION_CODE=202605292003
-          sed -i "s/versionCode 1/versionCode $VERSION_CODE/g" android/app/build.gradle || true
+          VERSION_CODE=$(date +%s)
+          sed -i "s/versionCode [0-9]*/versionCode $VERSION_CODE/" android/app/build.gradle
 
       - name: Sync Capacitor
         run: npx cap sync android
