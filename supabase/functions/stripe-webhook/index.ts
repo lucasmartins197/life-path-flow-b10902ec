@@ -28,22 +28,40 @@ serve(async (req) => {
     if (event.type === "checkout.session.completed") {
       const session = event.data.object as Stripe.Checkout.Session;
       const customerId = session.customer as string;
+      const userId = (session.metadata?.user_id as string) || (session.client_reference_id as string) || null;
+      const priceId = (session.metadata?.price_id as string) || null;
 
-      // Get subscription details
-      let subscriptionEnd: string | null = null;
-      if (session.subscription) {
-        const sub = await stripe.subscriptions.retrieve(session.subscription as string);
-        subscriptionEnd = new Date(sub.current_period_end * 1000).toISOString();
+      if (session.mode === "subscription") {
+        let subscriptionEnd: string | null = null;
+        if (session.subscription) {
+          const sub = await stripe.subscriptions.retrieve(session.subscription as string);
+          subscriptionEnd = new Date(sub.current_period_end * 1000).toISOString();
+        }
+        await supabase
+          .from("profiles")
+          .update({
+            subscription_status: "active",
+            stripe_customer_id: customerId,
+            subscription_end: subscriptionEnd,
+          })
+          .eq("stripe_customer_id", customerId);
+      } else if (session.mode === "payment" && userId) {
+        // Map known price IDs to payment_type
+        const THERAPY_PRICE = "price_1Ta1mr0oEfdN4xGLFJVZsmDT";
+        const LEGAL_PRICE = "price_1Ta1p00oEfdN4xGLiElxDceu";
+        let payment_type = "other";
+        if (priceId === THERAPY_PRICE) payment_type = "therapy";
+        else if (priceId === LEGAL_PRICE) payment_type = "legal";
+
+        const amount = (session.amount_total ?? 0) / 100;
+        await supabase.from("payments").insert({
+          user_id: userId,
+          payment_type,
+          amount,
+          status: "paid",
+          stripe_payment_id: session.id,
+        });
       }
-
-      await supabase
-        .from("profiles")
-        .update({
-          subscription_status: "active",
-          stripe_customer_id: customerId,
-          subscription_end: subscriptionEnd,
-        })
-        .eq("stripe_customer_id", customerId);
     }
 
     if (event.type === "customer.subscription.deleted") {
