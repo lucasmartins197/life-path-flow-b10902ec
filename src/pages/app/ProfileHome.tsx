@@ -502,8 +502,8 @@ export default function ProfileHome() {
         {/* SEÇÃO 5 — CONTA */}
         <section className="space-y-2">
           <button
-            onClick={async () => { await signOut(); navigate("/auth"); }}
-            className="w-full h-12 rounded-xl bg-secondary text-secondary-foreground font-medium flex items-center justify-center gap-2 active:scale-[0.98]"
+            onClick={async () => { await supabase.auth.signOut(); navigate("/auth"); }}
+            className="w-full h-12 rounded-xl bg-destructive/10 text-destructive font-semibold flex items-center justify-center gap-2 active:scale-[0.98] hover:bg-destructive/15 transition-colors"
           >
             <LogOut className="h-4 w-4" />
             Sair
