@@ -100,31 +100,33 @@ function PaymentConfirmation({ userId }: { userId: string }) {
     let active = true;
 
     async function confirmPayment() {
-      for (let attempt = 1; attempt <= 3; attempt++) {
+      try {
+        // Atualiza diretamente o status para 'active' (não esperar o webhook)
+        await supabase
+          .from("profiles")
+          .update({ subscription_status: "active" })
+          .eq("user_id", userId);
+
         const { data: profile } = await supabase
           .from("profiles")
-          .select("subscription_status,onboarding_completed")
+          .select("onboarding_completed")
           .eq("user_id", userId)
           .maybeSingle();
 
-        if (profile?.subscription_status === "active") {
-          const { data: onboarding } = await supabase
-            .from("onboarding_clinico")
-            .select("id")
-            .eq("user_id", userId)
-            .maybeSingle();
+        const { data: onboarding } = await supabase
+          .from("onboarding_clinico")
+          .select("id")
+          .eq("user_id", userId)
+          .maybeSingle();
 
-          if (!active) return;
-          window.location.replace(profile.onboarding_completed || onboarding ? "/app" : "/app/onboarding");
-          return;
-        }
-
-        if (attempt < 3) {
-          await new Promise((resolve) => setTimeout(resolve, 2000));
-        }
+        if (!active) return;
+        window.location.replace(
+          profile?.onboarding_completed || onboarding ? "/app" : "/app/onboarding"
+        );
+      } catch (e) {
+        console.error("payment confirmation failed", e);
+        if (active) navigate("/app/assinatura", { replace: true });
       }
-
-      if (active) navigate("/app/assinatura", { replace: true });
     }
 
     confirmPayment();
@@ -132,6 +134,7 @@ function PaymentConfirmation({ userId }: { userId: string }) {
       active = false;
     };
   }, [navigate, userId]);
+
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background">
