@@ -97,6 +97,8 @@ export default function SubscriptionHome() {
           body: JSON.stringify({
             user_id: session.user.id,
             email: session.user.email,
+            success_path: "/app?payment=success",
+            cancel_path: "/app/assinatura?canceled=true",
           }),
         }
       );
