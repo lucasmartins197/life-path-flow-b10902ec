@@ -1,4 +1,5 @@
-import Stripe from "https://esm.sh/stripe@14.21.0?target=deno";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import Stripe from "npm:stripe@14.21.0";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -10,26 +11,38 @@ Deno.serve(async (req) => {
     return new Response("ok", { headers: corsHeaders });
   }
   try {
-    let user_id, email, price_id, mode, success_path, cancel_path, coupon_id;
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader) {
+      return new Response(JSON.stringify({ error: "Missing authorization" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const userClient = createClient(supabaseUrl, Deno.env.get("SUPABASE_ANON_KEY")!, {
+      global: { headers: { Authorization: authHeader } },
+    });
+    const { data: userData, error: userError } = await userClient.auth.getUser();
+    if (userError || !userData.user?.email) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const user_id = userData.user.id;
+    const email = userData.user.email;
+    let price_id, mode, success_path, cancel_path, coupon_id;
     try {
       const body = await req.json();
-      user_id = body.user_id;
-      email = body.email;
       price_id = body.price_id;
       mode = body.mode;
       success_path = body.success_path;
       cancel_path = body.cancel_path;
       coupon_id = body.coupon_id;
     } catch(e) {
-      user_id = null;
-      email = null;
-    }
-
-    if (!user_id || !email) {
-      return new Response(JSON.stringify({ error: "Missing user_id or email" }), {
-        status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      price_id = undefined;
     }
 
     // Aliases nomeados para conveniência (frontend pode mandar "therapy", "legal_consult"...)
@@ -57,12 +70,15 @@ Deno.serve(async (req) => {
     }
     const checkoutMode = mode === "payment" ? "payment" : (price_id && price_id !== "subscription" ? "payment" : "subscription");
 
-    const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY")!, { apiVersion: "2023-10-16" });
+    const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY")!, {
+      apiVersion: "2023-10-16",
+      httpClient: Stripe.createFetchHttpClient(),
+    });
     const APP_BASE_URL = Deno.env.get("APP_BASE_URL") || "https://app.apostandonavida.com.br";
     const buildUrl = (path: string, fallbackQuery: string) => {
-      const url = `${APP_BASE_URL}${path}`;
-      // Only append fallback flag if caller didn't include any query string
-      return url.includes("?") ? url : `${url}?${fallbackQuery}`;
+      const url = new URL(path.startsWith("http") ? path : path.startsWith("/") ? path : `/${path}`, APP_BASE_URL);
+      if (!url.search) url.search = fallbackQuery;
+      return url.toString();
     };
     const defaultSuccess = checkoutMode === "subscription" ? "/app?payment=success" : "/app/assinatura";
     const sessionParams: any = {
