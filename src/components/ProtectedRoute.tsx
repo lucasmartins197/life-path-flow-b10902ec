@@ -1,6 +1,8 @@
 import { Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Loader2 } from "lucide-react";
+import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 type AppRole = "user" | "professional" | "admin";
 
@@ -12,6 +14,7 @@ interface ProtectedRouteProps {
 
 const ADMIN_BYPASS_ID = "60c8281c-eee0-48f2-9d31-d3002ce4eb14";
 const PAYWALL_EXEMPT = ["/app/assinatura", "/app/onboarding", "/auth"];
+const ONBOARDING_EXEMPT = ["/app/onboarding", "/app/assinatura", "/auth"];
 
 export function ProtectedRoute({
   children,
@@ -75,6 +78,59 @@ export function ProtectedRoute({
 
   if (!isAdminUser && !isExempt && !hasSubscription) {
     return <Navigate to="/app/assinatura" state={{ from: location }} replace />;
+  }
+
+  return (
+    <OnboardingCheck isAdminUser={isAdminUser} userId={user.id} pathname={location.pathname}>
+      {children}
+    </OnboardingCheck>
+  );
+}
+
+function OnboardingCheck({
+  isAdminUser,
+  userId,
+  pathname,
+  children,
+}: {
+  isAdminUser: boolean;
+  userId: string;
+  pathname: string;
+  children: React.ReactNode;
+}) {
+  const [state, setState] = useState<"loading" | "needs" | "ok">("loading");
+  const isExempt = ONBOARDING_EXEMPT.some((p) => pathname.startsWith(p));
+
+  useEffect(() => {
+    if (isAdminUser || isExempt) {
+      setState("ok");
+      return;
+    }
+    let active = true;
+    supabase
+      .from("onboarding_clinico")
+      .select("id")
+      .eq("user_id", userId)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (!active) return;
+        setState(data ? "ok" : "needs");
+      });
+    return () => {
+      active = false;
+    };
+  }, [userId, isAdminUser, isExempt]);
+
+  if (state === "loading") {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  if (state === "needs") {
+    return <Navigate to="/app/onboarding" replace />;
   }
 
   return <>{children}</>;
