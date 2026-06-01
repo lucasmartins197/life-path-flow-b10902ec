@@ -86,15 +86,18 @@ export default function SubscriptionHome() {
         return;
       }
 
+      console.log("Iniciando checkout...");
       const { data, error } = await supabase.functions.invoke("create-checkout-session", {
         body: {
           success_path: "/app?payment=success",
           cancel_path: "/app/assinatura?canceled=true",
         },
       });
+      console.log("Resposta checkout:", data, error);
       if (error) throw error;
 
-      if (data.url) {
+      if (data?.url) {
+        console.log("Redirecionando para:", data.url);
         window.location.href = data.url;
       } else {
         toast({ title: "Erro", description: data.error || "Não foi possível iniciar o pagamento.", variant: "destructive" });
