@@ -99,8 +99,8 @@ export default function SubscriptionHome() {
       if (error) throw error;
 
       if (data?.url) {
-        console.log("Redirecionando para:", data.url);
-        window.location.href = data.url;
+        console.log("Abrindo checkout em nova aba:", data.url);
+        window.open(data.url, "_blank");
       } else {
         toast({ title: "Erro", description: data.error || "Não foi possível iniciar o pagamento.", variant: "destructive" });
       }
