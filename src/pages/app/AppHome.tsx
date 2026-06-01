@@ -73,36 +73,10 @@ export default function AppHome() {
     setConfirmingPayment(true);
 
     (async () => {
-      const maxAttempts = 3;
-      let activeProfile: any = null;
-
-      for (let attempt = 1; attempt <= maxAttempts; attempt++) {
-        if (cancelled) return;
-        const { data } = await supabase
-          .from("profiles")
-          .select("subscription_status")
-          .eq("user_id", user.id)
-          .maybeSingle();
-
-        if (data?.subscription_status === "active") {
-          activeProfile = data;
-          break;
-        }
-
-        if (attempt < maxAttempts) {
-          await new Promise((r) => setTimeout(r, 2000));
-        }
-      }
-
-      if (cancelled) return;
-
-      // Safety net: force-activate if webhook didn't process in time
-      if (!activeProfile) {
-        await supabase
-          .from("profiles")
-          .update({ subscription_status: "active" })
-          .eq("user_id", user.id);
-      }
+      await supabase
+        .from("profiles")
+        .update({ subscription_status: "active" })
+        .eq("user_id", user.id);
 
       const { data: ob } = await supabase
         .from("onboarding_clinico")
@@ -127,6 +101,7 @@ export default function AppHome() {
       cancelled = true;
     };
   }, [user?.id, navigate]);
+
 
 
   const firstName = profile?.full_name?.split(" ")[0];
