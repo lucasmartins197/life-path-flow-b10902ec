@@ -104,6 +104,7 @@ const App = () => (
             {/* Protected ADMIN routes (ADMIN role) */}
             <Route path="/admin" element={<ProtectedRoute allowedRoles={["admin"]}><AdminHome /></ProtectedRoute>} />
             <Route path="/admin/profissionais" element={<ProtectedRoute allowedRoles={["admin"]}><AdminProfessionals /></ProtectedRoute>} />
+            <Route path="/admin/criar-usuario" element={<ProtectedRoute allowedRoles={["admin"]}><AdminCreateUser /></ProtectedRoute>} />
             
             {/* Catch-all */}
             <Route path="*" element={<NotFound />} />
