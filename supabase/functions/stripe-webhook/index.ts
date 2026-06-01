@@ -37,14 +37,17 @@ serve(async (req) => {
           const sub = await stripe.subscriptions.retrieve(session.subscription as string);
           subscriptionEnd = new Date(sub.current_period_end * 1000).toISOString();
         }
-        await supabase
-          .from("profiles")
-          .update({
-            subscription_status: "active",
-            stripe_customer_id: customerId,
-            subscription_end: subscriptionEnd,
-          })
-          .eq("stripe_customer_id", customerId);
+        const updatePayload = {
+          subscription_status: "active",
+          stripe_customer_id: customerId,
+          subscription_end: subscriptionEnd,
+        };
+        // Prefer matching by user_id (reliable on first checkout), fallback to customer_id
+        if (userId) {
+          await supabase.from("profiles").update(updatePayload).eq("user_id", userId);
+        } else {
+          await supabase.from("profiles").update(updatePayload).eq("stripe_customer_id", customerId);
+        }
       } else if (session.mode === "payment" && userId) {
         // Map known price IDs to payment_type
         const THERAPY_PRICE = "price_1Ta1mr0oEfdN4xGLFJVZsmDT";
