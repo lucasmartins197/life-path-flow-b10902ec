@@ -95,7 +95,7 @@ export default function SubscriptionHome() {
       if (error) throw error;
 
       if (data.url) {
-        window.open(data.url, "_top");
+        window.location.href = data.url;
       } else {
         toast({ title: "Erro", description: data.error || "Não foi possível iniciar o pagamento.", variant: "destructive" });
       }
