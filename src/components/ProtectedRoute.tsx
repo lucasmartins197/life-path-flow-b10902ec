@@ -115,7 +115,7 @@ function PaymentConfirmation({ userId }: { userId: string }) {
             .maybeSingle();
 
           if (!active) return;
-          navigate(profile.onboarding_completed || onboarding ? "/app" : "/app/onboarding", { replace: true });
+          window.location.replace(profile.onboarding_completed || onboarding ? "/app" : "/app/onboarding");
           return;
         }
 
