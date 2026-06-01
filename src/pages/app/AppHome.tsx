@@ -61,6 +61,44 @@ export default function AppHome() {
   const greeting = getGreeting();
   const quote = getDailyQuote();
 
+  // Handle Stripe checkout success redirect: ?payment=success
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("payment") !== "success" || !user?.id) return;
+
+    let cancelled = false;
+    (async () => {
+      try {
+        // Ensure subscription is marked active (webhook usually does this; safety net)
+        await supabase
+          .from("profiles")
+          .update({ subscription_status: "active" })
+          .eq("user_id", user.id);
+
+        // Check if clinical onboarding has been completed
+        const { data: ob } = await supabase
+          .from("onboarding_clinico")
+          .select("user_id")
+          .eq("user_id", user.id)
+          .maybeSingle();
+
+        if (cancelled) return;
+        toast({
+          title: "Pagamento confirmado!",
+          description: "Sua assinatura está ativa.",
+        });
+        // Strip query and redirect
+        window.history.replaceState({}, "", "/app");
+        if (!ob) navigate("/app/onboarding", { replace: true });
+      } catch (e) {
+        console.error("payment=success handling failed", e);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [user?.id, navigate]);
+
   const firstName = profile?.full_name?.split(" ")[0];
   const greetingText = firstName ? `${greeting}, ${firstName}!` : `${greeting}!`;
 
