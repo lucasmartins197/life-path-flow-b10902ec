@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useQuery } from "@tanstack/react-query";
@@ -9,6 +10,7 @@ import { PremiumNavCards } from "@/components/home/PremiumNavCards";
 import { useMedals } from "@/hooks/useMedals";
 import { BlockingBanner } from "@/components/recovery/BlockingBanner";
 import { EveningCheckIn } from "@/components/recovery/EveningCheckIn";
+import { toast } from "@/hooks/use-toast";
 
 /* ── Motivational quotes ── */
 const quotes = [
