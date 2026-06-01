@@ -58,13 +58,20 @@ Deno.serve(async (req) => {
     const checkoutMode = mode === "payment" ? "payment" : (price_id && price_id !== "subscription" ? "payment" : "subscription");
 
     const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY")!, { apiVersion: "2023-10-16" });
+    const APP_BASE_URL = Deno.env.get("APP_BASE_URL") || "https://app.apostandonavida.com.br";
+    const buildUrl = (path: string, fallbackQuery: string) => {
+      const url = `${APP_BASE_URL}${path}`;
+      // Only append fallback flag if caller didn't include any query string
+      return url.includes("?") ? url : `${url}?${fallbackQuery}`;
+    };
+    const defaultSuccess = checkoutMode === "subscription" ? "/app?payment=success" : "/app/assinatura";
     const sessionParams: any = {
       customer_email: email,
       mode: checkoutMode,
       payment_method_types: ["card"],
       line_items: [{ price: resolvedPrice, quantity: 1 }],
-      success_url: `https://life-path-flow.lovable.app${success_path || "/app/assinatura"}?success=true`,
-      cancel_url: `https://life-path-flow.lovable.app${cancel_path || "/app/assinatura"}?canceled=true`,
+      success_url: buildUrl(success_path || defaultSuccess, "success=true"),
+      cancel_url: buildUrl(cancel_path || "/app/assinatura", "canceled=true"),
       client_reference_id: user_id,
       metadata: { user_id, price_id: resolvedPrice },
     };
