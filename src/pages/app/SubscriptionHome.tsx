@@ -105,7 +105,7 @@ export default function SubscriptionHome() {
 
       const data = await response.json();
       if (data.url) {
-        window.open(data.url, "_blank");
+        window.location.href = data.url;
       } else {
         toast({ title: "Erro", description: data.error || "Não foi possível iniciar o pagamento.", variant: "destructive" });
       }
