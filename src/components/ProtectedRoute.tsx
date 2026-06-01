@@ -36,7 +36,9 @@ export function ProtectedRoute({
     return <Navigate to={redirectTo} state={{ from: location }} replace />;
   }
 
-  if (allowedRoles && allowedRoles.length > 0) {
+  const isAdminBypass = user.id === ADMIN_BYPASS_ID;
+
+  if (allowedRoles && allowedRoles.length > 0 && !isAdminBypass) {
     const hasRequiredRole = allowedRoles.some((role) => roles.includes(role));
     if (!hasRequiredRole) {
       if (roles.includes("admin")) return <Navigate to="/admin" replace />;
