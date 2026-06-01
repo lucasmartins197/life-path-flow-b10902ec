@@ -50,6 +50,7 @@ import ProHome from "./pages/pro/ProHome";
 // Admin pages (ADMIN role)
 import AdminHome from "./pages/admin/AdminHome";
 import AdminProfessionals from "./pages/admin/AdminProfessionals";
+import AdminCreateUser from "./pages/admin/AdminCreateUser";
 
 const queryClient = new QueryClient();
 
