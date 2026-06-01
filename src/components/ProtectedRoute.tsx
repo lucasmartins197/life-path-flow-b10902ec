@@ -105,7 +105,7 @@ function PaymentConfirmation({ userId }: { userId: string }) {
         await supabase
           .from("profiles")
           .update({ subscription_status: "active" })
-          .eq("user_id", userId);
+          .eq("id", userId);
 
         const { data: profile } = await supabase
           .from("profiles")
