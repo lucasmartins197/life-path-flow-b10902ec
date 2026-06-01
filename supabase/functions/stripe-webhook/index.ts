@@ -1,24 +1,12 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import Stripe from "https://esm.sh/stripe@14.21.0?target=deno";
 
 serve(async (req) => {
   try {
     const stripeKey = Deno.env.get("STRIPE_SECRET_KEY")!;
-    const stripe = new Stripe(stripeKey, { apiVersion: "2023-10-16" });
 
     const body = await req.text();
-    const sig = req.headers.get("stripe-signature");
-
-    // If STRIPE_WEBHOOK_SECRET is set, verify signature
-    const webhookSecret = Deno.env.get("STRIPE_WEBHOOK_SECRET");
-    let event: Stripe.Event;
-
-    if (webhookSecret && sig) {
-      event = stripe.webhooks.constructEvent(body, sig, webhookSecret);
-    } else {
-      event = JSON.parse(body) as Stripe.Event;
-    }
+    const event = JSON.parse(body);
 
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL")!,
@@ -26,7 +14,7 @@ serve(async (req) => {
     );
 
     if (event.type === "checkout.session.completed") {
-      const session = event.data.object as Stripe.Checkout.Session;
+      const session = event.data.object;
       const customerId = session.customer as string;
       const userId = (session.metadata?.user_id as string) || (session.client_reference_id as string) || null;
       const priceId = (session.metadata?.price_id as string) || null;
@@ -34,7 +22,10 @@ serve(async (req) => {
       if (session.mode === "subscription") {
         let subscriptionEnd: string | null = null;
         if (session.subscription) {
-          const sub = await stripe.subscriptions.retrieve(session.subscription as string);
+          const subResponse = await fetch(`https://api.stripe.com/v1/subscriptions/${session.subscription}`, {
+            headers: { Authorization: `Bearer ${stripeKey}` },
+          });
+          const sub = await subResponse.json();
           subscriptionEnd = new Date(sub.current_period_end * 1000).toISOString();
         }
         const updatePayload = {
@@ -44,7 +35,7 @@ serve(async (req) => {
         };
         // Prefer matching by user_id (reliable on first checkout), fallback to customer_id
         if (userId) {
-          await supabase.from("profiles").update(updatePayload).eq("id", userId);
+          await supabase.from("profiles").update(updatePayload).eq("user_id", userId);
         } else {
           await supabase.from("profiles").update(updatePayload).eq("stripe_customer_id", customerId);
         }
@@ -68,7 +59,7 @@ serve(async (req) => {
     }
 
     if (event.type === "customer.subscription.deleted") {
-      const subscription = event.data.object as Stripe.Subscription;
+      const subscription = event.data.object;
       const customerId = subscription.customer as string;
 
       await supabase
@@ -81,7 +72,7 @@ serve(async (req) => {
     }
 
     if (event.type === "customer.subscription.updated") {
-      const subscription = event.data.object as Stripe.Subscription;
+      const subscription = event.data.object;
       const customerId = subscription.customer as string;
       const status = subscription.status === "active" ? "active" : "inactive";
 

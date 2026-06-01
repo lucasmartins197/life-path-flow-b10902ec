@@ -1,4 +1,4 @@
-import { Navigate, useLocation } from "react-router-dom";
+import { Navigate, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Loader2 } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -37,6 +37,12 @@ export function ProtectedRoute({
 
   if (!user) {
     return <Navigate to={redirectTo} state={{ from: location }} replace />;
+  }
+
+  const isPaymentReturn =
+    location.pathname === "/app" && new URLSearchParams(location.search).get("payment") === "success";
+  if (isPaymentReturn) {
+    return <PaymentConfirmation userId={user.id} />;
   }
 
   const isAdminBypass = user.id === ADMIN_BYPASS_ID;
@@ -84,6 +90,56 @@ export function ProtectedRoute({
     <OnboardingCheck isAdminUser={isAdminUser} userId={user.id} pathname={location.pathname}>
       {children}
     </OnboardingCheck>
+  );
+}
+
+function PaymentConfirmation({ userId }: { userId: string }) {
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    let active = true;
+
+    async function confirmPayment() {
+      for (let attempt = 1; attempt <= 3; attempt++) {
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("subscription_status,onboarding_completed")
+          .eq("user_id", userId)
+          .maybeSingle();
+
+        if (profile?.subscription_status === "active") {
+          const { data: onboarding } = await supabase
+            .from("onboarding_clinico")
+            .select("id")
+            .eq("user_id", userId)
+            .maybeSingle();
+
+          if (!active) return;
+          window.location.replace(profile.onboarding_completed || onboarding ? "/app" : "/app/onboarding");
+          return;
+        }
+
+        if (attempt < 3) {
+          await new Promise((resolve) => setTimeout(resolve, 2000));
+        }
+      }
+
+      if (active) navigate("/app/assinatura", { replace: true });
+    }
+
+    confirmPayment();
+    return () => {
+      active = false;
+    };
+  }, [navigate, userId]);
+
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-background">
+      <div className="flex flex-col items-center gap-4">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <p className="text-muted-foreground">Confirmando pagamento...</p>
+      </div>
+    </div>
   );
 }
 

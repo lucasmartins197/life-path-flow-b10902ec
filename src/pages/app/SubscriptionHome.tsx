@@ -86,26 +86,16 @@ export default function SubscriptionHome() {
         return;
       }
 
-      const response = await fetch(
-        `https://ufvwzhgfuldwypvwzdic.supabase.co/functions/v1/create-checkout-session`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${session.access_token}`,
-          },
-          body: JSON.stringify({
-            user_id: session.user.id,
-            email: session.user.email,
-            success_path: "/app?payment=success",
-            cancel_path: "/app/assinatura?canceled=true",
-          }),
-        }
-      );
+      const { data, error } = await supabase.functions.invoke("create-checkout-session", {
+        body: {
+          success_path: "/app?payment=success",
+          cancel_path: "/app/assinatura?canceled=true",
+        },
+      });
+      if (error) throw error;
 
-      const data = await response.json();
       if (data.url) {
-        window.location.href = data.url;
+        window.open(data.url, "_top");
       } else {
         toast({ title: "Erro", description: data.error || "Não foi possível iniciar o pagamento.", variant: "destructive" });
       }
