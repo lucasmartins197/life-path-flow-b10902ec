@@ -89,6 +89,8 @@ export default function SubscriptionHome() {
       console.log("Iniciando checkout...");
       const { data, error } = await supabase.functions.invoke("create-checkout-session", {
         body: {
+          user_id: session.user.id,
+          email: session.user.email,
           success_path: "/app?payment=success",
           cancel_path: "/app/assinatura?canceled=true",
         },
