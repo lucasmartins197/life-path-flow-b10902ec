@@ -43,7 +43,10 @@ export default function AdminCreateUser() {
 
   return (
     <div className="min-h-screen bg-background safe-top safe-bottom">
-      <BackHeader title="Criar Usuário" />
+      <div className="px-4 pt-4">
+        <BackHeader label="Voltar" />
+        <h1 className="text-2xl font-bold mt-2">Criar Usuário</h1>
+      </div>
       <div className="px-4 py-6 max-w-md mx-auto">
         <Card className="p-6">
           <form onSubmit={handleSubmit} className="space-y-4">
