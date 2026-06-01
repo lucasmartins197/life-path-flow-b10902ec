@@ -44,7 +44,7 @@ serve(async (req) => {
         };
         // Prefer matching by user_id (reliable on first checkout), fallback to customer_id
         if (userId) {
-          await supabase.from("profiles").update(updatePayload).eq("user_id", userId);
+          await supabase.from("profiles").update(updatePayload).eq("id", userId);
         } else {
           await supabase.from("profiles").update(updatePayload).eq("stripe_customer_id", customerId);
         }
