@@ -191,6 +191,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return roles.includes(role);
   }
 
+  async function refreshProfile() {
+    if (user?.id) {
+      await fetchUserData(user.id);
+    }
+  }
+
   const value: AuthContextType = {
     user,
     session,
@@ -201,6 +207,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     signIn,
     signOut,
     hasRole,
+    refreshProfile,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
