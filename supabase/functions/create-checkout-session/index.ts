@@ -1,5 +1,4 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import Stripe from "npm:stripe@14.21.0";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -70,10 +69,7 @@ Deno.serve(async (req) => {
     }
     const checkoutMode = mode === "payment" ? "payment" : (price_id && price_id !== "subscription" ? "payment" : "subscription");
 
-    const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY")!, {
-      apiVersion: "2023-10-16",
-      httpClient: Stripe.createFetchHttpClient(),
-    });
+    const stripeKey = Deno.env.get("STRIPE_SECRET_KEY")!;
     const APP_BASE_URL = Deno.env.get("APP_BASE_URL") || "https://app.apostandonavida.com.br";
     const buildUrl = (path: string, fallbackQuery: string) => {
       const url = new URL(path.startsWith("http") ? path : path.startsWith("/") ? path : `/${path}`, APP_BASE_URL);
@@ -94,7 +90,32 @@ Deno.serve(async (req) => {
     if (coupon_id) {
       sessionParams.discounts = [{ coupon: coupon_id }];
     }
-    const session = await stripe.checkout.sessions.create(sessionParams);
+
+    const stripeBody = new URLSearchParams();
+    stripeBody.set("customer_email", sessionParams.customer_email);
+    stripeBody.set("mode", sessionParams.mode);
+    stripeBody.set("payment_method_types[0]", "card");
+    stripeBody.set("line_items[0][price]", resolvedPrice);
+    stripeBody.set("line_items[0][quantity]", "1");
+    stripeBody.set("success_url", sessionParams.success_url);
+    stripeBody.set("cancel_url", sessionParams.cancel_url);
+    stripeBody.set("client_reference_id", user_id);
+    stripeBody.set("metadata[user_id]", user_id);
+    stripeBody.set("metadata[price_id]", resolvedPrice);
+    if (coupon_id) stripeBody.set("discounts[0][coupon]", coupon_id);
+
+    const stripeResponse = await fetch("https://api.stripe.com/v1/checkout/sessions", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${stripeKey}`,
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      body: stripeBody,
+    });
+    const session = await stripeResponse.json();
+    if (!stripeResponse.ok) {
+      throw new Error(session?.error?.message || "Stripe checkout failed");
+    }
     return new Response(JSON.stringify({ url: session.url }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
