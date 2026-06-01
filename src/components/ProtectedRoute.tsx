@@ -1,6 +1,8 @@
 import { Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Loader2 } from "lucide-react";
+import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 type AppRole = "user" | "professional" | "admin";
 
@@ -12,6 +14,7 @@ interface ProtectedRouteProps {
 
 const ADMIN_BYPASS_ID = "60c8281c-eee0-48f2-9d31-d3002ce4eb14";
 const PAYWALL_EXEMPT = ["/app/assinatura", "/app/onboarding", "/auth"];
+const ONBOARDING_EXEMPT = ["/app/onboarding", "/app/assinatura", "/auth"];
 
 export function ProtectedRoute({
   children,
