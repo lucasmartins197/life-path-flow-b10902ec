@@ -1,11 +1,14 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import Stripe from "https://esm.sh/stripe@14.21.0?target=deno";
+import Stripe from "npm:stripe@14.21.0";
 
 serve(async (req) => {
   try {
     const stripeKey = Deno.env.get("STRIPE_SECRET_KEY")!;
-    const stripe = new Stripe(stripeKey, { apiVersion: "2023-10-16" });
+    const stripe = new Stripe(stripeKey, {
+      apiVersion: "2023-10-16",
+      httpClient: Stripe.createFetchHttpClient(),
+    });
 
     const body = await req.text();
     const sig = req.headers.get("stripe-signature");
@@ -44,7 +47,7 @@ serve(async (req) => {
         };
         // Prefer matching by user_id (reliable on first checkout), fallback to customer_id
         if (userId) {
-          await supabase.from("profiles").update(updatePayload).eq("id", userId);
+          await supabase.from("profiles").update(updatePayload).eq("user_id", userId);
         } else {
           await supabase.from("profiles").update(updatePayload).eq("stripe_customer_id", customerId);
         }
