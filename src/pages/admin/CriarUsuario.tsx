@@ -11,7 +11,7 @@ import { Loader2 } from "lucide-react";
 
 const ADMIN_ID = "60c8281c-eee0-48f2-9d31-d3002ce4eb14";
 
-export default function AdminCreateUser() {
+export default function CriarUsuario() {
   const { user } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -26,12 +26,13 @@ export default function AdminCreateUser() {
     setLoading(true);
     setResult(null);
     try {
+      // supabase.auth.admin.createUser exige service role key — chamamos via Edge Function
       const { data, error } = await supabase.functions.invoke("admin-create-user", {
         body: { email, password },
       });
       if (error) throw error;
       if ((data as any)?.error) throw new Error((data as any).error);
-      setResult({ ok: true, message: `Usuário criado com sucesso! ID: ${(data as any).userId}` });
+      setResult({ ok: true, message: `Usuário criado! ID: ${(data as any).userId}` });
       setEmail("");
       setPassword("");
     } catch (err) {
