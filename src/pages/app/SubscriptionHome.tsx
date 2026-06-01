@@ -1,23 +1,55 @@
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
-import { ArrowLeft, Check, CreditCard, Crown, Loader2, X } from "lucide-react";
+import { ArrowLeft, Check, CreditCard, Crown, Loader2, X, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { useEffect, useState } from "react";
 import { toast } from "@/hooks/use-toast";
 
 export default function SubscriptionHome() {
   const navigate = useNavigate();
   const { profile, user } = useAuth();
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [loading, setLoading] = useState(false);
+  const [canceling, setCanceling] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
 
   const isActive = profile?.subscription_status === "active";
   const subscriptionEnd = profile?.subscription_end;
+  const startDate =
+    (profile as any)?.stripe_subscription_created_at ||
+    (profile as any)?.created_at ||
+    null;
+
+  const renewalDate = (() => {
+    if (subscriptionEnd) return new Date(subscriptionEnd);
+    if (startDate) {
+      const d = new Date(startDate);
+      const next = new Date(d);
+      next.setMonth(next.getMonth() + 1);
+      // Adjust forward to the next future renewal
+      const now = new Date();
+      while (next < now) next.setMonth(next.getMonth() + 1);
+      return next;
+    }
+    return null;
+  })();
+
   const success = searchParams.get("success") === "true";
   const canceled = searchParams.get("canceled") === "true";
+  const cancelDone = searchParams.get("cancelDone") === "true";
 
   useEffect(() => {
     if (success) {
@@ -33,7 +65,13 @@ export default function SubscriptionHome() {
         variant: "destructive",
       });
     }
-  }, [success, canceled]);
+    if (cancelDone) {
+      toast({
+        title: "Assinatura cancelada",
+        description: "Sua assinatura foi cancelada com sucesso.",
+      });
+    }
+  }, [success, canceled, cancelDone]);
 
   const handleSubscribe = async () => {
     setLoading(true);
@@ -80,6 +118,28 @@ export default function SubscriptionHome() {
     }
   };
 
+  const handleCancel = async () => {
+    setCanceling(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("cancel-subscription");
+      if (error) throw error;
+      if ((data as any)?.error) throw new Error((data as any).error);
+
+      setConfirmOpen(false);
+      setSearchParams({ cancelDone: "true" });
+      // Reload to refresh profile state
+      setTimeout(() => window.location.reload(), 500);
+    } catch (err: any) {
+      toast({
+        title: "Erro ao cancelar",
+        description: err.message || "Não foi possível cancelar a assinatura.",
+        variant: "destructive",
+      });
+    } finally {
+      setCanceling(false);
+    }
+  };
+
   const benefits = [
     "Acesso completo à Jornada de 12 passos",
     "Consultas com profissionais de saúde",
@@ -90,6 +150,16 @@ export default function SubscriptionHome() {
     "Simulador jurídico e financeiro",
     "Suporte prioritário",
   ];
+
+  const fmtDate = (d: Date | string | null) => {
+    if (!d) return "—";
+    const date = typeof d === "string" ? new Date(d) : d;
+    return date.toLocaleDateString("pt-BR", {
+      day: "2-digit",
+      month: "long",
+      year: "numeric",
+    });
+  };
 
   return (
     <div className="min-h-screen bg-background pb-24">
@@ -134,31 +204,98 @@ export default function SubscriptionHome() {
         )}
 
         {isActive ? (
-          /* Active Subscription */
-          <Card className="border-primary/20">
-            <CardContent className="p-6 space-y-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Crown className="h-5 w-5 text-primary" />
-                  <span className="font-semibold text-lg">Plano Premium</span>
+          <>
+            {/* Active Subscription Card */}
+            <Card className="border-green-300 bg-green-50">
+              <CardContent className="p-6 space-y-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <ShieldCheck className="h-6 w-6 text-green-700" />
+                    <span className="font-bold text-lg text-green-900">Assinatura Ativa</span>
+                  </div>
+                  <Badge className="bg-green-600 text-white border-0">Ativo</Badge>
                 </div>
-                <Badge className="bg-green-100 text-green-700 border-green-200">Ativo</Badge>
-              </div>
-              {subscriptionEnd && (
-                <p className="text-sm text-muted-foreground">
-                  Próxima renovação: {new Date(subscriptionEnd).toLocaleDateString("pt-BR")}
-                </p>
-              )}
-              <div className="border-t border-border pt-4 space-y-2">
+
+                <div className="space-y-3 pt-2">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-green-900/70">Plano</span>
+                    <span className="font-semibold text-green-900">Premium</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-green-900/70">Valor</span>
+                    <span className="font-semibold text-green-900">R$ 79,90/mês</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-green-900/70">Início</span>
+                    <span className="font-semibold text-green-900">{fmtDate(startDate)}</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-green-900/70">Próxima renovação</span>
+                    <span className="font-semibold text-green-900">{fmtDate(renewalDate)}</span>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Benefits */}
+            <Card>
+              <CardContent className="p-6 space-y-3">
+                <div className="flex items-center gap-2 mb-2">
+                  <Crown className="h-5 w-5 text-primary" />
+                  <span className="font-semibold">Seus benefícios</span>
+                </div>
                 {benefits.map((b, i) => (
                   <div key={i} className="flex items-center gap-2 text-sm">
                     <Check className="h-4 w-4 text-green-500 shrink-0" />
                     <span>{b}</span>
                   </div>
                 ))}
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+
+            {/* Cancel Button */}
+            <Button
+              variant="destructive"
+              className="w-full h-12"
+              onClick={() => setConfirmOpen(true)}
+              disabled={canceling}
+            >
+              {canceling ? <Loader2 className="h-5 w-5 animate-spin mr-2" /> : null}
+              Cancelar assinatura
+            </Button>
+
+            <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Tem certeza?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    Você perderá acesso ao app imediatamente após o cancelamento.
+                    Essa ação não pode ser desfeita.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel disabled={canceling}>Voltar</AlertDialogCancel>
+                  <AlertDialogAction
+                    onClick={(e) => {
+                      e.preventDefault();
+                      handleCancel();
+                    }}
+                    disabled={canceling}
+                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                  >
+                    {canceling ? (
+                      <>
+                        <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                        Cancelando...
+                      </>
+                    ) : (
+                      "Sim, cancelar"
+                    )}
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          </>
         ) : (
           /* Inactive — Show Plans */
           <Card>
