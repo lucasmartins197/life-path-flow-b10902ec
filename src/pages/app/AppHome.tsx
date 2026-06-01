@@ -57,7 +57,7 @@ function calcStreak(dates: string[]): number {
 
 export default function AppHome() {
   const navigate = useNavigate();
-  const { user, profile } = useAuth();
+  const { user, profile, refreshProfile } = useAuth();
   const { totalEarned } = useMedals();
   const greeting = getGreeting();
   const quote = getDailyQuote();
@@ -76,7 +76,9 @@ export default function AppHome() {
       await supabase
         .from("profiles")
         .update({ subscription_status: "active" })
-        .eq("user_id", user.id);
+        .eq("id", user.id);
+
+      await refreshProfile();
 
       const { data: ob } = await supabase
         .from("onboarding_clinico")
@@ -100,7 +102,8 @@ export default function AppHome() {
     return () => {
       cancelled = true;
     };
-  }, [user?.id, navigate]);
+  }, [user?.id, navigate, refreshProfile]);
+
 
 
 
