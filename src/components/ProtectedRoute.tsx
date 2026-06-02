@@ -59,17 +59,8 @@ export function ProtectedRoute({
   const isAdminUser = user.id === ADMIN_BYPASS_ID || roles.includes("admin");
   const isExempt = PAYWALL_EXEMPT.some(p => location.pathname.startsWith(p));
 
-  // Wait for profile to load before evaluating subscription (avoids false redirect to /assinatura)
-  if (!isAdminUser && !isExempt && profile === null) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="flex flex-col items-center gap-4">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
-          <p className="text-muted-foreground">Carregando perfil...</p>
-        </div>
-      </div>
-    );
-  }
+  // If profile is null, treat as inactive (redirect to subscription)
+  // This handles new users whose profile hasn't been created yet
 
   const hasSubscription = (profile as any)?.subscription_status === "active";
 
@@ -110,7 +101,7 @@ function PaymentConfirmation({ userId }: { userId: string }) {
         const { data: profile } = await supabase
           .from("profiles")
           .select("onboarding_completed")
-          .eq("user_id", userId)
+          .eq("id", userId)
           .maybeSingle();
 
         const { data: onboarding } = await supabase
