@@ -67,6 +67,16 @@ const profileSchema = z.object({
   full_name: z.string().trim().min(2, "Nome muito curto").max(100, "Máximo 100 caracteres"),
   city: z.string().trim().max(80, "Máximo 80 caracteres").optional().or(z.literal("")),
   bio: z.string().trim().max(100, "Máximo 100 caracteres").optional().or(z.literal("")),
+  cpf: z.string().trim().optional().or(z.literal("")),
+  date_of_birth: z.string().trim().optional().or(z.literal("")),
+  phone: z.string().trim().optional().or(z.literal("")),
+  gender: z.string().trim().optional().or(z.literal("")),
+  zip_code: z.string().trim().optional().or(z.literal("")),
+  street: z.string().trim().optional().or(z.literal("")),
+  number: z.string().trim().optional().or(z.literal("")),
+  complement: z.string().trim().optional().or(z.literal("")),
+  neighborhood: z.string().trim().optional().or(z.literal("")),
+  state: z.string().trim().optional().or(z.literal("")),
 });
 
 const passwordSchema = z.object({
