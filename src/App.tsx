@@ -24,7 +24,7 @@ import ExerciseHome from "./pages/app/ExerciseHome";
 import CalendarHome from "./pages/app/CalendarHome";
 import AnchorHome from "./pages/app/AnchorHome";
 import SettingsHome from "./pages/app/SettingsHome";
-import OnboardingProfile from "./pages/app/OnboardingProfile";
+
 import HealthHome from "./pages/app/HealthHome";
 import FinanceHome from "./pages/app/FinanceHome";
 import ProfileHome from "./pages/app/ProfileHome";
