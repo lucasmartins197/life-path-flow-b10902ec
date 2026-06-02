@@ -11,11 +11,15 @@ export default function TherapyHome() {
   const [loading, setLoading] = useState(false);
   const [dataSelecionada, setDataSelecionada] = useState(false);
   const [coupon, setCoupon] = useState("");
-  const [appliedCoupon, setAppliedCoupon] = useState<{ id: string; percent_off: number | null; amount_off: number | null } | null>(null);
+  const [appliedCoupon, setAppliedCoupon] = useState<{
+    id: string;
+    percent_off: number | null;
+    amount_off: number | null;
+  } | null>(null);
   const [couponError, setCouponError] = useState("");
   const [couponLoading, setCouponLoading] = useState(false);
 
-  const BASE_PRICE = 229.20;
+  const BASE_PRICE = 229.2;
   const finalPrice = appliedCoupon
     ? appliedCoupon.percent_off
       ? BASE_PRICE * (1 - appliedCoupon.percent_off / 100)
@@ -49,7 +53,9 @@ export default function TherapyHome() {
   const handleCheckout = async () => {
     setLoading(true);
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
       if (!user) {
         toast.error("Faça login para continuar");
         navigate("/auth");
@@ -66,8 +72,14 @@ export default function TherapyHome() {
           ...(appliedCoupon ? { coupon_id: appliedCoupon.id } : {}),
         },
       });
-      if (error) { toast.error("Erro: " + error.message); return; }
-      if (data?.error) { toast.error("Erro: " + data.error); return; }
+      if (error) {
+        toast.error("Erro: " + error.message);
+        return;
+      }
+      if (data?.error) {
+        toast.error("Erro: " + data.error);
+        return;
+      }
       if (data?.url) {
         window.open(data.url, "_blank");
       } else {
@@ -87,8 +99,10 @@ export default function TherapyHome() {
     <div className="min-h-screen bg-background safe-top pb-28">
       <header className="bg-card border-b border-border/60 px-5 pt-8 pb-5">
         <div className="max-w-lg mx-auto">
-          <button onClick={() => navigate("/app")}
-            className="flex items-center gap-1.5 text-muted-foreground hover:text-foreground transition-colors mb-4 text-sm">
+          <button
+            onClick={() => navigate("/app")}
+            className="flex items-center gap-1.5 text-muted-foreground hover:text-foreground transition-colors mb-4 text-sm"
+          >
             <ChevronLeft className="h-4 w-4" /> Home
           </button>
           <h1 className="text-2xl font-bold tracking-tight text-foreground">Terapia Online</h1>
@@ -97,16 +111,18 @@ export default function TherapyHome() {
       </header>
 
       <main className="max-w-lg mx-auto px-5 pt-6 space-y-6">
-
         {/* Sucesso após pagamento */}
         {paymentSuccess && (
-          <div className="rounded-2xl p-5 flex items-start gap-3"
-            style={{ background: "#F0FDF4", border: "1px solid #BBF7D0" }}>
+          <div
+            className="rounded-2xl p-5 flex items-start gap-3"
+            style={{ background: "#F0FDF4", border: "1px solid #BBF7D0" }}
+          >
             <CheckCircle2 className="h-6 w-6 text-green-600 shrink-0 mt-0.5" />
             <div>
               <p className="font-bold text-green-800">Pagamento confirmado!</p>
               <p className="text-sm text-green-700 mt-1">
-                Você receberá um email de confirmação em instantes. Nossa equipe entrará em contato para confirmar o agendamento.
+                Você receberá um email de confirmação em instantes. Nossa equipe entrará em contato para confirmar o
+                agendamento.
               </p>
             </div>
           </div>
@@ -114,7 +130,9 @@ export default function TherapyHome() {
 
         {/* Vídeo */}
         <section>
-          <h2 className="text-base font-bold mb-3" style={{ color: "#1B4332" }}>Acompanhamento Psicológico</h2>
+          <h2 className="text-base font-bold mb-3" style={{ color: "#1B4332" }}>
+            Acompanhamento Psicológico
+          </h2>
           <div className="w-full rounded-xl overflow-hidden shadow-md bg-black">
             <iframe
               src="https://drive.google.com/file/d/1p4L5F5jkiUCltDejhgrK9x54HYU0ErFN/preview"
@@ -128,8 +146,10 @@ export default function TherapyHome() {
         </section>
 
         {/* Valor */}
-        <div className="rounded-2xl p-4 flex items-center justify-between"
-          style={{ background: "#F0FDF4", border: "1px solid #BBF7D0" }}>
+        <div
+          className="rounded-2xl p-4 flex items-center justify-between"
+          style={{ background: "#F0FDF4", border: "1px solid #BBF7D0" }}
+        >
           <div>
             <p className="font-bold text-green-800">Consulta Terapêutica</p>
             <p className="text-sm text-green-700">Sessão online — psicólogo especializado</p>
@@ -163,20 +183,29 @@ export default function TherapyHome() {
             style={{
               borderColor: dataSelecionada ? "#1B4332" : "#E5E7EB",
               background: dataSelecionada ? "#F0FDF4" : "#fff",
-              color: dataSelecionada ? "#1B4332" : "#6B7280"
-            }}>
+              color: dataSelecionada ? "#1B4332" : "#6B7280",
+            }}
+          >
             {dataSelecionada ? "✓ Data selecionada — prosseguir para pagamento" : "Já selecionei minha data →"}
           </button>
         </section>
 
         {/* Pagamento — só aparece após selecionar data */}
         {dataSelecionada && (
-          <section className="rounded-2xl p-5 space-y-4"
-            style={{ background: "#fff", border: "1px solid #E5E7EB", boxShadow: "0 1px 3px rgba(0,0,0,0.06)" }}>
+          <section
+            className="rounded-2xl p-5 space-y-4"
+            style={{ background: "#fff", border: "1px solid #E5E7EB", boxShadow: "0 1px 3px rgba(0,0,0,0.06)" }}
+          >
             <div className="flex items-center gap-2">
-              <div className="w-7 h-7 rounded-full flex items-center justify-center text-white text-sm font-bold"
-                style={{ background: "#1B4332" }}>2</div>
-              <p className="font-bold" style={{ color: "#1B4332" }}>Confirme o pagamento</p>
+              <div
+                className="w-7 h-7 rounded-full flex items-center justify-center text-white text-sm font-bold"
+                style={{ background: "#1B4332" }}
+              >
+                2
+              </div>
+              <p className="font-bold" style={{ color: "#1B4332" }}>
+                Confirme o pagamento
+              </p>
             </div>
             <p className="text-sm text-muted-foreground">
               Após o pagamento você receberá confirmação por email e nossa equipe validará o agendamento.
@@ -191,7 +220,10 @@ export default function TherapyHome() {
                 <input
                   type="text"
                   value={coupon}
-                  onChange={(e) => { setCoupon(e.target.value); setCouponError(""); }}
+                  onChange={(e) => {
+                    setCoupon(e.target.value);
+                    setCouponError("");
+                  }}
                   disabled={!!appliedCoupon}
                   placeholder="Digite seu cupom"
                   className="flex-1 px-3 py-2 rounded-lg border text-sm outline-none focus:ring-2"
@@ -201,7 +233,8 @@ export default function TherapyHome() {
                   onClick={handleApplyCoupon}
                   disabled={couponLoading || !coupon.trim() || !!appliedCoupon}
                   className="px-4 py-2 rounded-lg text-sm font-semibold text-white disabled:opacity-50"
-                  style={{ background: "#1B4332" }}>
+                  style={{ background: "#1B4332" }}
+                >
                   {couponLoading ? "..." : "Aplicar"}
                 </button>
               </div>
@@ -210,9 +243,7 @@ export default function TherapyHome() {
                   ✓ Cupom aplicado!{appliedCoupon.percent_off ? ` ${appliedCoupon.percent_off}% de desconto` : ""}
                 </p>
               )}
-              {couponError && (
-                <p className="text-sm font-semibold text-red-600">{couponError}</p>
-              )}
+              {couponError && <p className="text-sm font-semibold text-red-600">{couponError}</p>}
             </div>
 
             {appliedCoupon && (
@@ -226,14 +257,19 @@ export default function TherapyHome() {
               onClick={handleCheckout}
               disabled={loading}
               className="w-full py-3.5 rounded-xl text-white font-bold text-base transition-all active:scale-98 disabled:opacity-60"
-              style={{ background: "linear-gradient(135deg, #1B4332, #2D6A4F)" }}>
-              {loading
-                ? <span className="flex items-center justify-center gap-2"><Loader2 className="h-4 w-4 animate-spin" />Processando...</span>
-                : `Pagar R$ ${formatBRL(finalPrice)} →`}
+              style={{ background: "linear-gradient(135deg, #1B4332, #2D6A4F)" }}
+            >
+              {loading ? (
+                <span className="flex items-center justify-center gap-2">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Processando...
+                </span>
+              ) : (
+                `Pagar R$ ${formatBRL(finalPrice)} →`
+              )}
             </button>
           </section>
         )}
-
       </main>
 
       <BottomNavigation />
