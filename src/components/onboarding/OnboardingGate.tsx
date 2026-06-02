@@ -25,7 +25,7 @@ export function OnboardingGate({ children }: { children: React.ReactNode }) {
         .select("onboarding_completed")
         .eq("id", user.id)
         .maybeSingle();
-      console.log("OnboardingGate check:", { userId: user.id, data, error });
+      console.log("OnboardingGate:", { data, error, userId: user.id });
       if (!active) return;
       setNeedsOnboarding(!data?.onboarding_completed);
       setChecked(true);
