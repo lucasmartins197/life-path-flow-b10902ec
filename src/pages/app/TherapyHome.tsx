@@ -113,17 +113,25 @@ export default function TherapyHome() {
       <main className="max-w-lg mx-auto px-5 pt-6 space-y-6">
         {/* Sucesso após pagamento */}
         {paymentSuccess && (
-          <div
-            className="rounded-2xl p-5 flex items-start gap-3"
-            style={{ background: "#F0FDF4", border: "1px solid #BBF7D0" }}
-          >
-            <CheckCircle2 className="h-6 w-6 text-green-600 shrink-0 mt-0.5" />
-            <div>
-              <p className="font-bold text-green-800">Pagamento confirmado!</p>
-              <p className="text-sm text-green-700 mt-1">
-                Você receberá um email de confirmação em instantes. Nossa equipe entrará em contato para confirmar o
-                agendamento.
+          <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-6">
+            <div className="bg-white rounded-2xl p-8 max-w-sm w-full text-center shadow-2xl">
+              <div className="w-20 h-20 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-4">
+                <CheckCircle2 className="h-10 w-10 text-green-600" />
+              </div>
+              <h2 className="text-2xl font-bold text-gray-900 mb-2">Pagamento confirmado! ✅</h2>
+              <p className="text-gray-600 mb-2">
+                Sua sessão terapêutica foi agendada com sucesso.
               </p>
+              <p className="text-sm text-gray-500 mb-6">
+                Você receberá um email de confirmação com a data, horário e link da consulta em instantes.
+              </p>
+              <button
+                onClick={() => navigate("/app/terapia")}
+                className="w-full py-3 rounded-xl font-semibold text-white"
+                style={{ backgroundColor: "#1B4332" }}
+              >
+                Entendido
+              </button>
             </div>
           </div>
         )}

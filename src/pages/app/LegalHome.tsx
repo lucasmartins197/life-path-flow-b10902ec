@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import { CheckCircle2 } from "lucide-react";
 import {
   Scale,
   ChevronLeft,
@@ -113,6 +114,8 @@ function renderMarkdown(text: string) {
 
 export default function LegalHome() {
   const navigate = useNavigate();
+  const [params] = useSearchParams();
+  const paymentSuccess = params.get("success") === "true";
   const [activeTopic, setActiveTopic] = useState<Topic | null>(null);
   const [content, setContent] = useState<string>("");
   const [loading, setLoading] = useState(false);
@@ -208,6 +211,30 @@ export default function LegalHome() {
       </header>
 
       <main className="max-w-lg mx-auto px-5 pt-6 space-y-6">
+        {/* Confirmação de pagamento */}
+        {paymentSuccess && (
+          <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-6">
+            <div className="bg-white rounded-2xl p-8 max-w-sm w-full text-center shadow-2xl">
+              <div className="w-20 h-20 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-4">
+                <CheckCircle2 className="h-10 w-10 text-green-600" />
+              </div>
+              <h2 className="text-2xl font-bold text-gray-900 mb-2">Pagamento confirmado! ✅</h2>
+              <p className="text-gray-600 mb-2">
+                Sua consulta jurídica foi solicitada com sucesso.
+              </p>
+              <p className="text-sm text-gray-500 mb-6">
+                Em breve você receberá uma mensagem no WhatsApp para agendar sua reunião com o advogado especialista em ludopatia.
+              </p>
+              <button
+                onClick={() => navigate("/app/juridico")}
+                className="w-full py-3 rounded-xl font-semibold text-white"
+                style={{ backgroundColor: "#1B4332" }}
+              >
+                Entendido
+              </button>
+            </div>
+          </div>
+        )}
         {/* Vídeo introdutório */}
         <section>
           <h2 className="text-base font-bold mb-3" style={{ color: "#1B4332" }}>
