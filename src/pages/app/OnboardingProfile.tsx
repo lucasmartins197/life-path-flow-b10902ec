@@ -105,10 +105,14 @@ export default function OnboardingProfile() {
       .eq("user_id", user.id);
 
     if (error) {
+      console.error("[OnboardingProfile] Erro ao salvar perfil:", error, {
+        user_id: user.id,
+        payload: { phone, cpf, dateOfBirth, zipCode, street, number, complement, neighborhood, city, state },
+      });
       toast({
         variant: "destructive",
         title: "Erro",
-        description: "Não foi possível salvar seus dados.",
+        description: error.message || "Não foi possível salvar seus dados.",
       });
     } else {
       toast({
