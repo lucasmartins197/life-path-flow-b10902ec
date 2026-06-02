@@ -23,7 +23,7 @@ export function OnboardingGate({ children }: { children: React.ReactNode }) {
       const { data } = await supabase
         .from("profiles")
         .select("onboarding_completed")
-        .eq("user_id", user.id)
+        .eq("id", user.id)
         .maybeSingle();
       if (!active) return;
       setNeedsOnboarding(!data?.onboarding_completed);
