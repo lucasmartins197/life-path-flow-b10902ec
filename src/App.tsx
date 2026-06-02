@@ -70,7 +70,7 @@ const App = () => (
             <Route path="/auth/professional-register" element={<ProfessionalRegister />} />
             
             {/* Protected APP routes (USER role) */}
-            <Route path="/app" element={<ProtectedRoute allowedRoles={["user", "admin"]}><OnboardingGate><CommitmentGate><AppHome /></CommitmentGate></OnboardingGate></ProtectedRoute>} />
+            <Route path="/app" element={<ProtectedRoute allowedRoles={["user", "admin"]}><OnboardingGate><AppHome /></OnboardingGate></ProtectedRoute>} />
             <Route path="/app/jornada" element={<ProtectedRoute allowedRoles={["user", "admin"]}><JourneysHome /></ProtectedRoute>} />
             <Route path="/app/jornada/:stepNumber" element={<ProtectedRoute allowedRoles={["user", "admin"]}><JourneyStep /></ProtectedRoute>} />
             <Route path="/app/terapia" element={<ProtectedRoute allowedRoles={["user", "admin"]}><TherapyHome /></ProtectedRoute>} />
