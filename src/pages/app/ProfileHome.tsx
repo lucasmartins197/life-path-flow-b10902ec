@@ -271,6 +271,10 @@ export default function ProfileHome() {
     if (!user) return;
     const parsed = profileSchema.safeParse({
       full_name: draftName, city: draftCity, bio: draftBio,
+      cpf: draftCPF, date_of_birth: draftDOB, phone: draftPhone,
+      gender: draftGender, zip_code: draftZip, street: draftStreet,
+      number: draftNumber, complement: draftComplement,
+      neighborhood: draftNeighborhood, state: draftState,
     });
     if (!parsed.success) {
       toast({
@@ -286,6 +290,16 @@ export default function ProfileHome() {
         full_name: parsed.data.full_name,
         city: parsed.data.city || null,
         bio: parsed.data.bio || null,
+        cpf: parsed.data.cpf ? parsed.data.cpf.replace(/\D/g, "") : null,
+        date_of_birth: parsed.data.date_of_birth || null,
+        phone: parsed.data.phone ? parsed.data.phone.replace(/\D/g, "") : null,
+        gender: parsed.data.gender || null,
+        zip_code: parsed.data.zip_code ? parsed.data.zip_code.replace(/\D/g, "") : null,
+        street: parsed.data.street || null,
+        number: parsed.data.number || null,
+        complement: parsed.data.complement || null,
+        neighborhood: parsed.data.neighborhood || null,
+        state: parsed.data.state || null,
       }).eq("user_id", user.id);
       if (error) throw error;
       setProfile((p) => p ? {
@@ -293,6 +307,16 @@ export default function ProfileHome() {
         full_name: parsed.data.full_name,
         city: parsed.data.city || null,
         bio: parsed.data.bio || null,
+        cpf: parsed.data.cpf ? parsed.data.cpf.replace(/\D/g, "") : null,
+        date_of_birth: parsed.data.date_of_birth || null,
+        phone: parsed.data.phone ? parsed.data.phone.replace(/\D/g, "") : null,
+        gender: parsed.data.gender || null,
+        zip_code: parsed.data.zip_code ? parsed.data.zip_code.replace(/\D/g, "") : null,
+        street: parsed.data.street || null,
+        number: parsed.data.number || null,
+        complement: parsed.data.complement || null,
+        neighborhood: parsed.data.neighborhood || null,
+        state: parsed.data.state || null,
       } : p);
       setEditing(false);
       toast({ title: "Perfil atualizado" });
@@ -300,6 +324,24 @@ export default function ProfileHome() {
       toast({ title: "Erro", description: e.message, variant: "destructive" });
     } finally {
       setSaving(false);
+    }
+  }
+
+  async function lookupZipCode() {
+    const cleanZip = draftZip.replace(/\D/g, "");
+    if (cleanZip.length !== 8) return;
+    try {
+      const response = await fetch(`https://viacep.com.br/ws/${cleanZip}/json/`);
+      const data = await response.json();
+      if (!data.erro) {
+        setDraftStreet(data.logradouro || "");
+        setDraftNeighborhood(data.bairro || "");
+        setDraftCity(data.localidade || "");
+        setDraftState(data.uf || "");
+        toast({ title: "Endereço preenchido", description: "Dados do CEP carregados automaticamente." });
+      }
+    } catch (error) {
+      console.error("Error looking up CEP:", error);
     }
   }
 
