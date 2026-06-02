@@ -4,7 +4,7 @@ import { z } from "zod";
 import {
   ChevronLeft, ChevronRight, Camera, Bell, Eye, Anchor, Shield, CreditCard,
   Lock, LogOut, Trash2, FileText, Star, Award, Flame, Calendar, Footprints,
-  Loader2, Check, X,
+  Loader2, Check, X, MapPin,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -14,6 +14,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { BottomNavigation } from "@/components/BottomNavigation";
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from "@/components/ui/select";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription,
 } from "@/components/ui/dialog";
