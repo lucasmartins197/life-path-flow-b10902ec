@@ -13,8 +13,8 @@ interface ProtectedRouteProps {
 }
 
 const ADMIN_BYPASS_ID = "60c8281c-eee0-48f2-9d31-d3002ce4eb14";
-const PAYWALL_EXEMPT = ["/app/assinatura", "/app/onboarding", "/auth"];
-const ONBOARDING_EXEMPT = ["/app/onboarding", "/app/assinatura", "/auth"];
+const PAYWALL_EXEMPT = ["/app/assinatura", "/auth"];
+const ONBOARDING_EXEMPT = ["/app/assinatura", "/auth"];
 
 export function ProtectedRoute({
   children,
@@ -112,9 +112,7 @@ function PaymentConfirmation({ userId }: { userId: string }) {
           .maybeSingle();
 
         if (!active) return;
-        window.location.replace(
-          profile?.onboarding_completed ? "/app" : "/app/onboarding"
-        );
+        window.location.replace("/app");
       } catch (e) {
         console.error("payment confirmation failed", e);
         if (active) navigate("/app/assinatura", { replace: true });
@@ -181,7 +179,7 @@ function OnboardingCheck({
   }
 
   if (state === "needs") {
-    return <Navigate to="/app/onboarding" replace />;
+    return <Navigate to="/app" replace />;
   }
 
   return <>{children}</>;

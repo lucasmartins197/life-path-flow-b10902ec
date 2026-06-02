@@ -24,7 +24,7 @@ import ExerciseHome from "./pages/app/ExerciseHome";
 import CalendarHome from "./pages/app/CalendarHome";
 import AnchorHome from "./pages/app/AnchorHome";
 import SettingsHome from "./pages/app/SettingsHome";
-import OnboardingProfile from "./pages/app/OnboardingProfile";
+
 import HealthHome from "./pages/app/HealthHome";
 import FinanceHome from "./pages/app/FinanceHome";
 import ProfileHome from "./pages/app/ProfileHome";
@@ -80,7 +80,6 @@ const App = () => (
             <Route path="/app/agenda" element={<ProtectedRoute allowedRoles={["user", "admin"]}><CalendarHome /></ProtectedRoute>} />
             <Route path="/app/ancora" element={<ProtectedRoute allowedRoles={["user", "admin"]}><AnchorHome /></ProtectedRoute>} />
             <Route path="/app/configuracoes" element={<ProtectedRoute allowedRoles={["user", "admin"]}><SettingsHome /></ProtectedRoute>} />
-            <Route path="/app/onboarding" element={<ProtectedRoute allowedRoles={["user", "admin"]}><OnboardingProfile /></ProtectedRoute>} />
             <Route path="/app/saude" element={<ProtectedRoute allowedRoles={["user", "admin"]}><HealthHome /></ProtectedRoute>} />
             <Route path="/app/financas" element={<ProtectedRoute allowedRoles={["user", "admin"]}><FinanceHome /></ProtectedRoute>} />
             <Route path="/app/perfil" element={<ProtectedRoute allowedRoles={["user", "admin"]}><ProfileHome /></ProtectedRoute>} />

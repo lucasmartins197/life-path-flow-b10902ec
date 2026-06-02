@@ -67,7 +67,7 @@ export default function SubscriptionHome() {
           title: "Parabéns!",
           description: "Sua assinatura foi ativada com sucesso. Aproveite todos os recursos!",
         });
-        navigate("/app/onboarding", { replace: true });
+        navigate("/app", { replace: true });
       })();
     }
     if (canceled) {
@@ -275,7 +275,7 @@ export default function SubscriptionHome() {
 
             {/* Continue Button */}
             <Button
-              onClick={() => navigate("/app/onboarding")}
+              onClick={() => navigate("/app")}
               className="w-full bg-primary hover:bg-primary/90 text-primary-foreground h-12 text-base"
             >
               Continuar
