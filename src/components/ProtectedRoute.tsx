@@ -139,9 +139,6 @@ function PaymentConfirmation({ userId }: { userId: string }) {
 }
 
 function OnboardingCheck({
-  isAdminUser,
-  userId,
-  pathname,
   children,
 }: {
   isAdminUser: boolean;
@@ -149,41 +146,7 @@ function OnboardingCheck({
   pathname: string;
   children: React.ReactNode;
 }) {
-  const [state, setState] = useState<"loading" | "needs" | "ok">("loading");
-  const isExempt = ONBOARDING_EXEMPT.some((p) => pathname.startsWith(p));
-
-  useEffect(() => {
-    if (isAdminUser || isExempt) {
-      setState("ok");
-      return;
-    }
-    let active = true;
-    supabase
-      .from("profiles")
-      .select("onboarding_completed")
-      .eq("id", userId)
-      .maybeSingle()
-      .then(({ data }) => {
-        if (!active) return;
-        setState(data?.onboarding_completed ? "ok" : "needs");
-      });
-    return () => {
-      active = false;
-    };
-  }, [userId, isAdminUser, isExempt]);
-
-  if (state === "loading") {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    );
-  }
-
-  if (state === "needs") {
-    return <Navigate to="/app/onboarding" replace />;
-  }
-
+  // Onboarding is handled by <OnboardingGate>. This wrapper is now a no-op.
   return <>{children}</>;
 }
 
