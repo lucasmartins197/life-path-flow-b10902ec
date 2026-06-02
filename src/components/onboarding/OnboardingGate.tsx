@@ -20,11 +20,12 @@ export function OnboardingGate({ children }: { children: React.ReactNode }) {
         setChecked(true);
         return;
       }
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from("profiles")
         .select("onboarding_completed")
         .eq("id", user.id)
         .maybeSingle();
+      console.log("OnboardingGate check:", { userId: user.id, data, error });
       if (!active) return;
       setNeedsOnboarding(!data?.onboarding_completed);
       setChecked(true);
