@@ -59,7 +59,7 @@ export default function TherapyHome() {
         body: {
           user_id: user.id,
           email: user.email,
-          price_id: "price_1Ta1mr0oEfdN4xGLFJVZsmDT",
+          price_id: "price_1Tdtbp1kqWoIkJvRWg3m50qR",
           mode: "payment",
           success_path: "/app/terapia?success=true",
           cancel_path: "/app/terapia",

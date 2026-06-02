@@ -123,8 +123,8 @@ export default function LegalHome() {
         return;
       }
       const priceMap = {
-        legal_consult: "price_1Ta1p00oEfdN4xGLiElxDceu",
-        legal_full: "price_1Ta1p00oEfdN4xGLiElxDceu",
+        legal_consult: "price_1Tdta71kqWoIkJvRu6UHQTde",
+        legal_full: "price_1Tdta71kqWoIkJvRu6UHQTde",
       };
       const { data, error } = await supabase.functions.invoke("create-checkout-session", {
         body: {
