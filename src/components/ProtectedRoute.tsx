@@ -105,16 +105,8 @@ function PaymentConfirmation({ userId }: { userId: string }) {
           .update({ subscription_status: "active" })
           .eq("id", userId);
 
-        const { data: profile } = await supabase
-          .from("profiles")
-          .select("onboarding_completed")
-          .eq("id", userId)
-          .maybeSingle();
-
         if (!active) return;
-        window.location.replace(
-          profile?.onboarding_completed ? "/app" : "/app/onboarding"
-        );
+        window.location.replace("/app");
       } catch (e) {
         console.error("payment confirmation failed", e);
         if (active) navigate("/app/assinatura", { replace: true });
