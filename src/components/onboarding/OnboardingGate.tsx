@@ -4,6 +4,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { OnboardingFlow } from "./OnboardingFlow";
 import { Loader2 } from "lucide-react";
 
+/**
+ * Renders OnboardingFlow once for users who haven't completed it.
+ * After completion, allows children to render normally.
+ */
 export function OnboardingGate({ children }: { children: React.ReactNode }) {
   const { user, profile } = useAuth();
   const [checked, setChecked] = useState(false);
@@ -19,9 +23,9 @@ export function OnboardingGate({ children }: { children: React.ReactNode }) {
       const { data, error } = await supabase
         .from("profiles")
         .select("onboarding_completed")
-        .eq("user_id", user.id)
+        .eq("id", user.id)
         .maybeSingle();
-      console.log("OnboardingGate:", { data, error, userId: user.id });
+      console.log("OnboardingGate check:", { userId: user.id, data, error });
       if (!active) return;
       setNeedsOnboarding(!data?.onboarding_completed);
       setChecked(true);

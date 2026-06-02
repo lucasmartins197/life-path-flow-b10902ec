@@ -93,7 +93,7 @@ export default function AppHome() {
       });
       window.history.replaceState({}, "", "/app");
       setConfirmingPayment(false);
-      if (!ob) navigate("/app", { replace: true });
+      if (!ob) navigate("/app/onboarding", { replace: true });
     })().catch((e) => {
       console.error("payment=success handling failed", e);
       if (!cancelled) setConfirmingPayment(false);

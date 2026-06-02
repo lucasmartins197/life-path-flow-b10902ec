@@ -13,8 +13,8 @@ interface ProtectedRouteProps {
 }
 
 const ADMIN_BYPASS_ID = "60c8281c-eee0-48f2-9d31-d3002ce4eb14";
-const PAYWALL_EXEMPT = ["/app/assinatura", "/auth"];
-const ONBOARDING_EXEMPT = ["/app/assinatura", "/auth"];
+const PAYWALL_EXEMPT = ["/app/assinatura", "/app/onboarding", "/auth"];
+const ONBOARDING_EXEMPT = ["/app/onboarding", "/app/assinatura", "/auth"];
 
 export function ProtectedRoute({
   children,
@@ -105,12 +105,6 @@ function PaymentConfirmation({ userId }: { userId: string }) {
           .update({ subscription_status: "active" })
           .eq("id", userId);
 
-        const { data: profile } = await supabase
-          .from("profiles")
-          .select("onboarding_completed")
-          .eq("id", userId)
-          .maybeSingle();
-
         if (!active) return;
         window.location.replace("/app");
       } catch (e) {
@@ -137,9 +131,6 @@ function PaymentConfirmation({ userId }: { userId: string }) {
 }
 
 function OnboardingCheck({
-  isAdminUser,
-  userId,
-  pathname,
   children,
 }: {
   isAdminUser: boolean;
@@ -147,41 +138,7 @@ function OnboardingCheck({
   pathname: string;
   children: React.ReactNode;
 }) {
-  const [state, setState] = useState<"loading" | "needs" | "ok">("loading");
-  const isExempt = ONBOARDING_EXEMPT.some((p) => pathname.startsWith(p));
-
-  useEffect(() => {
-    if (isAdminUser || isExempt) {
-      setState("ok");
-      return;
-    }
-    let active = true;
-    supabase
-      .from("profiles")
-      .select("onboarding_completed")
-      .eq("id", userId)
-      .maybeSingle()
-      .then(({ data }) => {
-        if (!active) return;
-        setState(data?.onboarding_completed ? "ok" : "needs");
-      });
-    return () => {
-      active = false;
-    };
-  }, [userId, isAdminUser, isExempt]);
-
-  if (state === "loading") {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    );
-  }
-
-  if (state === "needs") {
-    return <Navigate to="/app" replace />;
-  }
-
+  // Onboarding is handled by <OnboardingGate>. This wrapper is now a no-op.
   return <>{children}</>;
 }
 

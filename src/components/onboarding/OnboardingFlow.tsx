@@ -594,8 +594,6 @@ function ClinicalScreen({
 
   return (
     <div className="h-full w-full flex flex-col bg-background px-6 pt-[max(env(safe-area-inset-top),4rem)] pb-[max(env(safe-area-inset-bottom),2rem)] overflow-y-auto">
-      <div style={{background:'red',color:'white',padding:'20px',fontSize:'24px'}}>STEP 4 - CLÍNICO</div>
-
       <h2 className="text-2xl font-bold tracking-tight mb-2" style={{ color: "#1B4332" }}>
         Precisamos entender melhor sua situação
       </h2>
