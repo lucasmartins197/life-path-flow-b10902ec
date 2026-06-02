@@ -4,7 +4,7 @@ import { z } from "zod";
 import {
   ChevronLeft, ChevronRight, Camera, Bell, Eye, Anchor, Shield, CreditCard,
   Lock, LogOut, Trash2, FileText, Star, Award, Flame, Calendar, Footprints,
-  Loader2, Check, X,
+  Loader2, Check, X, MapPin,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -14,6 +14,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { BottomNavigation } from "@/components/BottomNavigation";
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from "@/components/ui/select";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription,
 } from "@/components/ui/dialog";
@@ -26,6 +29,16 @@ interface ProfileRow {
   is_public: boolean;
   notifications_enabled: boolean;
   created_at: string;
+  cpf: string | null;
+  date_of_birth: string | null;
+  phone: string | null;
+  gender: string | null;
+  zip_code: string | null;
+  street: string | null;
+  number: string | null;
+  complement: string | null;
+  neighborhood: string | null;
+  state: string | null;
 }
 
 interface MedalDef {
@@ -54,6 +67,16 @@ const profileSchema = z.object({
   full_name: z.string().trim().min(2, "Nome muito curto").max(100, "Máximo 100 caracteres"),
   city: z.string().trim().max(80, "Máximo 80 caracteres").optional().or(z.literal("")),
   bio: z.string().trim().max(100, "Máximo 100 caracteres").optional().or(z.literal("")),
+  cpf: z.string().trim().optional().or(z.literal("")),
+  date_of_birth: z.string().trim().optional().or(z.literal("")),
+  phone: z.string().trim().optional().or(z.literal("")),
+  gender: z.string().trim().optional().or(z.literal("")),
+  zip_code: z.string().trim().optional().or(z.literal("")),
+  street: z.string().trim().optional().or(z.literal("")),
+  number: z.string().trim().optional().or(z.literal("")),
+  complement: z.string().trim().optional().or(z.literal("")),
+  neighborhood: z.string().trim().optional().or(z.literal("")),
+  state: z.string().trim().optional().or(z.literal("")),
 });
 
 const passwordSchema = z.object({
@@ -72,6 +95,27 @@ function daysSince(iso: string) {
   return Math.max(0, Math.floor(ms / (1000 * 60 * 60 * 24)));
 }
 
+function formatCPF(value: string) {
+  const nums = value.replace(/\D/g, "");
+  if (nums.length <= 3) return nums;
+  if (nums.length <= 6) return `${nums.slice(0, 3)}.${nums.slice(3)}`;
+  if (nums.length <= 9) return `${nums.slice(0, 3)}.${nums.slice(3, 6)}.${nums.slice(6)}`;
+  return `${nums.slice(0, 3)}.${nums.slice(3, 6)}.${nums.slice(6, 9)}-${nums.slice(9, 11)}`;
+}
+
+function formatPhone(value: string) {
+  const nums = value.replace(/\D/g, "");
+  if (nums.length <= 2) return nums;
+  if (nums.length <= 7) return `(${nums.slice(0, 2)}) ${nums.slice(2)}`;
+  return `(${nums.slice(0, 2)}) ${nums.slice(2, 7)}-${nums.slice(7, 11)}`;
+}
+
+function formatZipCode(value: string) {
+  const nums = value.replace(/\D/g, "");
+  if (nums.length <= 5) return nums;
+  return `${nums.slice(0, 5)}-${nums.slice(5, 8)}`;
+}
+
 export default function ProfileHome() {
   const navigate = useNavigate();
   const { user, signOut } = useAuth();
@@ -88,6 +132,16 @@ export default function ProfileHome() {
   const [draftName, setDraftName] = useState("");
   const [draftCity, setDraftCity] = useState("");
   const [draftBio, setDraftBio] = useState("");
+  const [draftCPF, setDraftCPF] = useState("");
+  const [draftDOB, setDraftDOB] = useState("");
+  const [draftPhone, setDraftPhone] = useState("");
+  const [draftGender, setDraftGender] = useState("");
+  const [draftZip, setDraftZip] = useState("");
+  const [draftStreet, setDraftStreet] = useState("");
+  const [draftNumber, setDraftNumber] = useState("");
+  const [draftComplement, setDraftComplement] = useState("");
+  const [draftNeighborhood, setDraftNeighborhood] = useState("");
+  const [draftState, setDraftState] = useState("");
 
   // Stats
   const [currentStep, setCurrentStep] = useState(1);
@@ -120,7 +174,7 @@ export default function ProfileHome() {
     try {
       const [profileRes, patientRes, journeyRes] = await Promise.all([
         supabase.from("profiles")
-          .select("full_name, avatar_url, city, bio, is_public, notifications_enabled, created_at")
+          .select("full_name, avatar_url, city, bio, is_public, notifications_enabled, created_at, cpf, date_of_birth, phone, gender, zip_code, street, number, complement, neighborhood, state")
           .eq("user_id", user.id)
           .maybeSingle(),
         supabase.from("patient_profiles")
@@ -141,11 +195,31 @@ export default function ProfileHome() {
         is_public: true,
         notifications_enabled: true,
         created_at: user.created_at ?? new Date().toISOString(),
+        cpf: null,
+        date_of_birth: null,
+        phone: null,
+        gender: null,
+        zip_code: null,
+        street: null,
+        number: null,
+        complement: null,
+        neighborhood: null,
+        state: null,
       }) as ProfileRow;
       setProfile(p);
       setDraftName(p.full_name ?? "");
       setDraftCity(p.city ?? "");
       setDraftBio(p.bio ?? "");
+      setDraftCPF(formatCPF(p.cpf ?? ""));
+      setDraftDOB(p.date_of_birth ?? "");
+      setDraftPhone(formatPhone(p.phone ?? ""));
+      setDraftGender(p.gender ?? "");
+      setDraftZip(formatZipCode(p.zip_code ?? ""));
+      setDraftStreet(p.street ?? "");
+      setDraftNumber(p.number ?? "");
+      setDraftComplement(p.complement ?? "");
+      setDraftNeighborhood(p.neighborhood ?? "");
+      setDraftState(p.state ?? "");
 
       setCurrentStep(patientRes.data?.current_step ?? 1);
       setStreak(patientRes.data?.streak_days ?? 0);
@@ -197,6 +271,10 @@ export default function ProfileHome() {
     if (!user) return;
     const parsed = profileSchema.safeParse({
       full_name: draftName, city: draftCity, bio: draftBio,
+      cpf: draftCPF, date_of_birth: draftDOB, phone: draftPhone,
+      gender: draftGender, zip_code: draftZip, street: draftStreet,
+      number: draftNumber, complement: draftComplement,
+      neighborhood: draftNeighborhood, state: draftState,
     });
     if (!parsed.success) {
       toast({
@@ -212,6 +290,16 @@ export default function ProfileHome() {
         full_name: parsed.data.full_name,
         city: parsed.data.city || null,
         bio: parsed.data.bio || null,
+        cpf: parsed.data.cpf ? parsed.data.cpf.replace(/\D/g, "") : null,
+        date_of_birth: parsed.data.date_of_birth || null,
+        phone: parsed.data.phone ? parsed.data.phone.replace(/\D/g, "") : null,
+        gender: parsed.data.gender || null,
+        zip_code: parsed.data.zip_code ? parsed.data.zip_code.replace(/\D/g, "") : null,
+        street: parsed.data.street || null,
+        number: parsed.data.number || null,
+        complement: parsed.data.complement || null,
+        neighborhood: parsed.data.neighborhood || null,
+        state: parsed.data.state || null,
       }).eq("user_id", user.id);
       if (error) throw error;
       setProfile((p) => p ? {
@@ -219,6 +307,16 @@ export default function ProfileHome() {
         full_name: parsed.data.full_name,
         city: parsed.data.city || null,
         bio: parsed.data.bio || null,
+        cpf: parsed.data.cpf ? parsed.data.cpf.replace(/\D/g, "") : null,
+        date_of_birth: parsed.data.date_of_birth || null,
+        phone: parsed.data.phone ? parsed.data.phone.replace(/\D/g, "") : null,
+        gender: parsed.data.gender || null,
+        zip_code: parsed.data.zip_code ? parsed.data.zip_code.replace(/\D/g, "") : null,
+        street: parsed.data.street || null,
+        number: parsed.data.number || null,
+        complement: parsed.data.complement || null,
+        neighborhood: parsed.data.neighborhood || null,
+        state: parsed.data.state || null,
       } : p);
       setEditing(false);
       toast({ title: "Perfil atualizado" });
@@ -226,6 +324,24 @@ export default function ProfileHome() {
       toast({ title: "Erro", description: e.message, variant: "destructive" });
     } finally {
       setSaving(false);
+    }
+  }
+
+  async function lookupZipCode() {
+    const cleanZip = draftZip.replace(/\D/g, "");
+    if (cleanZip.length !== 8) return;
+    try {
+      const response = await fetch(`https://viacep.com.br/ws/${cleanZip}/json/`);
+      const data = await response.json();
+      if (!data.erro) {
+        setDraftStreet(data.logradouro || "");
+        setDraftNeighborhood(data.bairro || "");
+        setDraftCity(data.localidade || "");
+        setDraftState(data.uf || "");
+        toast({ title: "Endereço preenchido", description: "Dados do CEP carregados automaticamente." });
+      }
+    } catch (error) {
+      console.error("Error looking up CEP:", error);
     }
   }
 
@@ -391,6 +507,162 @@ export default function ProfileHome() {
             <div>
               <Label className="text-xs text-muted-foreground">Email</Label>
               <p className="text-sm text-muted-foreground mt-0.5">{user?.email}</p>
+            </div>
+            <div>
+              <Label className="text-xs text-muted-foreground">CPF</Label>
+              {editing ? (
+                <Input
+                  value={draftCPF}
+                  onChange={(e) => setDraftCPF(formatCPF(e.target.value))}
+                  maxLength={14}
+                  placeholder="000.000.000-00"
+                  className="mt-1 h-10"
+                />
+              ) : (
+                <p className="text-sm mt-0.5">{profile?.cpf ? formatCPF(profile.cpf) : "—"}</p>
+              )}
+            </div>
+            <div>
+              <Label className="text-xs text-muted-foreground">Data de nascimento</Label>
+              {editing ? (
+                <Input
+                  type="date"
+                  value={draftDOB}
+                  onChange={(e) => setDraftDOB(e.target.value)}
+                  className="mt-1 h-10"
+                />
+              ) : (
+                <p className="text-sm mt-0.5">
+                  {profile?.date_of_birth
+                    ? new Date(profile.date_of_birth + "T00:00:00").toLocaleDateString("pt-BR")
+                    : "—"}
+                </p>
+              )}
+            </div>
+            <div>
+              <Label className="text-xs text-muted-foreground">Telefone</Label>
+              {editing ? (
+                <Input
+                  value={draftPhone}
+                  onChange={(e) => setDraftPhone(formatPhone(e.target.value))}
+                  maxLength={15}
+                  placeholder="(00) 00000-0000"
+                  className="mt-1 h-10"
+                />
+              ) : (
+                <p className="text-sm mt-0.5">{profile?.phone ? formatPhone(profile.phone) : "—"}</p>
+              )}
+            </div>
+            <div>
+              <Label className="text-xs text-muted-foreground">Gênero</Label>
+              {editing ? (
+                <Select value={draftGender} onValueChange={setDraftGender}>
+                  <SelectTrigger className="mt-1 h-10">
+                    <SelectValue placeholder="Selecione" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Masculino">Masculino</SelectItem>
+                    <SelectItem value="Feminino">Feminino</SelectItem>
+                    <SelectItem value="Outro">Outro</SelectItem>
+                    <SelectItem value="Prefiro não dizer">Prefiro não dizer</SelectItem>
+                  </SelectContent>
+                </Select>
+              ) : (
+                <p className="text-sm mt-0.5">{profile?.gender || "—"}</p>
+              )}
+            </div>
+
+            {/* Endereço */}
+            <div className="pt-2 border-t border-border/30">
+              <Label className="text-xs text-muted-foreground flex items-center gap-1.5">
+                <MapPin className="h-3 w-3" />
+                Endereço
+              </Label>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label className="text-xs text-muted-foreground">CEP</Label>
+                {editing ? (
+                  <Input
+                    value={draftZip}
+                    onChange={(e) => setDraftZip(formatZipCode(e.target.value))}
+                    onBlur={lookupZipCode}
+                    maxLength={9}
+                    placeholder="00000-000"
+                    className="mt-1 h-10"
+                  />
+                ) : (
+                  <p className="text-sm mt-0.5">{profile?.zip_code ? formatZipCode(profile.zip_code) : "—"}</p>
+                )}
+              </div>
+              <div>
+                <Label className="text-xs text-muted-foreground">Estado</Label>
+                {editing ? (
+                  <Input
+                    value={draftState}
+                    onChange={(e) => setDraftState(e.target.value)}
+                    maxLength={2}
+                    placeholder="UF"
+                    className="mt-1 h-10"
+                  />
+                ) : (
+                  <p className="text-sm mt-0.5">{profile?.state || "—"}</p>
+                )}
+              </div>
+            </div>
+            <div>
+              <Label className="text-xs text-muted-foreground">Rua</Label>
+              {editing ? (
+                <Input
+                  value={draftStreet}
+                  onChange={(e) => setDraftStreet(e.target.value)}
+                  placeholder="Nome da rua"
+                  className="mt-1 h-10"
+                />
+              ) : (
+                <p className="text-sm mt-0.5">{profile?.street || "—"}</p>
+              )}
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label className="text-xs text-muted-foreground">Número</Label>
+                {editing ? (
+                  <Input
+                    value={draftNumber}
+                    onChange={(e) => setDraftNumber(e.target.value)}
+                    placeholder="Nº"
+                    className="mt-1 h-10"
+                  />
+                ) : (
+                  <p className="text-sm mt-0.5">{profile?.number || "—"}</p>
+                )}
+              </div>
+              <div>
+                <Label className="text-xs text-muted-foreground">Complemento</Label>
+                {editing ? (
+                  <Input
+                    value={draftComplement}
+                    onChange={(e) => setDraftComplement(e.target.value)}
+                    placeholder="Apto, bloco..."
+                    className="mt-1 h-10"
+                  />
+                ) : (
+                  <p className="text-sm mt-0.5">{profile?.complement || "—"}</p>
+                )}
+              </div>
+            </div>
+            <div>
+              <Label className="text-xs text-muted-foreground">Bairro</Label>
+              {editing ? (
+                <Input
+                  value={draftNeighborhood}
+                  onChange={(e) => setDraftNeighborhood(e.target.value)}
+                  placeholder="Bairro"
+                  className="mt-1 h-10"
+                />
+              ) : (
+                <p className="text-sm mt-0.5">{profile?.neighborhood || "—"}</p>
+              )}
             </div>
             <div>
               <Label className="text-xs text-muted-foreground">Cidade</Label>

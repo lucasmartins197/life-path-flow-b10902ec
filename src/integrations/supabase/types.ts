@@ -1822,6 +1822,7 @@ export type Database = {
           date_of_birth: string | null
           full_name: string | null
           gambling_duration: string | null
+          gender: string | null
           id: string
           is_public: boolean
           neighborhood: string | null
@@ -1850,6 +1851,7 @@ export type Database = {
           date_of_birth?: string | null
           full_name?: string | null
           gambling_duration?: string | null
+          gender?: string | null
           id?: string
           is_public?: boolean
           neighborhood?: string | null
@@ -1878,6 +1880,7 @@ export type Database = {
           date_of_birth?: string | null
           full_name?: string | null
           gambling_duration?: string | null
+          gender?: string | null
           id?: string
           is_public?: boolean
           neighborhood?: string | null
