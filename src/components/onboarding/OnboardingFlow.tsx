@@ -162,6 +162,7 @@ export function OnboardingFlow({ onComplete }: { onComplete: () => void }) {
       .eq("id", user.id);
     setSaving(false);
     if (error) {
+      console.error("saveProfileBasics error:", JSON.stringify(error));
       toast({ title: "Não foi possível salvar", description: error.message, variant: "destructive" });
       return false;
     }
