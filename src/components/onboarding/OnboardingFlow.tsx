@@ -159,7 +159,7 @@ export function OnboardingFlow({ onComplete }: { onComplete: () => void }) {
         gambling_duration: data.gamblingDuration || null,
         recovery_situation: data.recoverySituation || null,
       })
-      .eq("user_id", user.id);
+      .eq("id", user.id);
     setSaving(false);
     if (error) {
       toast({ title: "Não foi possível salvar", description: error.message, variant: "destructive" });
@@ -260,7 +260,7 @@ export function OnboardingFlow({ onComplete }: { onComplete: () => void }) {
   async function finishOnboarding(target: "step1" | "explore") {
     if (!user) return;
     setSaving(true);
-    await supabase.from("profiles").update({ onboarding_completed: true }).eq("user_id", user.id);
+    await supabase.from("profiles").update({ onboarding_completed: true }).eq("id", user.id);
     setSaving(false);
     onComplete();
     navigate(target === "step1" ? "/app/jornada/1" : "/app", { replace: true });
