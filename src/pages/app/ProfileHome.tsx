@@ -174,7 +174,7 @@ export default function ProfileHome() {
     try {
       const [profileRes, patientRes, journeyRes] = await Promise.all([
         supabase.from("profiles")
-          .select("full_name, avatar_url, city, bio, is_public, notifications_enabled, created_at")
+          .select("full_name, avatar_url, city, bio, is_public, notifications_enabled, created_at, cpf, date_of_birth, phone, gender, zip_code, street, number, complement, neighborhood, state")
           .eq("user_id", user.id)
           .maybeSingle(),
         supabase.from("patient_profiles")
@@ -195,11 +195,31 @@ export default function ProfileHome() {
         is_public: true,
         notifications_enabled: true,
         created_at: user.created_at ?? new Date().toISOString(),
+        cpf: null,
+        date_of_birth: null,
+        phone: null,
+        gender: null,
+        zip_code: null,
+        street: null,
+        number: null,
+        complement: null,
+        neighborhood: null,
+        state: null,
       }) as ProfileRow;
       setProfile(p);
       setDraftName(p.full_name ?? "");
       setDraftCity(p.city ?? "");
       setDraftBio(p.bio ?? "");
+      setDraftCPF(formatCPF(p.cpf ?? ""));
+      setDraftDOB(p.date_of_birth ?? "");
+      setDraftPhone(formatPhone(p.phone ?? ""));
+      setDraftGender(p.gender ?? "");
+      setDraftZip(formatZipCode(p.zip_code ?? ""));
+      setDraftStreet(p.street ?? "");
+      setDraftNumber(p.number ?? "");
+      setDraftComplement(p.complement ?? "");
+      setDraftNeighborhood(p.neighborhood ?? "");
+      setDraftState(p.state ?? "");
 
       setCurrentStep(patientRes.data?.current_step ?? 1);
       setStreak(patientRes.data?.streak_days ?? 0);
