@@ -29,6 +29,16 @@ interface ProfileRow {
   is_public: boolean;
   notifications_enabled: boolean;
   created_at: string;
+  cpf: string | null;
+  date_of_birth: string | null;
+  phone: string | null;
+  gender: string | null;
+  zip_code: string | null;
+  street: string | null;
+  number: string | null;
+  complement: string | null;
+  neighborhood: string | null;
+  state: string | null;
 }
 
 interface MedalDef {
