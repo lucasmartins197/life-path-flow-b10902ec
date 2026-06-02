@@ -74,8 +74,8 @@ Deno.serve(async (req) => {
       mode: checkoutMode,
       payment_method_types: ["card"],
       line_items: [{ price: resolvedPrice, quantity: 1 }],
-      success_url: buildUrl(success_path || defaultSuccess, "success=true"),
-      cancel_url: buildUrl(cancel_path || "/app/assinatura", "canceled=true"),
+      success_url: successUrl,
+      cancel_url: cancelUrl,
       client_reference_id: user_id,
       metadata: { user_id, price_id: resolvedPrice },
     };
