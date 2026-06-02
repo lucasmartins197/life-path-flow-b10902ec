@@ -165,13 +165,13 @@ function OnboardingCheck({
     }
     let active = true;
     supabase
-      .from("onboarding_clinico")
-      .select("id")
-      .eq("user_id", userId)
+      .from("profiles")
+      .select("onboarding_completed")
+      .eq("id", userId)
       .maybeSingle()
       .then(({ data }) => {
         if (!active) return;
-        setState(data ? "ok" : "needs");
+        setState(data?.onboarding_completed ? "ok" : "needs");
       });
     return () => {
       active = false;
