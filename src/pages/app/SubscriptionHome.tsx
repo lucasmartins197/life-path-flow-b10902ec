@@ -273,6 +273,14 @@ export default function SubscriptionHome() {
               </CardContent>
             </Card>
 
+            {/* Continue Button */}
+            <Button
+              onClick={() => navigate("/app/onboarding")}
+              className="w-full bg-primary hover:bg-primary/90 text-primary-foreground h-12 text-base"
+            >
+              Continuar
+            </Button>
+
             {/* Cancel Button */}
             <Button
               variant="destructive"
