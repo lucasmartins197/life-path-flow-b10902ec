@@ -132,6 +132,16 @@ export default function ProfileHome() {
   const [draftName, setDraftName] = useState("");
   const [draftCity, setDraftCity] = useState("");
   const [draftBio, setDraftBio] = useState("");
+  const [draftCPF, setDraftCPF] = useState("");
+  const [draftDOB, setDraftDOB] = useState("");
+  const [draftPhone, setDraftPhone] = useState("");
+  const [draftGender, setDraftGender] = useState("");
+  const [draftZip, setDraftZip] = useState("");
+  const [draftStreet, setDraftStreet] = useState("");
+  const [draftNumber, setDraftNumber] = useState("");
+  const [draftComplement, setDraftComplement] = useState("");
+  const [draftNeighborhood, setDraftNeighborhood] = useState("");
+  const [draftState, setDraftState] = useState("");
 
   // Stats
   const [currentStep, setCurrentStep] = useState(1);
