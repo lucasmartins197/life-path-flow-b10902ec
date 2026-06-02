@@ -225,12 +225,38 @@ function CreatePostDialog({
             </div>
           </div>
 
+          <div>
+            <p className="text-sm font-medium mb-2">Como deseja publicar?</p>
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                onClick={() => setAnonymous(false)}
+                className={`px-3 py-2.5 rounded-xl text-xs font-semibold transition-all border-2 ${
+                  !anonymous
+                    ? "bg-[#1B4332]/10 text-[#1B4332] border-[#1B4332]"
+                    : "bg-muted text-muted-foreground border-transparent"
+                }`}
+              >
+                Publicar com meu nome
+              </button>
+              <button
+                onClick={() => setAnonymous(true)}
+                className={`px-3 py-2.5 rounded-xl text-xs font-semibold transition-all border-2 ${
+                  anonymous
+                    ? "bg-[#1B4332]/10 text-[#1B4332] border-[#1B4332]"
+                    : "bg-muted text-muted-foreground border-transparent"
+                }`}
+              >
+                Publicar anonimamente
+              </button>
+            </div>
+          </div>
+
           <Button
             onClick={handleSubmit}
             disabled={!content.trim() || submitting || uploading}
             className="w-full bg-[#1B4332] hover:bg-[#1B4332]/90 text-white h-12 text-base font-semibold"
           >
-            {submitting ? "Publicando..." : "Publicar anonimamente"}
+            {submitting ? "Publicando..." : anonymous ? "Publicar anonimamente" : "Publicar com meu nome"}
           </Button>
         </div>
       </DialogContent>
