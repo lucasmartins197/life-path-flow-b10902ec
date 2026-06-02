@@ -89,14 +89,12 @@ export default function SubscriptionHome() {
       }
 
       console.log("Iniciando checkout...");
-      const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
-      const SUPABASE_ANON = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
-      const response = await fetch(`${SUPABASE_URL}/functions/v1/create-checkout-session`, {
+      const response = await fetch("https://dmrlkxwpbwmzpdecsgnw.supabase.co/functions/v1/create-checkout-session", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           "Authorization": `Bearer ${token}`,
-          "apikey": SUPABASE_ANON,
+          "apikey": "sb_publishable_GrVvRKNeoFyX-QlBoBr8xw_Dura2nUZ",
         },
         body: JSON.stringify({
           user_id: authUser.id,
