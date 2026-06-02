@@ -112,9 +112,7 @@ function PaymentConfirmation({ userId }: { userId: string }) {
           .maybeSingle();
 
         if (!active) return;
-        window.location.replace(
-          profile?.onboarding_completed ? "/app" : "/app/onboarding"
-        );
+        window.location.replace("/app");
       } catch (e) {
         console.error("payment confirmation failed", e);
         if (active) navigate("/app/assinatura", { replace: true });
@@ -181,7 +179,7 @@ function OnboardingCheck({
   }
 
   if (state === "needs") {
-    return <Navigate to="/app/onboarding" replace />;
+    return <Navigate to="/app" replace />;
   }
 
   return <>{children}</>;
