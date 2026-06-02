@@ -76,8 +76,10 @@ export default function SubscriptionHome() {
   const handleSubscribe = async () => {
     setLoading(true);
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
+      const sessionResp = await supabase.auth.getSession();
+      const token = sessionResp.data.session?.access_token;
+      const authUser = sessionResp.data.session?.user;
+      if (!token || !authUser) {
         toast({
           title: "Erro",
           description: "Você precisa estar logado para assinar.",
@@ -87,22 +89,33 @@ export default function SubscriptionHome() {
       }
 
       console.log("Iniciando checkout...");
-      const { data, error } = await supabase.functions.invoke("create-checkout-session", {
-        body: {
-          user_id: session.user.id,
-          email: session.user.email,
+      const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
+      const SUPABASE_ANON = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+      const response = await fetch(`${SUPABASE_URL}/functions/v1/create-checkout-session`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`,
+          "apikey": SUPABASE_ANON,
+        },
+        body: JSON.stringify({
+          user_id: authUser.id,
+          email: authUser.email,
           success_path: "/app?payment=success",
           cancel_path: "/app/assinatura?canceled=true",
-        },
+        }),
       });
-      console.log("Resposta checkout:", data, error);
-      if (error) throw error;
+      const data = await response.json();
+      console.log("Checkout response:", data);
 
       if (data?.url) {
-        console.log("Abrindo checkout em nova aba:", data.url);
-        window.open(data.url, "_blank");
+        window.location.href = data.url;
       } else {
-        toast({ title: "Erro", description: data.error || "Não foi possível iniciar o pagamento.", variant: "destructive" });
+        toast({
+          title: "Erro",
+          description: data?.error || "Tente novamente",
+          variant: "destructive",
+        });
       }
     } catch (err: any) {
       toast({
