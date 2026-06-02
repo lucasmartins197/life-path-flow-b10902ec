@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
-import { SimpleOnboarding } from "./SimpleOnboarding";
+import { OnboardingFlow } from "./OnboardingFlow";
 import { Loader2 } from "lucide-react";
 
 export function OnboardingGate({ children }: { children: React.ReactNode }) {
@@ -41,7 +41,7 @@ export function OnboardingGate({ children }: { children: React.ReactNode }) {
   }
 
   if (needsOnboarding) {
-    return <SimpleOnboarding onComplete={() => setNeedsOnboarding(false)} />;
+    return <OnboardingFlow onComplete={() => setNeedsOnboarding(false)} />;
   }
 
   return <>{children}</>;
