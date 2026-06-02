@@ -403,7 +403,7 @@ function SplashScreen() {
             A
           </span>
         </div>
-        <h1 className="text-3xl font-bold tracking-tight text-white">Apostando na Vida</h1>
+        <h1 className="text-3xl font-bold tracking-tight text-white">Stake Real</h1>
         <p className="mt-2 text-base" style={{ color: "#A8C9B5" }}>
           Sua jornada de recuperação
         </p>
