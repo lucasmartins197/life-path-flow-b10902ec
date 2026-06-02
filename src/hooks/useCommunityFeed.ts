@@ -138,7 +138,7 @@ export function useCommunityFeed() {
       image_url: data.image_url || null,
       video_url: data.video_url || null,
       mood: data.mood || null,
-      anonymous: true, // Always anonymous in this community
+      anonymous: data.anonymous ?? true,
     });
     if (error) {
       toast({ title: "Erro ao publicar", description: error.message, variant: "destructive" });
