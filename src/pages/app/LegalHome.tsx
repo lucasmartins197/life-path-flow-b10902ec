@@ -34,7 +34,12 @@ const TOPICS: Topic[] = [
   { key: "patrimonio", icon: Home, title: "Proteção do Patrimônio Familiar", subtitle: "Como proteger sua família" },
   { key: "trabalho", icon: Briefcase, title: "Direitos Trabalhistas", subtitle: "Ludopatia e o ambiente de trabalho" },
   { key: "negativado", icon: AlertCircle, title: "Nome Negativado", subtitle: "Como limpar seu nome" },
-  { key: "autoexclusao", icon: Shield, title: "Medidas de Autoexclusão", subtitle: "Proteja-se legalmente das apostas" },
+  {
+    key: "autoexclusao",
+    icon: Shield,
+    title: "Medidas de Autoexclusão",
+    subtitle: "Proteja-se legalmente das apostas",
+  },
   { key: "familia", icon: Heart, title: "Impacto na Família", subtitle: "Divórcio, guarda e pensão" },
 ];
 
@@ -51,7 +56,7 @@ function renderMarkdown(text: string) {
           {listBuffer.map((item, i) => (
             <li key={i} dangerouslySetInnerHTML={{ __html: formatInline(item) }} />
           ))}
-        </ul>
+        </ul>,
       );
       listBuffer = [];
     }
@@ -60,7 +65,7 @@ function renderMarkdown(text: string) {
   const formatInline = (s: string) =>
     s
       .replace(/\*\*(.+?)\*\*/g, '<strong class="text-foreground font-semibold">$1</strong>')
-      .replace(/\*(.+?)\*/g, '<em>$1</em>');
+      .replace(/\*(.+?)\*/g, "<em>$1</em>");
 
   lines.forEach((raw, idx) => {
     const line = raw.trim();
@@ -73,21 +78,21 @@ function renderMarkdown(text: string) {
       elements.push(
         <h4 key={idx} className="font-semibold text-base text-foreground mt-4 mb-2">
           {line.slice(4)}
-        </h4>
+        </h4>,
       );
     } else if (line.startsWith("## ")) {
       flushList(idx);
       elements.push(
         <h3 key={idx} className="font-bold text-lg text-foreground mt-5 mb-2">
           {line.slice(3)}
-        </h3>
+        </h3>,
       );
     } else if (line.startsWith("# ")) {
       flushList(idx);
       elements.push(
         <h2 key={idx} className="font-bold text-xl text-foreground mt-5 mb-3">
           {line.slice(2)}
-        </h2>
+        </h2>,
       );
     } else if (/^[-*]\s+/.test(line)) {
       listBuffer.push(line.replace(/^[-*]\s+/, ""));
@@ -98,7 +103,7 @@ function renderMarkdown(text: string) {
           key={idx}
           className="text-sm text-foreground/90 leading-relaxed my-2"
           dangerouslySetInnerHTML={{ __html: formatInline(line) }}
-        />
+        />,
       );
     }
   });
@@ -116,7 +121,9 @@ export default function LegalHome() {
   const handleCheckout = async (priceAlias: "legal_consult" | "legal_full") => {
     setCheckoutLoading(priceAlias);
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
       if (!user) {
         toast.error("Faça login para continuar");
         navigate("/auth");
@@ -194,9 +201,7 @@ export default function LegalHome() {
             </div>
             <div>
               <h1 className="text-2xl font-bold text-foreground">Apoio Jurídico</h1>
-              <p className="text-sm text-muted-foreground mt-0.5">
-                Entenda seus direitos e encontre orientação
-              </p>
+              <p className="text-sm text-muted-foreground mt-0.5">Entenda seus direitos e encontre orientação</p>
             </div>
           </div>
         </div>
@@ -224,8 +229,8 @@ export default function LegalHome() {
         <div className="rounded-xl bg-card border border-border border-l-4 border-l-warning p-4 flex gap-3">
           <AlertTriangle className="h-5 w-5 text-warning shrink-0 mt-0.5" />
           <p className="text-xs text-foreground/80 leading-relaxed">
-            As informações aqui são <strong className="font-semibold">educativas</strong> e não substituem
-            consultoria jurídica profissional. Para seu caso específico, consulte um advogado.
+            As informações aqui são <strong className="font-semibold">educativas</strong> e não substituem consultoria
+            jurídica profissional. Para seu caso específico, consulte um advogado.
           </p>
         </div>
 
@@ -288,9 +293,7 @@ export default function LegalHome() {
               </div>
               <div className="flex-1 min-w-0">
                 <p className="font-semibold text-sm text-foreground">Primeira Consulta Jurídica</p>
-                <p className="text-xs text-muted-foreground mt-0.5">
-                  Avaliação inicial com advogado especializado
-                </p>
+                <p className="text-xs text-muted-foreground mt-0.5">Avaliação inicial com advogado especializado</p>
                 <p className="text-base font-bold text-foreground mt-2">R$ 199,90</p>
               </div>
             </div>
@@ -311,13 +314,12 @@ export default function LegalHome() {
           </div>
         </section>
 
-
         {/* LGPD */}
         <div className="rounded-xl border border-border p-4 flex gap-3">
           <Shield className="h-4 w-4 text-muted-foreground shrink-0 mt-0.5" />
           <p className="text-xs text-muted-foreground leading-relaxed">
-            Conteúdo educativo gerado com apoio de IA. Sempre verifique informações atualizadas e consulte
-            profissionais qualificados.
+            Conteúdo educativo gerado com apoio de IA. Sempre verifique informações atualizadas e consulte profissionais
+            qualificados.
           </p>
         </div>
       </main>
