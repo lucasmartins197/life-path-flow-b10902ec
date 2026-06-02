@@ -62,7 +62,7 @@ export function ProtectedRoute({
   // If profile is null, treat as inactive (redirect to subscription)
   // This handles new users whose profile hasn't been created yet
 
-  const hasSubscription = (profile as any)?.subscription_status === "active";
+  const hasSubscription = profile !== null && (profile as any)?.subscription_status === "active";
 
   console.log("[ProtectedRoute]", {
     userId: user.id,
