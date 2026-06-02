@@ -24,6 +24,13 @@ export function ProtectedRoute({
   const { user, roles, isLoading, profile } = useAuth();
   const location = useLocation();
 
+  console.log('ProtectedRoute state:', {
+    user: !!user,
+    isLoading,
+    profile: profile?.subscription_status,
+    path: location.pathname,
+  });
+
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
