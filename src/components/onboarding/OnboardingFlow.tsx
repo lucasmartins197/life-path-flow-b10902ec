@@ -153,8 +153,9 @@ export function OnboardingFlow({ onComplete }: { onComplete: () => void }) {
   );
 
   async function saveProfileBasics() {
-    if (!user) return false;
+    if (!user) { console.log("saveProfileBasics: no user"); return false; }
     setSaving(true);
+    console.log("saveProfileBasics: saving for user", user.id, "data:", { fullName: data.fullName, city: data.city });
     const { error } = await supabase
       .from("profiles")
       .update({
@@ -165,6 +166,7 @@ export function OnboardingFlow({ onComplete }: { onComplete: () => void }) {
       })
       .eq("id", user.id);
     setSaving(false);
+    console.log("saveProfileBasics result:", error ? "ERROR: " + error.message : "OK");
     if (error) {
       console.error("saveProfileBasics error:", JSON.stringify(error));
       toast({ title: "Não foi possível salvar", description: error.message, variant: "destructive" });
