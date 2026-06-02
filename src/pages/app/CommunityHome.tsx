@@ -166,7 +166,7 @@ function CreatePostDialog({
       <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto pb-20">
         <DialogHeader>
           <DialogTitle className="text-lg font-bold tracking-tight">Novo post</DialogTitle>
-          <DialogDescription className="text-sm">Compartilhe com a comunidade (anônimo)</DialogDescription>
+          <DialogDescription className="text-sm">Compartilhe sua história com a comunidade</DialogDescription>
         </DialogHeader>
         <div className="space-y-4 mt-2">
           <Textarea
