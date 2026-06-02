@@ -133,7 +133,11 @@ export function OnboardingFlow({ onComplete }: { onComplete: () => void }) {
 
   function goNext() {
     setDirection("forward");
-    setStep((s) => Math.min(TOTAL_STEPS, s + 1) as StepId);
+    setStep((s) => {
+      const next = Math.min(TOTAL_STEPS, s + 1) as StepId;
+      console.log("goNext called, current step:", s, "→ next:", next, "TOTAL_STEPS:", TOTAL_STEPS);
+      return next;
+    });
   }
   function goBack() {
     setDirection("back");
