@@ -509,6 +509,162 @@ export default function ProfileHome() {
               <p className="text-sm text-muted-foreground mt-0.5">{user?.email}</p>
             </div>
             <div>
+              <Label className="text-xs text-muted-foreground">CPF</Label>
+              {editing ? (
+                <Input
+                  value={draftCPF}
+                  onChange={(e) => setDraftCPF(formatCPF(e.target.value))}
+                  maxLength={14}
+                  placeholder="000.000.000-00"
+                  className="mt-1 h-10"
+                />
+              ) : (
+                <p className="text-sm mt-0.5">{profile?.cpf ? formatCPF(profile.cpf) : "—"}</p>
+              )}
+            </div>
+            <div>
+              <Label className="text-xs text-muted-foreground">Data de nascimento</Label>
+              {editing ? (
+                <Input
+                  type="date"
+                  value={draftDOB}
+                  onChange={(e) => setDraftDOB(e.target.value)}
+                  className="mt-1 h-10"
+                />
+              ) : (
+                <p className="text-sm mt-0.5">
+                  {profile?.date_of_birth
+                    ? new Date(profile.date_of_birth + "T00:00:00").toLocaleDateString("pt-BR")
+                    : "—"}
+                </p>
+              )}
+            </div>
+            <div>
+              <Label className="text-xs text-muted-foreground">Telefone</Label>
+              {editing ? (
+                <Input
+                  value={draftPhone}
+                  onChange={(e) => setDraftPhone(formatPhone(e.target.value))}
+                  maxLength={15}
+                  placeholder="(00) 00000-0000"
+                  className="mt-1 h-10"
+                />
+              ) : (
+                <p className="text-sm mt-0.5">{profile?.phone ? formatPhone(profile.phone) : "—"}</p>
+              )}
+            </div>
+            <div>
+              <Label className="text-xs text-muted-foreground">Gênero</Label>
+              {editing ? (
+                <Select value={draftGender} onValueChange={setDraftGender}>
+                  <SelectTrigger className="mt-1 h-10">
+                    <SelectValue placeholder="Selecione" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Masculino">Masculino</SelectItem>
+                    <SelectItem value="Feminino">Feminino</SelectItem>
+                    <SelectItem value="Outro">Outro</SelectItem>
+                    <SelectItem value="Prefiro não dizer">Prefiro não dizer</SelectItem>
+                  </SelectContent>
+                </Select>
+              ) : (
+                <p className="text-sm mt-0.5">{profile?.gender || "—"}</p>
+              )}
+            </div>
+
+            {/* Endereço */}
+            <div className="pt-2 border-t border-border/30">
+              <Label className="text-xs text-muted-foreground flex items-center gap-1.5">
+                <MapPin className="h-3 w-3" />
+                Endereço
+              </Label>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label className="text-xs text-muted-foreground">CEP</Label>
+                {editing ? (
+                  <Input
+                    value={draftZip}
+                    onChange={(e) => setDraftZip(formatZipCode(e.target.value))}
+                    onBlur={lookupZipCode}
+                    maxLength={9}
+                    placeholder="00000-000"
+                    className="mt-1 h-10"
+                  />
+                ) : (
+                  <p className="text-sm mt-0.5">{profile?.zip_code ? formatZipCode(profile.zip_code) : "—"}</p>
+                )}
+              </div>
+              <div>
+                <Label className="text-xs text-muted-foreground">Estado</Label>
+                {editing ? (
+                  <Input
+                    value={draftState}
+                    onChange={(e) => setDraftState(e.target.value)}
+                    maxLength={2}
+                    placeholder="UF"
+                    className="mt-1 h-10"
+                  />
+                ) : (
+                  <p className="text-sm mt-0.5">{profile?.state || "—"}</p>
+                )}
+              </div>
+            </div>
+            <div>
+              <Label className="text-xs text-muted-foreground">Rua</Label>
+              {editing ? (
+                <Input
+                  value={draftStreet}
+                  onChange={(e) => setDraftStreet(e.target.value)}
+                  placeholder="Nome da rua"
+                  className="mt-1 h-10"
+                />
+              ) : (
+                <p className="text-sm mt-0.5">{profile?.street || "—"}</p>
+              )}
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label className="text-xs text-muted-foreground">Número</Label>
+                {editing ? (
+                  <Input
+                    value={draftNumber}
+                    onChange={(e) => setDraftNumber(e.target.value)}
+                    placeholder="Nº"
+                    className="mt-1 h-10"
+                  />
+                ) : (
+                  <p className="text-sm mt-0.5">{profile?.number || "—"}</p>
+                )}
+              </div>
+              <div>
+                <Label className="text-xs text-muted-foreground">Complemento</Label>
+                {editing ? (
+                  <Input
+                    value={draftComplement}
+                    onChange={(e) => setDraftComplement(e.target.value)}
+                    placeholder="Apto, bloco..."
+                    className="mt-1 h-10"
+                  />
+                ) : (
+                  <p className="text-sm mt-0.5">{profile?.complement || "—"}</p>
+                )}
+              </div>
+            </div>
+            <div>
+              <Label className="text-xs text-muted-foreground">Bairro</Label>
+              {editing ? (
+                <Input
+                  value={draftNeighborhood}
+                  onChange={(e) => setDraftNeighborhood(e.target.value)}
+                  placeholder="Bairro"
+                  className="mt-1 h-10"
+                />
+              ) : (
+                <p className="text-sm mt-0.5">{profile?.neighborhood || "—"}</p>
+              )}
+            </div>
+            <div>
               <Label className="text-xs text-muted-foreground">Cidade</Label>
               {editing ? (
                 <Input
