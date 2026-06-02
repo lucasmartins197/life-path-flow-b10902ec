@@ -111,15 +111,9 @@ function PaymentConfirmation({ userId }: { userId: string }) {
           .eq("id", userId)
           .maybeSingle();
 
-        const { data: onboarding } = await supabase
-          .from("onboarding_clinico")
-          .select("id")
-          .eq("user_id", userId)
-          .maybeSingle();
-
         if (!active) return;
         window.location.replace(
-          profile?.onboarding_completed || onboarding ? "/app" : "/app/onboarding"
+          profile?.onboarding_completed ? "/app" : "/app/onboarding"
         );
       } catch (e) {
         console.error("payment confirmation failed", e);
