@@ -56,7 +56,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       
       if (existingSession?.user) {
         try {
-          await fetchUserData(existingSession.user.id);
+          await fetchUserData(existingSession.user.id, existingSession.user.email ?? null);
         } catch (error) {
           console.error("Error fetching user data on init:", error);
           setProfile(null);
