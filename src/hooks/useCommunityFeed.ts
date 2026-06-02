@@ -70,17 +70,20 @@ export function useCommunityFeed() {
 
       const [
         { data: patientProfiles },
+        { data: userProfiles },
         { data: myReacts },
         { data: allReacts },
         { data: follows },
       ] = await Promise.all([
         supabase.from("patient_profiles").select("user_id, current_step").in("user_id", userIds),
+        supabase.from("profiles").select("user_id, full_name, avatar_url").in("user_id", userIds),
         supabase.from("post_likes").select("post_id, reaction_type").eq("user_id", user.id).in("post_id", postIds),
         supabase.from("post_likes").select("post_id, reaction_type").in("post_id", postIds),
         supabase.from("user_follows").select("following_id").eq("follower_id", user.id),
       ]);
 
       const stepMap = new Map(patientProfiles?.map((p) => [p.user_id, p.current_step]) || []);
+      const profileMap = new Map<string, any>(userProfiles?.map((p: any) => [p.user_id, p]) || []);
       const followSet = new Set(follows?.map((f) => f.following_id) || []);
       setFollowingIds(followSet);
 
@@ -100,10 +103,12 @@ export function useCommunityFeed() {
 
       const enriched: CommunityPost[] = postsData.map((p: any) => {
         const mine = myReactMap.get(p.id) || [];
+        const prof = profileMap.get(p.user_id);
+        const realName = prof?.full_name?.trim();
         return {
           ...p,
-          author_name: anonName(p.user_id),
-          author_avatar: undefined,
+          author_name: p.anonymous || !realName ? anonName(p.user_id) : realName,
+          author_avatar: p.anonymous ? undefined : prof?.avatar_url || undefined,
           author_step: stepMap.get(p.user_id) || undefined,
           has_liked: mine.includes("heart"),
           my_reactions: mine,
@@ -133,7 +138,7 @@ export function useCommunityFeed() {
       image_url: data.image_url || null,
       video_url: data.video_url || null,
       mood: data.mood || null,
-      anonymous: true, // Always anonymous in this community
+      anonymous: data.anonymous ?? true,
     });
     if (error) {
       toast({ title: "Erro ao publicar", description: error.message, variant: "destructive" });

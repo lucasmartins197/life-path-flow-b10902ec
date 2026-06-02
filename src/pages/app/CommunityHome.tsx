@@ -114,6 +114,7 @@ function CreatePostDialog({
   const [mood, setMood] = useState<string | null>(null);
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
+  const [anonymous, setAnonymous] = useState<boolean>(true);
   const [uploading, setUploading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const imgRef = useRef<HTMLInputElement>(null);
@@ -122,8 +123,8 @@ function CreatePostDialog({
   const handleImageSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    if (file.size > 2 * 1024 * 1024) {
-      alert("Imagem deve ter no máximo 2MB");
+    if (file.size > 5 * 1024 * 1024) {
+      alert("Imagem deve ter no máximo 5MB");
       return;
     }
     setUploading(true);
@@ -135,8 +136,8 @@ function CreatePostDialog({
   const handleVideoSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    if (file.size > 30 * 1024 * 1024) {
-      alert("Vídeo deve ter no máximo 30MB");
+    if (file.size > 50 * 1024 * 1024) {
+      alert("Vídeo deve ter no máximo 50MB");
       return;
     }
     setUploading(true);
@@ -153,9 +154,9 @@ function CreatePostDialog({
       image_url: imageUrl || undefined,
       video_url: videoUrl || undefined,
       mood: mood || undefined,
-      anonymous: true,
+      anonymous,
     });
-    setContent(""); setMood(null); setImageUrl(null); setVideoUrl(null);
+    setContent(""); setMood(null); setImageUrl(null); setVideoUrl(null); setAnonymous(true);
     setSubmitting(false);
     onClose();
   };
@@ -165,7 +166,7 @@ function CreatePostDialog({
       <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto pb-20">
         <DialogHeader>
           <DialogTitle className="text-lg font-bold tracking-tight">Novo post</DialogTitle>
-          <DialogDescription className="text-sm">Compartilhe com a comunidade (anônimo)</DialogDescription>
+          <DialogDescription className="text-sm">Compartilhe sua história com a comunidade</DialogDescription>
         </DialogHeader>
         <div className="space-y-4 mt-2">
           <Textarea
@@ -224,12 +225,38 @@ function CreatePostDialog({
             </div>
           </div>
 
+          <div>
+            <p className="text-sm font-medium mb-2">Como deseja publicar?</p>
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                onClick={() => setAnonymous(false)}
+                className={`px-3 py-2.5 rounded-xl text-xs font-semibold transition-all border-2 ${
+                  !anonymous
+                    ? "bg-[#1B4332]/10 text-[#1B4332] border-[#1B4332]"
+                    : "bg-muted text-muted-foreground border-transparent"
+                }`}
+              >
+                Publicar com meu nome
+              </button>
+              <button
+                onClick={() => setAnonymous(true)}
+                className={`px-3 py-2.5 rounded-xl text-xs font-semibold transition-all border-2 ${
+                  anonymous
+                    ? "bg-[#1B4332]/10 text-[#1B4332] border-[#1B4332]"
+                    : "bg-muted text-muted-foreground border-transparent"
+                }`}
+              >
+                Publicar anonimamente
+              </button>
+            </div>
+          </div>
+
           <Button
             onClick={handleSubmit}
             disabled={!content.trim() || submitting || uploading}
             className="w-full bg-[#1B4332] hover:bg-[#1B4332]/90 text-white h-12 text-base font-semibold"
           >
-            {submitting ? "Publicando..." : "Publicar anonimamente"}
+            {submitting ? "Publicando..." : anonymous ? "Publicar anonimamente" : "Publicar com meu nome"}
           </Button>
         </div>
       </DialogContent>
