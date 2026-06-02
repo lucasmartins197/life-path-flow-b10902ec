@@ -331,8 +331,8 @@ export function OnboardingFlow({ onComplete }: { onComplete: () => void }) {
             update={update}
             onContinue={async () => {
               if (!canContinue) return;
-              const ok = await saveProfileBasics();
-              if (ok) goNext();
+              await saveProfileBasics();
+              goNext();
             }}
             saving={saving}
           />
