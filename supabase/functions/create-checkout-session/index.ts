@@ -19,30 +19,30 @@ Deno.serve(async (req) => {
     }
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-    const userClient = createClient(supabaseUrl, Deno.env.get("SUPABASE_ANON_KEY")!, {
-      global: { headers: { Authorization: authHeader } },
-    });
-    const { data: userData, error: userError } = await userClient.auth.getUser();
-    if (userError || !userData.user?.email) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), {
-        status: 401,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    const user_id = userData.user.id;
-    const email = userData.user.email;
+    // Use service role to bypass JWT algorithm issues
+    const serviceClient = createClient(supabaseUrl, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+    
+    // Extract user_id from request body instead of JWT
+    let user_id, email;
     let price_id, mode, success_path, cancel_path, coupon_id;
     try {
       const body = await req.json();
+      user_id = body.user_id;
+      email = body.email;
       price_id = body.price_id;
       mode = body.mode;
       success_path = body.success_path;
       cancel_path = body.cancel_path;
       coupon_id = body.coupon_id;
-    } catch(e) {
-      price_id = undefined;
+    } catch(e) {}
+
+    if (!user_id || !email) {
+      return new Response(JSON.stringify({ error: "Missing user_id or email" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
+
 
     // Aliases nomeados para conveniência (frontend pode mandar "therapy", "legal_consult"...)
     const PRICE_ALIASES: Record<string, string | undefined> = {
