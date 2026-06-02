@@ -20,7 +20,7 @@ import { toast } from "@/hooks/use-toast";
 
 export default function SubscriptionHome() {
   const navigate = useNavigate();
-  const { profile, user } = useAuth();
+  const { profile, user, refreshProfile } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
   const [loading, setLoading] = useState(false);
   const [canceling, setCanceling] = useState(false);
@@ -52,11 +52,23 @@ export default function SubscriptionHome() {
   const cancelDone = searchParams.get("cancelDone") === "true";
 
   useEffect(() => {
-    if (success) {
-      toast({
-        title: "Parabéns!",
-        description: "Sua assinatura foi ativada com sucesso. Aproveite todos os recursos!",
-      });
+    if (success && user?.id) {
+      (async () => {
+        try {
+          await supabase
+            .from("profiles")
+            .update({ subscription_status: "active" })
+            .eq("id", user.id);
+          await refreshProfile();
+        } catch (e) {
+          console.error("Failed to activate subscription locally:", e);
+        }
+        toast({
+          title: "Parabéns!",
+          description: "Sua assinatura foi ativada com sucesso. Aproveite todos os recursos!",
+        });
+        navigate("/app/onboarding", { replace: true });
+      })();
     }
     if (canceled) {
       toast({
