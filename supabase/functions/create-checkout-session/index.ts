@@ -66,20 +66,16 @@ Deno.serve(async (req) => {
     const checkoutMode = mode === "payment" ? "payment" : (price_id && price_id !== "subscription" ? "payment" : "subscription");
 
     const stripeKey = Deno.env.get("STRIPE_SECRET_KEY")!;
-    const APP_BASE_URL = Deno.env.get("APP_BASE_URL") || "https://app.apostandonavida.com.br";
-    const buildUrl = (path: string, fallbackQuery: string) => {
-      const url = new URL(path.startsWith("http") ? path : path.startsWith("/") ? path : `/${path}`, APP_BASE_URL);
-      if (!url.search) url.search = fallbackQuery;
-      return url.toString();
-    };
-    const defaultSuccess = checkoutMode === "subscription" ? "/app?payment=success" : "/app/assinatura";
+    const APP_BASE_URL = "https://app.apostandonavida.com.br";
+    const successUrl = `${APP_BASE_URL}/app?payment=success`;
+    const cancelUrl = `${APP_BASE_URL}/app/assinatura?canceled=true`;
     const sessionParams: any = {
       customer_email: email,
       mode: checkoutMode,
       payment_method_types: ["card"],
       line_items: [{ price: resolvedPrice, quantity: 1 }],
-      success_url: buildUrl(success_path || defaultSuccess, "success=true"),
-      cancel_url: buildUrl(cancel_path || "/app/assinatura", "canceled=true"),
+      success_url: successUrl,
+      cancel_url: cancelUrl,
       client_reference_id: user_id,
       metadata: { user_id, price_id: resolvedPrice },
     };
