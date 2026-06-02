@@ -56,7 +56,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       
       if (existingSession?.user) {
         try {
-          await fetchUserData(existingSession.user.id);
+          await fetchUserData(existingSession.user.id, existingSession.user.email ?? null);
         } catch (error) {
           console.error("Error fetching user data on init:", error);
           setProfile(null);
@@ -83,7 +83,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         
         if (currentSession?.user) {
           // Fire and forget to avoid blocking the auth state change callback
-          fetchUserData(currentSession.user.id).catch((error) => {
+          fetchUserData(currentSession.user.id, currentSession.user.email ?? null).catch((error) => {
             console.error("Error fetching user data on auth change:", error);
             if (isMounted) {
               setProfile(null);
@@ -106,25 +106,36 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
   }, []);
 
-  async function fetchUserData(userId: string) {
+  async function fetchUserData(userId: string, userEmail: string | null = null) {
     try {
-      // Fetch profile — upsert if missing
+      // Fetch profile — try by id first, then by user_id, create if missing
       let { data: profileData } = await supabase
         .from("profiles")
         .select("*")
-        .eq("user_id", userId)
+        .eq("id", userId)
         .maybeSingle();
-      
+
+      if (!profileData) {
+        const res = await supabase
+          .from("profiles")
+          .select("*")
+          .eq("user_id", userId)
+          .maybeSingle();
+        profileData = res.data;
+      }
+
       if (!profileData) {
         // Profile doesn't exist yet — create with defaults
-        const { data: newProfile } = await supabase
+        const { data: newProfile, error: insertError } = await supabase
           .from("profiles")
           .insert({
-            user_id: userId,
+            id: userId,
+            email: userEmail,
             subscription_status: "inactive",
-          })
+          } as any)
           .select("*")
           .single();
+        if (insertError) console.error("Error creating profile:", insertError);
         profileData = newProfile;
       }
 
