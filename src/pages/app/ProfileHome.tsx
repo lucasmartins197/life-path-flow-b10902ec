@@ -85,6 +85,27 @@ function daysSince(iso: string) {
   return Math.max(0, Math.floor(ms / (1000 * 60 * 60 * 24)));
 }
 
+function formatCPF(value: string) {
+  const nums = value.replace(/\D/g, "");
+  if (nums.length <= 3) return nums;
+  if (nums.length <= 6) return `${nums.slice(0, 3)}.${nums.slice(3)}`;
+  if (nums.length <= 9) return `${nums.slice(0, 3)}.${nums.slice(3, 6)}.${nums.slice(6)}`;
+  return `${nums.slice(0, 3)}.${nums.slice(3, 6)}.${nums.slice(6, 9)}-${nums.slice(9, 11)}`;
+}
+
+function formatPhone(value: string) {
+  const nums = value.replace(/\D/g, "");
+  if (nums.length <= 2) return nums;
+  if (nums.length <= 7) return `(${nums.slice(0, 2)}) ${nums.slice(2)}`;
+  return `(${nums.slice(0, 2)}) ${nums.slice(2, 7)}-${nums.slice(7, 11)}`;
+}
+
+function formatZipCode(value: string) {
+  const nums = value.replace(/\D/g, "");
+  if (nums.length <= 5) return nums;
+  return `${nums.slice(0, 5)}-${nums.slice(5, 8)}`;
+}
+
 export default function ProfileHome() {
   const navigate = useNavigate();
   const { user, signOut } = useAuth();
