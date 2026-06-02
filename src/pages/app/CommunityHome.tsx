@@ -114,6 +114,7 @@ function CreatePostDialog({
   const [mood, setMood] = useState<string | null>(null);
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
+  const [anonymous, setAnonymous] = useState<boolean>(true);
   const [uploading, setUploading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const imgRef = useRef<HTMLInputElement>(null);
@@ -122,8 +123,8 @@ function CreatePostDialog({
   const handleImageSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    if (file.size > 2 * 1024 * 1024) {
-      alert("Imagem deve ter no máximo 2MB");
+    if (file.size > 5 * 1024 * 1024) {
+      alert("Imagem deve ter no máximo 5MB");
       return;
     }
     setUploading(true);
@@ -135,8 +136,8 @@ function CreatePostDialog({
   const handleVideoSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    if (file.size > 30 * 1024 * 1024) {
-      alert("Vídeo deve ter no máximo 30MB");
+    if (file.size > 50 * 1024 * 1024) {
+      alert("Vídeo deve ter no máximo 50MB");
       return;
     }
     setUploading(true);
@@ -153,9 +154,9 @@ function CreatePostDialog({
       image_url: imageUrl || undefined,
       video_url: videoUrl || undefined,
       mood: mood || undefined,
-      anonymous: true,
+      anonymous,
     });
-    setContent(""); setMood(null); setImageUrl(null); setVideoUrl(null);
+    setContent(""); setMood(null); setImageUrl(null); setVideoUrl(null); setAnonymous(true);
     setSubmitting(false);
     onClose();
   };
