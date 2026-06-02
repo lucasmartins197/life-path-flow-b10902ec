@@ -83,7 +83,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         
         if (currentSession?.user) {
           // Fire and forget to avoid blocking the auth state change callback
-          fetchUserData(currentSession.user.id).catch((error) => {
+          fetchUserData(currentSession.user.id, currentSession.user.email ?? null).catch((error) => {
             console.error("Error fetching user data on auth change:", error);
             if (isMounted) {
               setProfile(null);
