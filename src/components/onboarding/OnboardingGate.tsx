@@ -13,28 +13,30 @@ export function OnboardingGate({ children }: { children: React.ReactNode }) {
   const [checked, setChecked] = useState(false);
   const [needsOnboarding, setNeedsOnboarding] = useState(false);
 
+  // Não bloquear rotas de pagamento/confirmação
+  const currentPath = window.location.pathname;
+  const exempt = ["/app/terapia", "/app/juridico", "/app/assinatura", "/auth"];
+  const isExempt = exempt.some(p => currentPath.startsWith(p));
+
   useEffect(() => {
     let active = true;
     async function check() {
-      if (!user) {
+      if (!user || isExempt) {
         setChecked(true);
         return;
       }
-      const { data, error } = await supabase
+      const { data } = await supabase
         .from("profiles")
         .select("onboarding_completed")
         .eq("id", user.id)
         .maybeSingle();
-      console.log("OnboardingGate check:", { userId: user.id, data, error });
       if (!active) return;
       setNeedsOnboarding(!data?.onboarding_completed);
       setChecked(true);
     }
     check();
-    return () => {
-      active = false;
-    };
-  }, [user?.id, profile?.id]);
+    return () => { active = false; };
+  }, [user?.id, profile?.id, isExempt]);
 
   if (!checked) {
     return (
