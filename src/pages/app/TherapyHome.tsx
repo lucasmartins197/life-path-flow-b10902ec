@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { ChevronLeft, CreditCard, Calendar, Loader2, CheckCircle2 } from "lucide-react";
 import { BottomNavigation } from "@/components/BottomNavigation";
 import { PortoSeguroButton } from "@/components/PortoSeguroButton";
@@ -7,6 +7,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 export default function TherapyHome() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const paymentSuccess = searchParams.get("success") === "true";
   const [loading, setLoading] = useState(false);
   const [dataSelecionada, setDataSelecionada] = useState(false);
   const [coupon, setCoupon] = useState("");
@@ -91,8 +93,8 @@ export default function TherapyHome() {
     }
   };
 
-  const params = new URLSearchParams(window.location.search);
-  const paymentSuccess = params.get("success") === "true";
+
+
 
   return (
     <div className="min-h-screen bg-background safe-top pb-28">
