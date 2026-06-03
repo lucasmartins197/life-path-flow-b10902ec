@@ -93,8 +93,8 @@ export default function TherapyHome() {
     }
   };
 
-  const params = new URLSearchParams(window.location.search);
-  const paymentSuccess = params.get("success") === "true";
+
+
 
   return (
     <div className="min-h-screen bg-background safe-top pb-28">
