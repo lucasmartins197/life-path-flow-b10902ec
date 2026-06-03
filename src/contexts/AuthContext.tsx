@@ -40,7 +40,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     let isMounted = true;
 
-    // Safety timeout — never stay loading forever (3 seconds)
     const timeout = setTimeout(() => {
       if (isMounted && isLoading) {
         console.warn("Auth loading timeout reached, forcing ready state");
@@ -48,57 +47,56 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     }, 3000);
 
-    // Check for existing session first
-    supabase.auth.getSession().then(async ({ data: { session: existingSession } }) => {
-      if (!isMounted) return;
-      setSession(existingSession);
-      setUser(existingSession?.user ?? null);
-      
-      if (existingSession?.user) {
-        try {
-          await fetchUserData(existingSession.user.id, existingSession.user.email ?? null);
-        } catch (error) {
-          console.error("Error fetching user data on init:", error);
+    supabase.auth
+      .getSession()
+      .then(async ({ data: { session: existingSession } }) => {
+        if (!isMounted) return;
+        setSession(existingSession);
+        setUser(existingSession?.user ?? null);
+        if (existingSession?.user) {
+          try {
+            await fetchUserData(existingSession.user.id, existingSession.user.email ?? null);
+          } catch (error) {
+            console.error("Error fetching user data on init:", error);
+            setProfile(null);
+            setRoles([]);
+          }
+        }
+        if (isMounted) setIsLoading(false);
+      })
+      .catch((error) => {
+        console.error("Error getting session:", error);
+        if (isMounted) {
           setProfile(null);
           setRoles([]);
+          setIsLoading(false);
         }
-      }
-      
-      if (isMounted) setIsLoading(false);
-    }).catch((error) => {
-      console.error("Error getting session:", error);
-      if (isMounted) {
+      });
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((event, currentSession) => {
+      if (!isMounted) return;
+      setSession(currentSession);
+      setUser(currentSession?.user ?? null);
+      if (currentSession?.user) {
+        fetchUserData(currentSession.user.id, currentSession.user.email ?? null)
+          .catch((error) => {
+            console.error("Error fetching user data on auth change:", error);
+            if (isMounted) {
+              setProfile(null);
+              setRoles([]);
+            }
+          })
+          .finally(() => {
+            if (isMounted) setIsLoading(false);
+          });
+      } else {
         setProfile(null);
         setRoles([]);
         setIsLoading(false);
       }
     });
-
-    // Then set up listener for subsequent changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, currentSession) => {
-        if (!isMounted) return;
-        setSession(currentSession);
-        setUser(currentSession?.user ?? null);
-        
-        if (currentSession?.user) {
-          // Fire and forget to avoid blocking the auth state change callback
-          fetchUserData(currentSession.user.id, currentSession.user.email ?? null).catch((error) => {
-            console.error("Error fetching user data on auth change:", error);
-            if (currentSession?.user) {
-  fetchUserData(currentSession.user.id, currentSession.user.email ?? null).catch((error) => {
-    console.error("Error fetching user data on auth change:", error);
-    if (isMounted) { setProfile(null); setRoles([]); }
-  }).finally(() => {
-    if (isMounted) setIsLoading(false);
-  });
-} else {
-  setProfile(null);
-  setRoles([]);
-  setIsLoading(false);
-}
-      }
-    );
 
     return () => {
       isMounted = false;
@@ -109,24 +107,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   async function fetchUserData(userId: string, userEmail: string | null = null) {
     try {
-      // Fetch profile — try by id first, then by user_id, create if missing
-      let { data: profileData } = await supabase
-        .from("profiles")
-        .select("*")
-        .eq("id", userId)
-        .maybeSingle();
+      let { data: profileData } = await supabase.from("profiles").select("*").eq("id", userId).maybeSingle();
 
       if (!profileData) {
-        const res = await supabase
-          .from("profiles")
-          .select("*")
-          .eq("user_id", userId)
-          .maybeSingle();
+        const res = await supabase.from("profiles").select("*").eq("user_id", userId).maybeSingle();
         profileData = res.data;
       }
 
       if (!profileData) {
-        // Profile doesn't exist yet — create with defaults
         const { data: newProfile, error: insertError } = await supabase
           .from("profiles")
           .insert({
@@ -147,12 +135,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         });
       }
 
-      // Fetch roles
-      const { data: rolesData } = await supabase
-        .from("user_roles")
-        .select("role")
-        .eq("user_id", userId);
-      
+      const { data: rolesData } = await supabase.from("user_roles").select("role").eq("user_id", userId);
       if (rolesData) {
         setRoles(rolesData.map((r) => r.role as AppRole));
       }
@@ -168,9 +151,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         password,
         options: {
           emailRedirectTo: "https://app.apostandonavida.com.br",
-          data: {
-            full_name: fullName,
-          },
+          data: { full_name: fullName },
         },
       });
       return { error };
@@ -181,10 +162,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   async function signIn(email: string, password: string) {
     try {
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
       return { error };
     } catch (error) {
       return { error: error as Error };
