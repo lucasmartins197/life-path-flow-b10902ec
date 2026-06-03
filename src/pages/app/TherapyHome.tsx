@@ -5,7 +5,6 @@ import { BottomNavigation } from "@/components/BottomNavigation";
 import { PortoSeguroButton } from "@/components/PortoSeguroButton";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-
 export default function TherapyHome() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
@@ -81,7 +80,7 @@ export default function TherapyHome() {
         return;
       }
       if (data?.url) {
-        window.open(data.url, "_blank");
+        window.location.href = data.url;
       } else {
         toast.error("Erro ao gerar link de pagamento");
       }
@@ -119,9 +118,7 @@ export default function TherapyHome() {
                 <CheckCircle2 className="h-10 w-10 text-green-600" />
               </div>
               <h2 className="text-2xl font-bold text-gray-900 mb-2">Pagamento confirmado! ✅</h2>
-              <p className="text-gray-600 mb-2">
-                Sua sessão terapêutica foi agendada com sucesso.
-              </p>
+              <p className="text-gray-600 mb-2">Sua sessão terapêutica foi agendada com sucesso.</p>
               <p className="text-sm text-gray-500 mb-6">
                 Você receberá um email de confirmação com a data, horário e link da consulta em instantes.
               </p>
