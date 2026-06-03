@@ -13,8 +13,8 @@ interface ProtectedRouteProps {
 }
 
 const ADMIN_BYPASS_ID = "60c8281c-eee0-48f2-9d31-d3002ce4eb14";
-const PAYWALL_EXEMPT = ["/app/assinatura", "/auth"];
-const ONBOARDING_EXEMPT = ["/app/assinatura", "/auth"];
+const PAYWALL_EXEMPT = ["/app/assinatura", "/auth", "/app/terapia", "/app/juridico"];
+const ONBOARDING_EXEMPT = ["/app/assinatura", "/auth", "/app/terapia", "/app/juridico"];
 
 export function ProtectedRoute({
   children,
