@@ -16,15 +16,11 @@ const ADMIN_BYPASS_ID = "60c8281c-eee0-48f2-9d31-d3002ce4eb14";
 const PAYWALL_EXEMPT = ["/app/assinatura", "/auth", "/app/terapia", "/app/juridico"];
 const ONBOARDING_EXEMPT = ["/app/assinatura", "/auth", "/app/terapia", "/app/juridico"];
 
-export function ProtectedRoute({
-  children,
-  allowedRoles,
-  redirectTo = "/auth",
-}: ProtectedRouteProps) {
+export function ProtectedRoute({ children, allowedRoles, redirectTo = "/auth" }: ProtectedRouteProps) {
   const { user, roles, isLoading, profile } = useAuth();
   const location = useLocation();
 
-  console.log('ProtectedRoute state:', {
+  console.log("ProtectedRoute state:", {
     user: !!user,
     isLoading,
     profile: profile?.subscription_status,
@@ -55,6 +51,12 @@ export function ProtectedRoute({
   const isAdminBypass = user.id === ADMIN_BYPASS_ID;
 
   if (allowedRoles && allowedRoles.length > 0 && !isAdminBypass) {
+    if (roles.length === 0)
+      return (
+        <div className="min-h-screen flex items-center justify-center">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      );
     const hasRequiredRole = allowedRoles.some((role) => roles.includes(role));
     if (!hasRequiredRole) {
       if (roles.includes("admin")) return <Navigate to="/admin" replace />;
@@ -64,7 +66,7 @@ export function ProtectedRoute({
   }
 
   const isAdminUser = user.id === ADMIN_BYPASS_ID || roles.includes("admin");
-  const isExempt = PAYWALL_EXEMPT.some(p => location.pathname.startsWith(p));
+  const isExempt = PAYWALL_EXEMPT.some((p) => location.pathname.startsWith(p));
 
   // If profile is null, treat as inactive (redirect to subscription)
   // This handles new users whose profile hasn't been created yet
@@ -100,10 +102,7 @@ function PaymentConfirmation({ userId }: { userId: string }) {
     async function confirmPayment() {
       try {
         // Atualiza diretamente o status para 'active' (não esperar o webhook)
-        await supabase
-          .from("profiles")
-          .update({ subscription_status: "active" })
-          .eq("id", userId);
+        await supabase.from("profiles").update({ subscription_status: "active" }).eq("id", userId);
 
         if (!active) return;
         window.location.replace("/app");
@@ -118,7 +117,6 @@ function PaymentConfirmation({ userId }: { userId: string }) {
       active = false;
     };
   }, [navigate, userId]);
-
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background">
@@ -141,4 +139,3 @@ function OnboardingCheck({
   // Onboarding is handled by <OnboardingGate>. This wrapper is now a no-op.
   return <>{children}</>;
 }
-
