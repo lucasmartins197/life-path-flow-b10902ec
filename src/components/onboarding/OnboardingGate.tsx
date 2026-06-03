@@ -4,30 +4,23 @@ import { supabase } from "@/integrations/supabase/client";
 import { OnboardingFlow } from "./OnboardingFlow";
 import { Loader2 } from "lucide-react";
 
-/**
- * Renders OnboardingFlow once for users who haven't completed it.
- * After completion, allows children to render normally.
- */
 export function OnboardingGate({ children }: { children: React.ReactNode }) {
   const { user, profile } = useAuth();
   const [checked, setChecked] = useState(false);
   const [needsOnboarding, setNeedsOnboarding] = useState(false);
 
+  const currentPath = window.location.pathname;
+  const exempt = ["/app/terapia", "/app/juridico", "/app/assinatura", "/auth"];
+  const isExempt = exempt.some((p) => currentPath.startsWith(p));
+
   useEffect(() => {
     let active = true;
     async function check() {
-      const currentPath = window.location.pathname;
-      const exempt = ["/app/terapia", "/app/juridico", "/app/assinatura", "/auth"];
-      if (!user || exempt.some((p) => currentPath.startsWith(p))) {
+      if (!user || isExempt) {
         setChecked(true);
         return;
       }
-      const { data, error } = await supabase
-        .from("profiles")
-        .select("onboarding_completed")
-        .eq("id", user.id)
-        .maybeSingle();
-      console.log("OnboardingGate check:", { userId: user.id, data, error });
+      const { data } = await supabase.from("profiles").select("onboarding_completed").eq("id", user.id).maybeSingle();
       if (!active) return;
       setNeedsOnboarding(!data?.onboarding_completed);
       setChecked(true);
@@ -36,7 +29,7 @@ export function OnboardingGate({ children }: { children: React.ReactNode }) {
     return () => {
       active = false;
     };
-  }, [user?.id, profile?.id]);
+  }, [user?.id, profile?.id, isExempt]);
 
   if (!checked) {
     return (
