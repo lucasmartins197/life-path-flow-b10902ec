@@ -67,8 +67,8 @@ Deno.serve(async (req) => {
 
     const stripeKey = Deno.env.get("STRIPE_SECRET_KEY")!;
     const APP_BASE_URL = "https://app.apostandonavida.com.br";
-    const successUrl = `${APP_BASE_URL}/app?payment=success`;
-    const cancelUrl = `${APP_BASE_URL}/app/assinatura?canceled=true`;
+    const successUrl = success_path ? `${APP_BASE_URL}${success_path}` : `${APP_BASE_URL}/app?payment=success`;
+    const cancelUrl = cancel_path ? `${APP_BASE_URL}${cancel_path}` : `${APP_BASE_URL}/app/assinatura?canceled=true`;
     const sessionParams: any = {
       customer_email: email,
       mode: checkoutMode,
