@@ -186,7 +186,7 @@ export default function ShieldHome() {
         <section className="bg-card border border-border/40 rounded-2xl p-5">
           <h2 className="text-base font-bold mb-1">Sites bloqueados</h2>
           <p className="text-xs text-muted-foreground mb-4">
-            Lista das casas de aposta que você quer evitar. Use no Tempo de Uso / Bem-estar Digital do seu celular.
+            Lista das casas de aposta que você quer evitar.
           </p>
 
           <div className="flex gap-2 mb-4">
@@ -206,33 +206,99 @@ export default function ShieldHome() {
             </button>
           </div>
 
+          {/* Instruções: como bloquear de verdade */}
+          <div className="rounded-xl p-4 mb-4 border" style={{ background: "#1B4332", borderColor: "#2D6A4F" }}>
+            <h3 className="text-sm font-bold text-white mb-1">Como bloquear de verdade</h3>
+            <p className="text-xs text-white/80 mb-3 leading-relaxed">
+              Salvar sites aqui não os bloqueia automaticamente. Use um dos métodos abaixo para bloquear de verdade no seu celular:
+            </p>
+            <div className="flex flex-col gap-2">
+              <button
+                onClick={() => window.open("https://play.google.com/store/apps/details?id=com.blocksite.blocksite", "_blank")}
+                className="flex items-center gap-2.5 px-3 py-2.5 rounded-lg bg-white/10 hover:bg-white/20 transition-colors text-left"
+              >
+                <Smartphone className="h-4 w-4 text-white/90 shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold text-white">Android — BlockSite</p>
+                  <p className="text-xs text-white/70">Gratuito na Play Store. Instale e cole sua lista.</p>
+                </div>
+                <ExternalLink className="h-3.5 w-3.5 text-white/60 shrink-0" />
+              </button>
+              <button
+                onClick={() => setShowIosInstructions((v) => !v)}
+                className="flex items-center gap-2.5 px-3 py-2.5 rounded-lg bg-white/10 hover:bg-white/20 transition-colors text-left"
+              >
+                <Apple className="h-4 w-4 text-white/90 shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold text-white">iPhone — Tempo de Uso</p>
+                  <p className="text-xs text-white/70">Configuração nativa do iOS. Toque para ver os passos.</p>
+                </div>
+                <span className="text-xs text-white/60 font-medium shrink-0">
+                  {showIosInstructions ? "Ocultar" : "Ver"}
+                </span>
+              </button>
+            </div>
+
+            {showIosInstructions && (
+              <ol className="mt-3 space-y-2 text-xs text-white/90">
+                {[
+                  "Abra Ajustes no iPhone",
+                  "Toque em Tempo de Uso",
+                  "Toque em Restrições de Conteúdo e Privacidade",
+                  "Ative e toque em Restrições de Conteúdo",
+                  "Toque em Conteúdo Web → Limitar sites adultos",
+                  "Em Nunca Permitir, adicione cada site da sua lista",
+                  "Defina uma senha que não seja fácil — peça para alguém de confiança definir por você",
+                ].map((step, i) => (
+                  <li key={i} className="flex gap-2.5">
+                    <span className="w-5 h-5 rounded-full bg-white/20 text-white text-[10px] font-bold flex items-center justify-center shrink-0">
+                      {i + 1}
+                    </span>
+                    <span className="leading-relaxed">{step}</span>
+                  </li>
+                ))}
+              </ol>
+            )}
+          </div>
+
           {loading ? (
             <p className="text-sm text-muted-foreground">Carregando...</p>
           ) : (
-            <ul className="space-y-1.5">
-              {sites.map((s) => (
-                <li
-                  key={s.id}
-                  className="flex items-center gap-2 px-3 py-2.5 rounded-xl bg-secondary/40 border border-border/30"
+            <>
+              <ul className="space-y-1.5">
+                {sites.map((s) => (
+                  <li
+                    key={s.id}
+                    className="flex items-center gap-2 px-3 py-2.5 rounded-xl bg-secondary/40 border border-border/30"
+                  >
+                    <span className={`flex-1 text-sm font-mono truncate ${s.active ? "text-foreground" : "text-muted-foreground line-through"}`}>
+                      {s.url}
+                    </span>
+                    <Switch
+                      checked={s.active}
+                      onCheckedChange={(v) => toggleSite(s.id, v)}
+                    />
+                    {!s.is_default && (
+                      <button
+                        onClick={() => removeSite(s.id)}
+                        className="p-1.5 text-muted-foreground hover:text-destructive transition-colors"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </button>
+                    )}
+                  </li>
+                ))}
+              </ul>
+              {sites.length > 0 && (
+                <button
+                  onClick={handleCopyList}
+                  className="mt-3 flex items-center gap-2 text-sm font-medium text-primary hover:text-primary/80 transition-colors"
                 >
-                  <span className={`flex-1 text-sm font-mono truncate ${s.active ? "text-foreground" : "text-muted-foreground line-through"}`}>
-                    {s.url}
-                  </span>
-                  <Switch
-                    checked={s.active}
-                    onCheckedChange={(v) => toggleSite(s.id, v)}
-                  />
-                  {!s.is_default && (
-                    <button
-                      onClick={() => removeSite(s.id)}
-                      className="p-1.5 text-muted-foreground hover:text-destructive transition-colors"
-                    >
-                      <Trash2 className="h-3.5 w-3.5" />
-                    </button>
-                  )}
-                </li>
-              ))}
-            </ul>
+                  <Copy className="h-4 w-4" />
+                  Copiar lista
+                </button>
+              )}
+            </>
           )}
         </section>
 
