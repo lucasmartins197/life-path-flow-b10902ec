@@ -6,13 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Checkbox } from "@/components/ui/checkbox";
 
 interface FinanceOnboardingProps {
-  onComplete: (data: {
-    income: any;
-    fixed_expenses: any[];
-    debts: any[];
-    goal: string;
-    goal_deadline: string;
-  }) => void;
+  onComplete: (data: { income: any; fixed_expenses: any[]; debts: any[]; goal: string; goal_deadline: string }) => void;
 }
 
 const STEPS = [
@@ -58,15 +52,26 @@ export function FinanceOnboarding({ onComplete }: FinanceOnboardingProps) {
         variable: income.variable,
         variable_avg: parseFloat(income.variable_avg) || 0,
       },
-      fixed_expenses: expenses.filter(e => e.amount).map(e => ({ name: e.name, amount: parseFloat(e.amount) || 0 })),
-      debts: debts.filter(d => d.total).map(d => ({
-        type: d.type, bank: d.bank,
-        total: parseFloat(d.total) || 0,
-        monthly_payment: parseFloat(d.monthly_payment) || 0,
-        interest_rate: parseFloat(d.interest_rate) || 0,
-      })),
+      fixed_expenses: expenses
+        .filter((e) => e.amount)
+        .map((e) => ({ name: e.name, amount: parseFloat(e.amount) || 0 })),
+      debts: debts
+        .filter((d) => d.total)
+        .map((d) => ({
+          type: d.type,
+          bank: d.bank,
+          total: parseFloat(d.total) || 0,
+          monthly_payment: parseFloat(d.monthly_payment) || 0,
+          interest_rate: parseFloat(d.interest_rate) || 0,
+        })),
       goal,
-      goal_deadline: goalDeadline,
+      goal_deadline: goalDeadline
+        ? (() => {
+            const d = new Date();
+            d.setMonth(d.getMonth() + parseInt(goalDeadline));
+            return d.toISOString().split("T")[0];
+          })()
+        : null,
     });
   };
 
@@ -89,7 +94,10 @@ export function FinanceOnboarding({ onComplete }: FinanceOnboardingProps) {
           {/* Progress */}
           <div className="flex gap-1.5">
             {STEPS.map((_, i) => (
-              <div key={i} className={`h-1 flex-1 rounded-full transition-colors ${i <= step ? "bg-primary" : "bg-border"}`} />
+              <div
+                key={i}
+                className={`h-1 flex-1 rounded-full transition-colors ${i <= step ? "bg-primary" : "bg-border"}`}
+              />
             ))}
           </div>
         </div>
@@ -100,13 +108,20 @@ export function FinanceOnboarding({ onComplete }: FinanceOnboardingProps) {
             <>
               <div>
                 <label className="text-sm font-medium text-foreground">Renda mensal líquida</label>
-                <Input type="number" placeholder="Ex: 3500" value={income.monthly}
-                  onChange={e => setIncome({ ...income, monthly: e.target.value })} className="mt-1" />
+                <Input
+                  type="number"
+                  placeholder="Ex: 3500"
+                  value={income.monthly}
+                  onChange={(e) => setIncome({ ...income, monthly: e.target.value })}
+                  className="mt-1"
+                />
               </div>
               <div>
                 <label className="text-sm font-medium text-foreground">Frequência</label>
-                <Select value={income.frequency} onValueChange={v => setIncome({ ...income, frequency: v })}>
-                  <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
+                <Select value={income.frequency} onValueChange={(v) => setIncome({ ...income, frequency: v })}>
+                  <SelectTrigger className="mt-1">
+                    <SelectValue />
+                  </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="mensal">Mensal</SelectItem>
                     <SelectItem value="quinzenal">Quinzenal</SelectItem>
@@ -115,14 +130,19 @@ export function FinanceOnboarding({ onComplete }: FinanceOnboardingProps) {
                 </Select>
               </div>
               <div className="flex items-center gap-2">
-                <Checkbox checked={income.variable} onCheckedChange={c => setIncome({ ...income, variable: !!c })} />
+                <Checkbox checked={income.variable} onCheckedChange={(c) => setIncome({ ...income, variable: !!c })} />
                 <label className="text-sm text-foreground">Tenho renda variável</label>
               </div>
               {income.variable && (
                 <div>
                   <label className="text-sm font-medium text-foreground">Média estimada da renda variável</label>
-                  <Input type="number" placeholder="Ex: 800" value={income.variable_avg}
-                    onChange={e => setIncome({ ...income, variable_avg: e.target.value })} className="mt-1" />
+                  <Input
+                    type="number"
+                    placeholder="Ex: 800"
+                    value={income.variable_avg}
+                    onChange={(e) => setIncome({ ...income, variable_avg: e.target.value })}
+                    className="mt-1"
+                  />
                 </div>
               )}
             </>
@@ -134,10 +154,19 @@ export function FinanceOnboarding({ onComplete }: FinanceOnboardingProps) {
               {expenses.map((exp, i) => (
                 <div key={i} className="flex gap-2 items-end">
                   <div className="flex-1">
-                    <Input placeholder="Nome" value={exp.name} onChange={e => updateExpense(i, "name", e.target.value)} />
+                    <Input
+                      placeholder="Nome"
+                      value={exp.name}
+                      onChange={(e) => updateExpense(i, "name", e.target.value)}
+                    />
                   </div>
                   <div className="w-28">
-                    <Input type="number" placeholder="R$" value={exp.amount} onChange={e => updateExpense(i, "amount", e.target.value)} />
+                    <Input
+                      type="number"
+                      placeholder="R$"
+                      value={exp.amount}
+                      onChange={(e) => updateExpense(i, "amount", e.target.value)}
+                    />
                   </div>
                   <button onClick={() => removeExpense(i)} className="p-2 text-muted-foreground hover:text-destructive">
                     <X className="h-4 w-4" />
@@ -166,8 +195,10 @@ export function FinanceOnboarding({ onComplete }: FinanceOnboardingProps) {
                       <X className="h-4 w-4" />
                     </button>
                   </div>
-                  <Select value={debt.type} onValueChange={v => updateDebt(i, "type", v)}>
-                    <SelectTrigger><SelectValue placeholder="Tipo de dívida" /></SelectTrigger>
+                  <Select value={debt.type} onValueChange={(v) => updateDebt(i, "type", v)}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Tipo de dívida" />
+                    </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="cartao">Cartão de Crédito</SelectItem>
                       <SelectItem value="emprestimo">Empréstimo Pessoal</SelectItem>
@@ -177,11 +208,30 @@ export function FinanceOnboarding({ onComplete }: FinanceOnboardingProps) {
                       <SelectItem value="outro">Outro</SelectItem>
                     </SelectContent>
                   </Select>
-                  <Input placeholder="Banco/Instituição" value={debt.bank} onChange={e => updateDebt(i, "bank", e.target.value)} />
+                  <Input
+                    placeholder="Banco/Instituição"
+                    value={debt.bank}
+                    onChange={(e) => updateDebt(i, "bank", e.target.value)}
+                  />
                   <div className="grid grid-cols-3 gap-2">
-                    <Input type="number" placeholder="Total R$" value={debt.total} onChange={e => updateDebt(i, "total", e.target.value)} />
-                    <Input type="number" placeholder="Parcela R$" value={debt.monthly_payment} onChange={e => updateDebt(i, "monthly_payment", e.target.value)} />
-                    <Input type="number" placeholder="Juros %" value={debt.interest_rate} onChange={e => updateDebt(i, "interest_rate", e.target.value)} />
+                    <Input
+                      type="number"
+                      placeholder="Total R$"
+                      value={debt.total}
+                      onChange={(e) => updateDebt(i, "total", e.target.value)}
+                    />
+                    <Input
+                      type="number"
+                      placeholder="Parcela R$"
+                      value={debt.monthly_payment}
+                      onChange={(e) => updateDebt(i, "monthly_payment", e.target.value)}
+                    />
+                    <Input
+                      type="number"
+                      placeholder="Juros %"
+                      value={debt.interest_rate}
+                      onChange={(e) => updateDebt(i, "interest_rate", e.target.value)}
+                    />
                   </div>
                 </div>
               ))}
@@ -201,16 +251,21 @@ export function FinanceOnboarding({ onComplete }: FinanceOnboardingProps) {
                 { id: "reserva_emergencia", label: "Criar reserva de emergência" },
                 { id: "investir", label: "Investir" },
                 { id: "organizar", label: "Organizar as finanças" },
-              ].map(opt => (
-                <button key={opt.id} onClick={() => setGoal(opt.id)}
-                  className={`w-full text-left p-3 rounded-xl border transition-colors ${goal === opt.id ? "bg-primary/10 border-primary text-primary font-semibold" : "border-border text-foreground hover:bg-accent/10"}`}>
+              ].map((opt) => (
+                <button
+                  key={opt.id}
+                  onClick={() => setGoal(opt.id)}
+                  className={`w-full text-left p-3 rounded-xl border transition-colors ${goal === opt.id ? "bg-primary/10 border-primary text-primary font-semibold" : "border-border text-foreground hover:bg-accent/10"}`}
+                >
                   {opt.label}
                 </button>
               ))}
               <div className="pt-2">
                 <label className="text-sm font-medium text-foreground">Prazo desejado</label>
                 <Select value={goalDeadline} onValueChange={setGoalDeadline}>
-                  <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
+                  <SelectTrigger className="mt-1">
+                    <SelectValue />
+                  </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="3">3 meses</SelectItem>
                     <SelectItem value="6">6 meses</SelectItem>
