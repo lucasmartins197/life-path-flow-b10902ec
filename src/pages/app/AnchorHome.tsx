@@ -237,15 +237,36 @@ export default function AnchorHome() {
 
   const handleSendUpdate = async () => {
     if (!anchor) return;
-    // Abre WhatsApp do próprio usuário com mensagem pré-preenchida
-    const userName = user?.user_metadata?.full_name || "Seu apoiado";
-    const phone = anchor.phone.replace(/\D/g, "");
-    const message = encodeURIComponent(
-      `Olá ${anchor.name}! Sou ${userName} e estou usando o app Stake Real para me recuperar. Queria te dar uma atualização: estou bem e continuando minha jornada. Obrigado pelo seu apoio! 💚`,
-    );
-    window.open(`https://wa.me/${phone}?text=${message}`, "_blank");
-    await logAlert("update", "Mensagem de atualização enviada via WhatsApp");
-    toast.success("Abrindo WhatsApp...");
+    if (!anchor.email) {
+      // Se não tem email, abre WhatsApp com mensagem simples
+      const userName = user?.user_metadata?.full_name || "Seu apoiado";
+      const phone = anchor.phone.replace(/\D/g, "");
+      const message = encodeURIComponent(
+        `Olá ${anchor.name}! Sou ${userName} e estou usando o app Stake Real para me recuperar. Queria te dar uma atualização: estou bem e continuando minha jornada. Obrigado pelo seu apoio! 💚`,
+      );
+      window.open(`https://wa.me/${phone}?text=${message}`, "_blank");
+      await logAlert("update", "Mensagem de atualização enviada via WhatsApp");
+      toast.success("Abrindo WhatsApp...");
+      return;
+    }
+    // Se tem email, envia relatório completo
+    try {
+      await supabase.functions.invoke("notify-guardian", {
+        body: {
+          type: "update",
+          guardian_name: anchor.name,
+          guardian_email: anchor.email,
+          guardian_phone: anchor.phone,
+          user_name: user?.user_metadata?.full_name || "Seu apoiado",
+          user_id: user?.id,
+          include_report: true,
+        },
+      });
+      await logAlert("update", "Relatório completo enviado por email");
+      toast.success("Relatório enviado para o email do âncora!");
+    } catch (e) {
+      toast.error("Erro ao enviar relatório");
+    }
   };
 
   const handleEmergency = async () => {
