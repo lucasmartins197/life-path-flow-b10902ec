@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemoA, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Shield, Sparkles } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -147,13 +147,13 @@ export function OnboardingFlow({ onComplete }: { onComplete: () => void }) {
   const update = <K extends keyof OnboardingData>(key: K, value: OnboardingData[K]) =>
     setData((d) => ({ ...d, [key]: value }));
 
-  const firstName = useMemo(
-    () => (data.fullName.trim().split(/\s+/)[0] || "amigo").trim(),
-    [data.fullName]
-  );
+  const firstName = useMemo(() => (data.fullName.trim().split(/\s+/)[0] || "amigo").trim(), [data.fullName]);
 
   async function saveProfileBasics() {
-    if (!user) { console.log("saveProfileBasics: no user"); return false; }
+    if (!user) {
+      console.log("saveProfileBasics: no user");
+      return false;
+    }
     setSaving(true);
     console.log("saveProfileBasics: saving for user", user.id, "data:", { fullName: data.fullName, city: data.city });
     const { error } = await supabase
@@ -178,9 +178,8 @@ export function OnboardingFlow({ onComplete }: { onComplete: () => void }) {
   async function saveClinicalData() {
     if (!user) return false;
     setSaving(true);
-    const { error } = await supabase
-      .from("onboarding_clinico")
-      .upsert({
+    const { error } = await supabase.from("onboarding_clinico").upsert(
+      {
         user_id: user.id,
         total_loss_range: data.totalLossRange || null,
         gambling_types: data.gamblingTypes,
@@ -189,7 +188,9 @@ export function OnboardingFlow({ onComplete }: { onComplete: () => void }) {
         mental_health_risk: data.mentalHealthRisk || null,
         main_motivation: data.mainMotivation || null,
         created_at: new Date().toISOString(),
-      }, { onConflict: "user_id" });
+      },
+      { onConflict: "user_id" },
+    );
     setSaving(false);
     if (error) {
       toast({ title: "Não foi possível salvar dados clínicos", description: error.message, variant: "destructive" });
@@ -254,7 +255,7 @@ export function OnboardingFlow({ onComplete }: { onComplete: () => void }) {
         signature_name: data.commitmentSignature.trim(),
         signed_at: new Date().toISOString(),
       },
-      { onConflict: "user_id" }
+      { onConflict: "user_id" },
     );
     setSaving(false);
     if (error) {
@@ -303,7 +304,7 @@ export function OnboardingFlow({ onComplete }: { onComplete: () => void }) {
                 key={i}
                 className={cn(
                   "h-1.5 rounded-full transition-all",
-                  active ? "w-6 bg-primary" : "w-1.5 bg-muted-foreground/30"
+                  active ? "w-6 bg-primary" : "w-1.5 bg-muted-foreground/30",
                 )}
               />
             );
@@ -398,11 +399,8 @@ function SplashScreen() {
     <div className="h-full w-full flex flex-col items-center justify-center bg-primary text-primary-foreground px-6">
       <div className="animate-scale-in flex flex-col items-center">
         <div className="h-28 w-28 rounded-full border-4 border-[hsl(var(--gold,40_60%_54%))] flex items-center justify-center mb-6 shadow-2xl">
-          <span
-            className="text-6xl font-bold"
-            style={{ color: "#C9A84C", fontFamily: "Georgia, serif" }}
-          >
-            A
+          <span className="text-4xl font-bold" style={{ color: "#C9A84C", fontFamily: "Georgia, serif" }}>
+            SR
           </span>
         </div>
         <h1 className="text-3xl font-bold tracking-tight text-white">Stake Real</h1>
@@ -516,7 +514,7 @@ function AboutYouScreen({
                   "min-h-12 px-3 py-2 rounded-lg border text-sm text-left transition",
                   data.gamblingDuration === opt.value
                     ? "border-primary bg-primary/10 text-primary font-medium"
-                    : "border-border bg-card hover:border-primary/50"
+                    : "border-border bg-card hover:border-primary/50",
                 )}
               >
                 {opt.label}
@@ -537,7 +535,7 @@ function AboutYouScreen({
                   "w-full min-h-12 px-4 py-3 rounded-lg border text-sm text-left transition",
                   data.recoverySituation === opt.value
                     ? "border-primary bg-primary/10 text-primary font-medium"
-                    : "border-border bg-card hover:border-primary/50"
+                    : "border-border bg-card hover:border-primary/50",
                 )}
               >
                 {opt.label}
@@ -586,7 +584,10 @@ function ClinicalScreen({
   function toggleGamblingType(value: string) {
     const current = data.gamblingTypes;
     if (current.includes(value)) {
-      update("gamblingTypes", current.filter((v) => v !== value));
+      update(
+        "gamblingTypes",
+        current.filter((v) => v !== value),
+      );
     } else {
       update("gamblingTypes", [...current, value]);
     }
@@ -615,7 +616,7 @@ function ClinicalScreen({
                   "min-h-11 px-3 py-2 rounded-lg border text-sm text-left transition",
                   data.gamblingTypes.includes(opt.value)
                     ? "border-primary bg-primary/10 text-primary font-medium"
-                    : "border-border bg-card hover:border-primary/50"
+                    : "border-border bg-card hover:border-primary/50",
                 )}
               >
                 {opt.label}
@@ -637,7 +638,7 @@ function ClinicalScreen({
                   "w-full min-h-11 px-4 py-2 rounded-lg border text-sm text-left transition",
                   data.totalLossRange === opt.value
                     ? "border-primary bg-primary/10 text-primary font-medium"
-                    : "border-border bg-card hover:border-primary/50"
+                    : "border-border bg-card hover:border-primary/50",
                 )}
               >
                 {opt.label}
@@ -659,7 +660,7 @@ function ClinicalScreen({
                   "min-h-11 px-3 py-2 rounded-lg border text-sm text-left transition",
                   data.stopAttempts === opt.value
                     ? "border-primary bg-primary/10 text-primary font-medium"
-                    : "border-border bg-card hover:border-primary/50"
+                    : "border-border bg-card hover:border-primary/50",
                 )}
               >
                 {opt.label}
@@ -681,7 +682,7 @@ function ClinicalScreen({
                   "w-full min-h-11 px-4 py-2 rounded-lg border text-sm text-left transition",
                   data.familyAware === opt.value
                     ? "border-primary bg-primary/10 text-primary font-medium"
-                    : "border-border bg-card hover:border-primary/50"
+                    : "border-border bg-card hover:border-primary/50",
                 )}
               >
                 {opt.label}
@@ -703,7 +704,7 @@ function ClinicalScreen({
                   "w-full min-h-11 px-4 py-2 rounded-lg border text-sm text-left transition",
                   data.mentalHealthRisk === opt.value
                     ? "border-primary bg-primary/10 text-primary font-medium"
-                    : "border-border bg-card hover:border-primary/50"
+                    : "border-border bg-card hover:border-primary/50",
                 )}
               >
                 {opt.label}
@@ -713,7 +714,8 @@ function ClinicalScreen({
           {data.mentalHealthRisk === "pensamentos_ruins" && (
             <div className="mt-3 p-3 rounded-lg bg-amber-50 border border-amber-200">
               <p className="text-sm text-amber-800">
-                💛 Obrigado por compartilhar isso. Nossa equipe será notificada para te dar suporte especial. Você não está sozinho.
+                💛 Obrigado por compartilhar isso. Nossa equipe será notificada para te dar suporte especial. Você não
+                está sozinho.
               </p>
             </div>
           )}
@@ -732,7 +734,7 @@ function ClinicalScreen({
                   "w-full min-h-11 px-4 py-2 rounded-lg border text-sm text-left transition",
                   data.mainMotivation === opt.value
                     ? "border-primary bg-primary/10 text-primary font-medium"
-                    : "border-border bg-card hover:border-primary/50"
+                    : "border-border bg-card hover:border-primary/50",
                 )}
               >
                 {opt.label}
@@ -793,9 +795,7 @@ function MeetAnaScreen({ firstName, onContinue }: { firstName: string; onContinu
           </svg>
         </div>
 
-        <h2 className="text-2xl font-bold text-white mb-4">
-          Olá, {firstName}! Eu sou a Ana.
-        </h2>
+        <h2 className="text-2xl font-bold text-white mb-4">Olá, {firstName}! Eu sou a Ana.</h2>
         <p className="text-base text-white/90 leading-relaxed max-w-sm min-h-[120px]">
           {typed}
           <span className="inline-block w-0.5 h-4 bg-white/80 ml-0.5 animate-pulse" />
@@ -870,7 +870,7 @@ function AnchorScreen({
                   "min-h-12 px-3 py-2 rounded-lg border text-sm transition",
                   data.anchorRelation === opt.value
                     ? "border-primary bg-primary/10 text-primary font-medium"
-                    : "border-border bg-card hover:border-primary/50"
+                    : "border-border bg-card hover:border-primary/50",
                 )}
               >
                 {opt.label}
@@ -880,11 +880,7 @@ function AnchorScreen({
         </div>
 
         <div className="flex items-start gap-3 rounded-lg border border-border bg-card p-4">
-          <Switch
-            checked={data.anchorNotify}
-            onCheckedChange={(v) => update("anchorNotify", v)}
-            className="mt-0.5"
-          />
+          <Switch checked={data.anchorNotify} onCheckedChange={(v) => update("anchorNotify", v)} className="mt-0.5" />
           <span className="text-sm leading-relaxed">
             Autorizo o app a notificar meu âncora se eu ficar inativo por 3 dias
           </span>
@@ -900,10 +896,7 @@ function AnchorScreen({
         >
           {saving ? "Salvando..." : "Confirmar âncora"}
         </Button>
-        <button
-          onClick={onSkip}
-          className="w-full text-sm text-muted-foreground hover:text-foreground transition"
-        >
+        <button onClick={onSkip} className="w-full text-sm text-muted-foreground hover:text-foreground transition">
           Pular por agora
         </button>
       </div>
@@ -930,13 +923,16 @@ function CommitmentScreen({
       style={{ backgroundColor: "#1B4332" }}
     >
       <div className="flex-1 flex flex-col items-center text-center">
-        <div className="h-20 w-20 rounded-full flex items-center justify-center mb-6 animate-scale-in" style={{ backgroundColor: "rgba(201,168,76,0.15)" }}>
+        <div
+          className="h-20 w-20 rounded-full flex items-center justify-center mb-6 animate-scale-in"
+          style={{ backgroundColor: "rgba(201,168,76,0.15)" }}
+        >
           <Shield className="h-10 w-10" style={{ color: "#C9A84C" }} strokeWidth={1.8} />
         </div>
         <h2 className="text-2xl font-bold text-white mb-4">Seu Compromisso de Recuperação</h2>
         <p className="text-base text-white/90 leading-relaxed max-w-sm">
-          Eu, <span className="font-semibold text-[#C9A84C]">{firstName}</span>, me comprometo a percorrer
-          essa jornada com honestidade, a cuidar de mim mesmo e a buscar ajuda quando precisar.
+          Eu, <span className="font-semibold text-[#C9A84C]">{firstName}</span>, me comprometo a percorrer essa jornada
+          com honestidade, a cuidar de mim mesmo e a buscar ajuda quando precisar.
         </p>
 
         <div className="w-full mt-8">
@@ -983,17 +979,21 @@ function ReadyScreen({
       <Confetti />
 
       <div className="flex-1 flex flex-col items-center justify-center text-center relative z-10">
-        <div className="h-16 w-16 rounded-full flex items-center justify-center mb-6 animate-scale-in" style={{ backgroundColor: "rgba(201,168,76,0.15)" }}>
+        <div
+          className="h-16 w-16 rounded-full flex items-center justify-center mb-6 animate-scale-in"
+          style={{ backgroundColor: "rgba(201,168,76,0.15)" }}
+        >
           <Sparkles className="h-8 w-8" style={{ color: "#C9A84C" }} />
         </div>
         <h2 className="text-2xl font-bold tracking-tight mb-2" style={{ color: "#1B4332" }}>
           Sua jornada começa agora, {firstName}!
         </h2>
-        <p className="text-base text-muted-foreground mb-8">
-          O Passo 1 está esperando por você.
-        </p>
+        <p className="text-base text-muted-foreground mb-8">O Passo 1 está esperando por você.</p>
 
-        <div className="w-full max-w-sm rounded-2xl border-2 p-5 text-left shadow-lg" style={{ borderColor: "#1B4332", backgroundColor: "#F5F0E8" }}>
+        <div
+          className="w-full max-w-sm rounded-2xl border-2 p-5 text-left shadow-lg"
+          style={{ borderColor: "#1B4332", backgroundColor: "#F5F0E8" }}
+        >
           <span className="text-xs font-semibold uppercase tracking-wider" style={{ color: "#C9A84C" }}>
             Passo 1
           </span>
@@ -1038,7 +1038,7 @@ function Confetti() {
         color: i % 2 === 0 ? "#1B4332" : "#C9A84C",
         size: 6 + Math.random() * 6,
       })),
-    []
+    [],
   );
   return (
     <div className="absolute inset-0 pointer-events-none overflow-hidden">
