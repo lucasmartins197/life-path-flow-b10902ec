@@ -66,7 +66,7 @@ export default function TherapyHome() {
         body: {
           user_id: user.id,
           email: user.email,
-          price_id: "price_1Tdtbp1kqWoIkJvRWg3m50qR",
+          price_id: "price_1TePGm1kqWoIkJvR8JFLZde6",
           mode: "payment",
           success_path: "/app/terapia?success=true",
           cancel_path: "/app/terapia",
@@ -92,9 +92,6 @@ export default function TherapyHome() {
       setLoading(false);
     }
   };
-
-
-
 
   return (
     <div className="min-h-screen bg-background safe-top pb-28">
