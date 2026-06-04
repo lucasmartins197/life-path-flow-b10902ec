@@ -12,7 +12,7 @@ interface ProtectedRouteProps {
   redirectTo?: string;
 }
 
-const ADMIN_BYPASS_ID = "60c8281c-eee0-48f2-9d31-d3002ce4eb14";
+const ADMIN_BYPASS_ID = "f997e372-2a46-4e36-a75f-04b49af0aef2";
 const PAYWALL_EXEMPT = ["/app/assinatura", "/auth", "/app/terapia", "/app/juridico"];
 const ONBOARDING_EXEMPT = ["/app/assinatura", "/auth", "/app/terapia", "/app/juridico"];
 
