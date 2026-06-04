@@ -237,35 +237,37 @@ export default function AnchorHome() {
 
   const handleSendUpdate = async () => {
     if (!anchor) return;
-    if (!anchor.email) {
-      // Se não tem email, abre WhatsApp com mensagem simples
-      const userName = user?.user_metadata?.full_name || "Seu apoiado";
-      const phone = anchor.phone.replace(/\D/g, "");
-      const message = encodeURIComponent(
-        `Olá ${anchor.name}! Sou ${userName} e estou usando o app Stake Real para me recuperar. Queria te dar uma atualização: estou bem e continuando minha jornada. Obrigado pelo seu apoio! 💚`,
-      );
-      window.open(`https://wa.me/${phone}?text=${message}`, "_blank");
-      await logAlert("update", "Mensagem de atualização enviada via WhatsApp");
-      toast.success("Abrindo WhatsApp...");
-      return;
-    }
-    // Se tem email, envia relatório completo
-    try {
-      await supabase.functions.invoke("notify-guardian", {
-        body: {
-          type: "update",
-          guardian_name: anchor.name,
-          guardian_email: anchor.email,
-          guardian_phone: anchor.phone,
-          user_name: user?.user_metadata?.full_name || "Seu apoiado",
-          user_id: user?.id,
-          include_report: true,
-        },
-      });
-      await logAlert("update", "Relatório completo enviado por email");
-      toast.success("Relatório enviado para o email do âncora!");
-    } catch (e) {
-      toast.error("Erro ao enviar relatório");
+    const userName = user?.user_metadata?.full_name || "Seu apoiado";
+    const phone = anchor.phone.replace(/\D/g, "");
+
+    // Sempre abre WhatsApp com mensagem simbólica
+    const message = encodeURIComponent(
+      `Olá ${anchor.name}! 💚 Estou aqui, firme na minha jornada de recuperação pelo Stake Real. Só queria que soubesse que estou bem e continuando. Obrigado pelo seu apoio! — ${userName}`,
+    );
+    window.open(`https://wa.me/${phone}?text=${message}`, "_blank");
+
+    // Se tiver email, envia relatório completo também
+    if (anchor.email) {
+      try {
+        await supabase.functions.invoke("notify-guardian", {
+          body: {
+            type: "update",
+            guardian_name: anchor.name,
+            guardian_email: anchor.email,
+            user_name: userName,
+            user_id: user?.id,
+            include_report: true,
+          },
+        });
+        await logAlert("update", "WhatsApp + relatório por email enviados");
+        toast.success("WhatsApp aberto + relatório enviado por email!");
+      } catch (e) {
+        await logAlert("update", "Mensagem enviada via WhatsApp");
+        toast.success("WhatsApp aberto!");
+      }
+    } else {
+      await logAlert("update", "Mensagem enviada via WhatsApp");
+      toast.success("WhatsApp aberto!");
     }
   };
 
@@ -273,15 +275,21 @@ export default function AnchorHome() {
     if (!anchor) return;
     setSendingEmergency(true);
     try {
-      // Abre WhatsApp do próprio usuário com mensagem de urgência
-      const userName = user?.user_metadata?.full_name || "Seu apoiado";
-      const phone = anchor.phone.replace(/\D/g, "");
-      const message = encodeURIComponent(
-        `🚨 ${anchor.name}, preciso de ajuda urgente! Estou com muita vontade de apostar e preciso do seu apoio agora. Por favor, me liga ou me manda mensagem o mais rápido possível. - ${userName}`,
-      );
-      window.open(`https://wa.me/${phone}?text=${message}`, "_blank");
+      // Envia direto via Z-API sem precisar abrir WhatsApp
+      await supabase.functions.invoke("notify-guardian", {
+        body: {
+          type: "urgency",
+          guardian_name: anchor.name,
+          guardian_phone: anchor.phone,
+          guardian_email: anchor.email || undefined,
+          user_name: user?.user_metadata?.full_name || "Seu apoiado",
+          user_id: user?.id,
+        },
+      });
       await logAlert("emergency", "Pedido de apoio urgente enviado via WhatsApp");
-      toast.success("Abrindo WhatsApp para contato urgente...");
+      toast.success("🚨 Âncora notificado com urgência! Ele receberá sua mensagem agora.");
+    } catch (e) {
+      toast.error("Erro ao notificar âncora");
     } finally {
       setSendingEmergency(false);
       setConfirmEmergency(false);
