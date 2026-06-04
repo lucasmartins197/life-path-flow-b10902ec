@@ -46,7 +46,7 @@ export function useTherapy() {
   const fetchProfessionals = useCallback(async () => {
     const { data, error } = await supabase
       .from("professional_profiles")
-      .select("*")
+      .select("id, user_id, specialty, bio, rating, total_sessions, hourly_rate, is_online, gambling_specialist, approach, specialties, council_number, council_state, is_approved, professional_type")
       .eq("is_approved", true)
       .eq("professional_type", "psicologo")
       .order("rating", { ascending: false });
@@ -83,7 +83,7 @@ export function useTherapy() {
       gambling_specialist: p.gambling_specialist || false,
       approach: Array.isArray(p.approach) ? p.approach : [],
       specialties: Array.isArray(p.specialties) ? p.specialties : [],
-      meeting_link: p.meeting_link,
+      meeting_link: null,
       council_number: p.council_number,
       council_state: p.council_state,
       profile_name: profileMap[p.user_id]?.full_name || p.specialty,
@@ -124,28 +124,34 @@ export function useTherapy() {
 
     let hasCredit = credits > 0;
 
-    // Create appointment
-    const { error } = await supabase.from("appointments").insert({
+    // Create appointment (meeting_link is set server-side / via RPC after booking)
+    const { data: created, error } = await supabase.from("appointments").insert({
       user_id: user.id,
       professional_id: professionalId,
       scheduled_at: scheduledAt.toISOString(),
       duration_minutes: 45,
       status: "scheduled",
-      meeting_link: meetingLink,
-    });
+      meeting_link: null,
+    }).select("id").maybeSingle();
 
     if (error) {
       toast({ title: "Erro ao agendar", description: error.message, variant: "destructive" });
       return false;
     }
 
-    // Deduct credit if available
-    if (hasCredit) {
-      await supabase
-        .from("session_credits")
-        .update({ credits_remaining: credits - 1, updated_at: new Date().toISOString() })
-        .eq("user_id", user.id);
+    // Fetch the meeting link via secure RPC and attach it to the appointment
+    try {
+      const { data: link } = await supabase.rpc("get_professional_meeting_link", {
+        _professional_id: professionalId,
+      });
+      if (created?.id && link) {
+        await supabase.from("appointments").update({ meeting_link: link as string }).eq("id", created.id);
+      }
+    } catch (e) {
+      console.warn("Could not attach meeting link", e);
     }
+
+    // Credit deduction is handled server-side by the payment webhook
 
     toast({ title: "Sessão agendada", description: "Sua consulta foi confirmada com sucesso." });
     await Promise.all([fetchAppointments(), fetchCredits()]);
@@ -165,21 +171,8 @@ export function useTherapy() {
       return;
     }
 
-    // Refund credit
-    const existing = await supabase
-      .from("session_credits")
-      .select("credits_remaining")
-      .eq("user_id", user.id)
-      .maybeSingle();
-
-    if (existing.data) {
-      await supabase
-        .from("session_credits")
-        .update({ credits_remaining: existing.data.credits_remaining + 1 })
-        .eq("user_id", user.id);
-    }
-
-    toast({ title: "Sessão cancelada", description: "O crédito foi devolvido ao seu saldo." });
+    // Credit refunds are handled server-side
+    toast({ title: "Sessão cancelada", description: "Sua consulta foi cancelada." });
     await Promise.all([fetchAppointments(), fetchCredits()]);
   };
 

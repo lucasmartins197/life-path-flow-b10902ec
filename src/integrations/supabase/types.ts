@@ -2772,6 +2772,10 @@ export type Database = {
         Args: { _patient_id: string; _professional_id: string }
         Returns: boolean
       }
+      get_professional_meeting_link: {
+        Args: { _professional_id: string }
+        Returns: string
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
