@@ -46,7 +46,7 @@ export function useTherapy() {
   const fetchProfessionals = useCallback(async () => {
     const { data, error } = await supabase
       .from("professional_profiles")
-      .select("*")
+      .select("id, user_id, specialty, bio, rating, total_sessions, hourly_rate, is_online, gambling_specialist, approach, specialties, council_number, council_state, is_approved, professional_type")
       .eq("is_approved", true)
       .eq("professional_type", "psicologo")
       .order("rating", { ascending: false });
