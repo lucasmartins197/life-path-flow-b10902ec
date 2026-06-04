@@ -171,21 +171,8 @@ export function useTherapy() {
       return;
     }
 
-    // Refund credit
-    const existing = await supabase
-      .from("session_credits")
-      .select("credits_remaining")
-      .eq("user_id", user.id)
-      .maybeSingle();
-
-    if (existing.data) {
-      await supabase
-        .from("session_credits")
-        .update({ credits_remaining: existing.data.credits_remaining + 1 })
-        .eq("user_id", user.id);
-    }
-
-    toast({ title: "Sessão cancelada", description: "O crédito foi devolvido ao seu saldo." });
+    // Credit refunds are handled server-side
+    toast({ title: "Sessão cancelada", description: "Sua consulta foi cancelada." });
     await Promise.all([fetchAppointments(), fetchCredits()]);
   };
 
