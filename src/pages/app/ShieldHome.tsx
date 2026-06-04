@@ -122,6 +122,16 @@ export default function ShieldHome() {
     }
   };
 
+  const handleCopyList = async () => {
+    const urls = sites.map((s) => s.url).join("\n");
+    try {
+      await navigator.clipboard.writeText(urls);
+      toast({ title: "Lista copiada!", description: "Cole no app de bloqueio do seu celular." });
+    } catch {
+      toast({ title: "Erro ao copiar", variant: "destructive" });
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background safe-top pb-28">
       <header className="bg-card border-b border-border/60 px-5 pt-8 pb-4">
