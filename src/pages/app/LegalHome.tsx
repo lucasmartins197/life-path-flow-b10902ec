@@ -133,8 +133,8 @@ export default function LegalHome() {
         return;
       }
       const priceMap = {
-        legal_consult: "price_1Tdta71kqWoIkJvRu6UHQTde",
-        legal_full: "price_1Tdta71kqWoIkJvRu6UHQTde",
+        legal_consult: "price_1TePGr1kqWoIkJvR69tvR5K7",
+        legal_full: "price_1TePGr1kqWoIkJvR69tvR5K7",
       };
       const { data, error } = await supabase.functions.invoke("create-checkout-session", {
         body: {
@@ -219,11 +219,10 @@ export default function LegalHome() {
                 <CheckCircle2 className="h-10 w-10 text-green-600" />
               </div>
               <h2 className="text-2xl font-bold text-gray-900 mb-2">Pagamento confirmado! ✅</h2>
-              <p className="text-gray-600 mb-2">
-                Sua consulta jurídica foi solicitada com sucesso.
-              </p>
+              <p className="text-gray-600 mb-2">Sua consulta jurídica foi solicitada com sucesso.</p>
               <p className="text-sm text-gray-500 mb-6">
-                Em breve você receberá uma mensagem no WhatsApp para agendar sua reunião com o advogado especialista em ludopatia.
+                Em breve você receberá uma mensagem no WhatsApp para agendar sua reunião com o advogado especialista em
+                ludopatia.
               </p>
               <button
                 onClick={() => navigate("/app/juridico")}
