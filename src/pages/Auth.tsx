@@ -20,7 +20,7 @@ export default function Auth() {
   const [showLoginPassword, setShowLoginPassword] = useState(false);
   const [showSignupPassword, setShowSignupPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  
+
   const { signIn, signUp, user, roles, isLoading: authLoading } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
@@ -30,9 +30,9 @@ export default function Auth() {
   useEffect(() => {
     if (authLoading) return;
     if (!user) return;
-    
+
     const from = (location.state as { from?: { pathname: string } })?.from?.pathname;
-    
+
     if (from) {
       navigate(from, { replace: true });
     } else if (roles.includes("admin")) {
@@ -47,17 +47,17 @@ export default function Auth() {
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault();
     setIsLoading(true);
-    
+
     const { error } = await signIn(loginEmail, loginPassword);
-    
+
     if (error) {
       const msg = error.message?.toLowerCase() || "";
       const description =
         msg.includes("invalid login credentials") || msg.includes("invalid_credentials")
           ? "Senha incorreta. Verifique e tente novamente."
           : msg.includes("email not confirmed")
-          ? "Confirme seu email antes de entrar."
-          : error.message;
+            ? "Confirme seu email antes de entrar."
+            : error.message;
       toast({
         variant: "destructive",
         title: "Erro no login",
@@ -69,13 +69,13 @@ export default function Auth() {
         description: "Login realizado com sucesso.",
       });
     }
-    
+
     setIsLoading(false);
   }
 
   async function handleSignup(e: React.FormEvent) {
     e.preventDefault();
-    
+
     if (signupPassword !== confirmPassword) {
       toast({
         variant: "destructive",
@@ -84,7 +84,7 @@ export default function Auth() {
       });
       return;
     }
-    
+
     if (signupPassword.length < 8 || !/\d/.test(signupPassword) || !/[a-zA-Z]/.test(signupPassword)) {
       toast({
         variant: "destructive",
@@ -93,11 +93,11 @@ export default function Auth() {
       });
       return;
     }
-    
+
     setIsLoading(true);
-    
+
     const { error } = await signUp(signupEmail, signupPassword, signupName);
-    
+
     if (error) {
       toast({
         variant: "destructive",
@@ -107,7 +107,7 @@ export default function Auth() {
       setIsLoading(false);
       return;
     }
-    
+
     // Enviar dados para o webhook do n8n
     try {
       await fetch("https://apostandonavida.app.n8n.cloud/webhook/validate-user", {
@@ -120,17 +120,17 @@ export default function Auth() {
           email: signupEmail,
         }),
       });
-      
+
       // signup redirect handled by useEffect when user state updates
     } catch (webhookError) {
       console.error("Erro ao enviar para webhook:", webhookError);
     }
-    
+
     toast({
       title: "Conta criada!",
       description: "Verifique seu email para confirmar o cadastro.",
     });
-    
+
     setIsLoading(false);
   }
 
@@ -143,20 +143,16 @@ export default function Auth() {
             <div className="w-12 h-12 rounded-2xl bg-white/20 flex items-center justify-center">
               <Heart className="h-6 w-6" />
             </div>
-            <h1 className="text-2xl lg:text-3xl font-display font-bold">
-              Apostando na Vida
-            </h1>
+            <h1 className="text-2xl lg:text-3xl font-display font-bold">Stake Real</h1>
           </div>
-          
-          <h2 className="text-3xl lg:text-4xl font-display font-bold mb-6">
-            Sua jornada de transformação começa aqui
-          </h2>
-          
+
+          <h2 className="text-3xl lg:text-4xl font-display font-bold mb-6">Sua jornada de transformação começa aqui</h2>
+
           <p className="text-lg text-white/80 mb-8">
-            Um programa completo de terapia digital para apoiar sua recuperação 
-            com profissionais qualificados e ferramentas personalizadas.
+            Um programa completo de terapia digital para apoiar sua recuperação com profissionais qualificados e
+            ferramentas personalizadas.
           </p>
-          
+
           <div className="space-y-4">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center">
@@ -167,7 +163,7 @@ export default function Auth() {
                 <p className="text-sm text-white/70">Trilha guiada de recuperação</p>
               </div>
             </div>
-            
+
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center">
                 <Heart className="h-5 w-5" />
@@ -177,7 +173,7 @@ export default function Auth() {
                 <p className="text-sm text-white/70">Profissionais especializados</p>
               </div>
             </div>
-            
+
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center">
                 <Shield className="h-5 w-5" />
@@ -190,24 +186,22 @@ export default function Auth() {
           </div>
         </div>
       </div>
-      
+
       {/* Right side - Auth forms */}
       <div className="flex-1 flex items-center justify-center p-6 lg:p-12">
         <Card className="w-full max-w-md border-0 shadow-xl">
           <CardHeader className="text-center pb-2">
             <CardTitle className="text-2xl font-display">Acesse sua conta</CardTitle>
-            <CardDescription>
-              Entre ou crie uma conta para continuar
-            </CardDescription>
+            <CardDescription>Entre ou crie uma conta para continuar</CardDescription>
           </CardHeader>
-          
+
           <CardContent>
             <Tabs defaultValue="login" className="w-full">
               <TabsList className="grid w-full grid-cols-2 mb-6">
                 <TabsTrigger value="login">Entrar</TabsTrigger>
                 <TabsTrigger value="signup">Criar conta</TabsTrigger>
               </TabsList>
-              
+
               <TabsContent value="login">
                 <form onSubmit={handleLogin} className="space-y-4">
                   <div className="space-y-2">
@@ -222,14 +216,11 @@ export default function Auth() {
                       className="input-premium"
                     />
                   </div>
-                  
+
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
                       <Label htmlFor="login-password">Senha</Label>
-                      <a 
-                        href="/auth/forgot-password" 
-                        className="text-sm text-primary hover:underline"
-                      >
+                      <a href="/auth/forgot-password" className="text-sm text-primary hover:underline">
                         Esqueceu a senha?
                       </a>
                     </div>
@@ -243,18 +234,17 @@ export default function Auth() {
                         required
                         className="input-premium pr-10"
                       />
-                      <button type="button" onClick={() => setShowLoginPassword(p => !p)}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
+                      <button
+                        type="button"
+                        onClick={() => setShowLoginPassword((p) => !p)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                      >
                         {showLoginPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                       </button>
                     </div>
                   </div>
-                  
-                  <Button
-                    type="submit"
-                    className="w-full btn-premium-primary"
-                    disabled={isLoading}
-                  >
+
+                  <Button type="submit" className="w-full btn-premium-primary" disabled={isLoading}>
                     {isLoading ? (
                       <>
                         <Loader2 className="h-4 w-4 animate-spin" />
@@ -264,11 +254,9 @@ export default function Auth() {
                       "Entrar"
                     )}
                   </Button>
-                  
                 </form>
               </TabsContent>
 
-              
               <TabsContent value="signup">
                 <form onSubmit={handleSignup} className="space-y-4">
                   <div className="space-y-2">
@@ -283,7 +271,7 @@ export default function Auth() {
                       className="input-premium"
                     />
                   </div>
-                  
+
                   <div className="space-y-2">
                     <Label htmlFor="signup-email">Email</Label>
                     <Input
@@ -296,7 +284,7 @@ export default function Auth() {
                       className="input-premium"
                     />
                   </div>
-                  
+
                   <div className="space-y-2">
                     <Label htmlFor="signup-password">Senha</Label>
                     <div className="relative">
@@ -309,13 +297,16 @@ export default function Auth() {
                         required
                         className="input-premium pr-10"
                       />
-                      <button type="button" onClick={() => setShowSignupPassword(p => !p)}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
+                      <button
+                        type="button"
+                        onClick={() => setShowSignupPassword((p) => !p)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                      >
                         {showSignupPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                       </button>
                     </div>
                   </div>
-                  
+
                   <div className="space-y-2">
                     <Label htmlFor="confirm-password">Confirmar senha</Label>
                     <div className="relative">
@@ -328,18 +319,17 @@ export default function Auth() {
                         required
                         className="input-premium pr-10"
                       />
-                      <button type="button" onClick={() => setShowConfirmPassword(p => !p)}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
+                      <button
+                        type="button"
+                        onClick={() => setShowConfirmPassword((p) => !p)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                      >
                         {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                       </button>
                     </div>
                   </div>
-                  
-                  <Button
-                    type="submit"
-                    className="w-full btn-premium-primary"
-                    disabled={isLoading}
-                  >
+
+                  <Button type="submit" className="w-full btn-premium-primary" disabled={isLoading}>
                     {isLoading ? (
                       <>
                         <Loader2 className="h-4 w-4 animate-spin" />
@@ -349,7 +339,7 @@ export default function Auth() {
                       "Criar conta"
                     )}
                   </Button>
-                  
+
                   <p className="text-xs text-muted-foreground text-center">
                     Ao criar uma conta, você concorda com nossos{" "}
                     <a href="#" className="text-primary hover:underline">
