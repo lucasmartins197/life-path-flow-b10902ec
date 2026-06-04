@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   ChevronLeft, Shield, Plus, Trash2, Apple, Smartphone, UserRound, Mail, Phone,
-  Heart, Flame, AlertTriangle, Check, Sparkles, X, MessageCircle,
+  Heart, Flame, AlertTriangle, Check, Sparkles, X, MessageCircle, Copy, ExternalLink,
 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Switch } from "@/components/ui/switch";
