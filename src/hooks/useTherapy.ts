@@ -83,7 +83,7 @@ export function useTherapy() {
       gambling_specialist: p.gambling_specialist || false,
       approach: Array.isArray(p.approach) ? p.approach : [],
       specialties: Array.isArray(p.specialties) ? p.specialties : [],
-      meeting_link: p.meeting_link,
+      meeting_link: null,
       council_number: p.council_number,
       council_state: p.council_state,
       profile_name: profileMap[p.user_id]?.full_name || p.specialty,
