@@ -4,17 +4,22 @@ import confetti from "canvas-confetti";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useMedals } from "@/hooks/useMedals";
-import {
-  useJourneyValidation,
-  STEP_VALIDATION_MEDAL,
-  STEP_TASK_LABEL,
-} from "@/hooks/useJourneyValidation";
+import { useJourneyValidation, STEP_VALIDATION_MEDAL, STEP_TASK_LABEL } from "@/hooks/useJourneyValidation";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import {
-  Loader2, ArrowLeft, Award, Headphones, Sparkles, MessageSquare, Compass, ArrowRight,
-  CheckCircle, Lock, RefreshCw,
+  Loader2,
+  ArrowLeft,
+  Award,
+  Headphones,
+  Sparkles,
+  MessageSquare,
+  Compass,
+  ArrowRight,
+  CheckCircle,
+  Lock,
+  RefreshCw,
 } from "lucide-react";
 
 /* ── Áudio do passo (Supabase Storage) ── */
@@ -51,7 +56,8 @@ const STEPS: Record<number, StepContent> = {
     medal: "Coragem de Olhar",
     message: "O primeiro passo é o mais corajoso. Você admitiu o problema — isso já é uma vitória.",
     question: "Em quais áreas da sua vida o jogo causou mais impacto? Seja honesto consigo mesmo.",
-    activity: "Complete seu perfil no app — quanto mais informações você registrar, mais personalizada será sua jornada.",
+    activity:
+      "Complete seu perfil no app — quanto mais informações você registrar, mais personalizada será sua jornada.",
     activityButton: "Completar meu perfil",
     activityRoute: "/app/perfil",
     youtubeId: "dpvudFrQHJo",
@@ -61,7 +67,8 @@ const STEPS: Record<number, StepContent> = {
     medal: "Primeiro Raio de Luz",
     message: "Pessoas perderam tudo e reconstruíram suas vidas. Você também pode — um dia de cada vez.",
     question: "Como seria sua vida daqui a 1 ano se você se mantiver na recuperação? Descreva com detalhes.",
-    activity: "Publique sua primeira história no app. Não precisa se identificar — seu relato pode ser a esperança que outra pessoa precisa hoje.",
+    activity:
+      "Publique sua primeira história no app. Não precisa se identificar — seu relato pode ser a esperança que outra pessoa precisa hoje.",
     activityButton: "Ir para Histórias que Conectam",
     activityRoute: "/app/comunidade",
     youtubeId: "xyaUZHTUHkU",
@@ -70,8 +77,10 @@ const STEPS: Record<number, StepContent> = {
     name: "Entrega",
     medal: "Âncora Plantada",
     message: "Pedir ajuda não é fraqueza. É a decisão mais inteligente que você pode tomar agora.",
-    question: "Quem é a pessoa de confiança que pode te apoiar nessa jornada? Já contou para ela sobre o que está passando?",
-    activity: "Cadastre agora seu Contato Âncora — a pessoa que você liga nos momentos de crise. Ter esse contato salvo no app pode evitar uma recaída.",
+    question:
+      "Quem é a pessoa de confiança que pode te apoiar nessa jornada? Já contou para ela sobre o que está passando?",
+    activity:
+      "Cadastre agora seu Contato Âncora — a pessoa que você liga nos momentos de crise. Ter esse contato salvo no app pode evitar uma recaída.",
     activityButton: "Cadastrar meu Contato Âncora",
     activityRoute: "/app/ancora",
     youtubeId: "82CZZveTJqE",
@@ -80,7 +89,8 @@ const STEPS: Record<number, StepContent> = {
     name: "Inventário",
     medal: "Espelho Honesto",
     message: "Conhecer seus gatilhos é a arma mais poderosa contra a recaída.",
-    question: "O que geralmente te levava a apostar? Tédio, ansiedade, dívidas, solidão? Identifique seus 3 principais gatilhos.",
+    question:
+      "O que geralmente te levava a apostar? Tédio, ansiedade, dívidas, solidão? Identifique seus 3 principais gatilhos.",
     activity: "Registre seus gatilhos no Meu Escudo. O app vai te alertar quando você estiver em situação de risco.",
     activityButton: "Configurar Meu Escudo",
     activityRoute: "/app/escudo",
@@ -90,8 +100,10 @@ const STEPS: Record<number, StepContent> = {
     name: "Verdade",
     medal: "Voz que Liberta",
     message: "A vergonha perde força quando você fala. O silêncio alimenta o vício.",
-    question: "Existe alguém importante na sua vida para quem você ainda não contou a verdade? O que te impede de falar?",
-    activity: "Poste um depoimento anônimo em Histórias que Conectam. Falar a verdade — mesmo que anonimamente — é o primeiro passo para a cura.",
+    question:
+      "Existe alguém importante na sua vida para quem você ainda não contou a verdade? O que te impede de falar?",
+    activity:
+      "Poste um depoimento anônimo em Histórias que Conectam. Falar a verdade — mesmo que anonimamente — é o primeiro passo para a cura.",
     activityButton: "Publicar depoimento anônimo",
     activityRoute: "/app/comunidade",
     youtubeId: "YpvINqS3uPw",
@@ -101,7 +113,8 @@ const STEPS: Record<number, StepContent> = {
     medal: "Porta Aberta",
     message: "Mudar exige mais do que querer — exige agir diferente todos os dias.",
     question: "Quais hábitos do seu dia a dia precisam mudar para afastar o risco de recaída? Liste pelo menos 3.",
-    activity: "Crie sua primeira rotina no app. Estrutura diária é proteção — cada hábito saudável ocupa o espaço que o jogo ocupava.",
+    activity:
+      "Crie sua primeira rotina no app. Estrutura diária é proteção — cada hábito saudável ocupa o espaço que o jogo ocupava.",
     activityButton: "Criar minha Rotina Inteligente",
     activityRoute: "/app/rotina",
     youtubeId: "oBi37roJ0RY",
@@ -110,8 +123,10 @@ const STEPS: Record<number, StepContent> = {
     name: "Humildade",
     medal: "Força que Dobra",
     message: "Você não precisa ter tudo resolvido para pedir ajuda. Precisa apenas ser honesto.",
-    question: "Em que momento do vício você mais se iludiu achando que estava no controle? O que essa ilusão te custou?",
-    activity: "Agende sua primeira sessão de terapia online. Profissionais especializados em ludopatia estão aqui para te ajudar — sem julgamento.",
+    question:
+      "Em que momento do vício você mais se iludiu achando que estava no controle? O que essa ilusão te custou?",
+    activity:
+      "Agende sua primeira sessão de terapia online. Profissionais especializados em ludopatia estão aqui para te ajudar — sem julgamento.",
     activityButton: "Agendar sessão de Terapia",
     activityRoute: "/app/terapia",
     youtubeId: "RNkJUNA71MY",
@@ -121,7 +136,8 @@ const STEPS: Record<number, StepContent> = {
     medal: "Ponte Reconstruída",
     message: "Você não pode mudar o passado. Mas pode mudar o que faz a partir de agora.",
     question: "Quem foi mais afetado pelo seu comportamento? O que você gostaria de dizer ou fazer por essa pessoa?",
-    activity: "Registre suas dívidas no app. Encarar os números é o primeiro passo para reorganizar sua vida financeira com um plano real.",
+    activity:
+      "Registre suas dívidas no app. Encarar os números é o primeiro passo para reorganizar sua vida financeira com um plano real.",
     activityButton: "Ir para Finanças",
     activityRoute: "/app/financas",
     youtubeId: "sLsN078bgY8",
@@ -130,8 +146,10 @@ const STEPS: Record<number, StepContent> = {
     name: "Responsabilidade",
     medal: "Peso nos Ombros",
     message: "Cada dia sem apostar é prova de que você é capaz. Construa sua nova identidade com ações.",
-    question: "Que compromisso concreto você assume consigo mesmo hoje? Escreva como se fosse um contrato com você mesmo.",
-    activity: "Ative o check-in diário na sua Rotina Inteligente. Registrar sua presença todo dia é o ato mais poderoso de responsabilidade que existe.",
+    question:
+      "Que compromisso concreto você assume consigo mesmo hoje? Escreva como se fosse um contrato com você mesmo.",
+    activity:
+      "Ative o check-in diário na sua Rotina Inteligente. Registrar sua presença todo dia é o ato mais poderoso de responsabilidade que existe.",
     activityButton: "Ativar check-in diário",
     activityRoute: "/app/rotina",
     youtubeId: "7y1uvHZ_znY",
@@ -141,7 +159,8 @@ const STEPS: Record<number, StepContent> = {
     medal: "Guarda Fiel",
     message: "A recaída começa na cabeça antes de acontecer. Você já sabe reconhecer os sinais.",
     question: "Nos últimos dias sentiu vontade de apostar? O que aconteceu antes? Qual foi o gatilho?",
-    activity: "Configure os alertas de proteção no Meu Escudo. Quando o risco aparecer, o app age antes que você precise agir sozinho.",
+    activity:
+      "Configure os alertas de proteção no Meu Escudo. Quando o risco aparecer, o app age antes que você precise agir sozinho.",
     activityButton: "Configurar alertas no Meu Escudo",
     activityRoute: "/app/escudo",
     youtubeId: "KvfQCwczYhI",
@@ -151,7 +170,8 @@ const STEPS: Record<number, StepContent> = {
     medal: "Raízes Profundas",
     message: "Quando você tem razões para viver, o jogo perde o poder sobre você.",
     question: "O que te dá sentido e propósito além do jogo? Família, trabalho, um sonho? Escreva sobre isso.",
-    activity: "Se você perdeu dinheiro para casas de apostas, pode haver um caminho jurídico para recuperá-lo. Acesse o Apoio Jurídico e entenda seus direitos.",
+    activity:
+      "Se você perdeu dinheiro para casas de apostas, pode haver um caminho jurídico para recuperá-lo. Acesse o Apoio Jurídico e entenda seus direitos.",
     activityButton: "Acessar Apoio Jurídico",
     activityRoute: "/app/juridico",
     youtubeId: "YpvINqS3uPw",
@@ -160,8 +180,10 @@ const STEPS: Record<number, StepContent> = {
     name: "Repasse",
     medal: "Farol Aceso",
     message: "Sua história tem o poder de salvar outra pessoa. Compartilhar é parte da sua cura.",
-    question: "Se você pudesse mandar uma mensagem para alguém no início do vício, o que diria? Escreva essa mensagem agora.",
-    activity: "Publique sua história de conquista em Histórias que Conectam e compartilhe o app Apostando na Vida com alguém que precisa. Você completa sua jornada ajudando outros a começar a deles.",
+    question:
+      "Se você pudesse mandar uma mensagem para alguém no início do vício, o que diria? Escreva essa mensagem agora.",
+    activity:
+      "Publique sua história de conquista em Histórias que Conectam e compartilhe o app Stake Real com alguém que precisa. Você completa sua jornada ajudando outros a começar a deles.",
     activityButton: "Publicar minha conquista",
     activityRoute: "/app/comunidade",
     youtubeId: "xyaUZHTUHkU",
@@ -175,8 +197,7 @@ export default function JourneyStep() {
   const { user } = useAuth();
   const { toast } = useToast();
   const { awardMedal } = useMedals();
-  const { isUnlocked, isDone: taskValidated, isAdmin, refetch: revalidate, validations } =
-    useJourneyValidation();
+  const { isUnlocked, isDone: taskValidated, isAdmin, refetch: revalidate, validations } = useJourneyValidation();
   const step = STEPS[stepNumber] || STEPS[1];
 
   const [loading, setLoading] = useState(true);
@@ -220,7 +241,7 @@ export default function JourneyStep() {
       .from("jornada_respostas" as any)
       .upsert(
         { user_id: user.id, passo_numero: stepNumber, resposta: resposta.trim(), updated_at: new Date().toISOString() },
-        { onConflict: "user_id,passo_numero" }
+        { onConflict: "user_id,passo_numero" },
       );
     setSaving(false);
     if (error) {
@@ -244,7 +265,11 @@ export default function JourneyStep() {
   async function completeStep() {
     if (!user) return;
     if (!resposta.trim()) {
-      toast({ variant: "destructive", title: "Reflexão necessária", description: "Responda a pergunta antes de concluir." });
+      toast({
+        variant: "destructive",
+        title: "Reflexão necessária",
+        description: "Responda a pergunta antes de concluir.",
+      });
       return;
     }
     setCompleting(true);
@@ -304,19 +329,54 @@ export default function JourneyStep() {
 
   if (showCelebration) {
     return (
-      <div className="min-h-screen flex items-center justify-center" style={{ background: "linear-gradient(135deg, #1B4332, #2D6A4F)" }}>
-        <div className="text-center animate-scale-in px-6">
+      <div
+        className="min-h-screen flex flex-col items-center justify-center px-6"
+        style={{ background: "linear-gradient(135deg, #1B4332, #2D6A4F)" }}
+      >
+        <div className="text-center animate-scale-in w-full max-w-sm">
+          {/* Medalha */}
           <div
-            className="w-24 h-24 rounded-full mx-auto mb-6 flex items-center justify-center"
-            style={{ background: "linear-gradient(135deg, #C9A84C, #E8D590)", boxShadow: "0 0 40px rgba(201,168,76,0.5)" }}
+            className="w-24 h-24 rounded-full mx-auto mb-4 flex items-center justify-center"
+            style={{
+              background: "linear-gradient(135deg, #C9A84C, #E8D590)",
+              boxShadow: "0 0 40px rgba(201,168,76,0.5)",
+            }}
           >
             <Award className="h-12 w-12 text-white" />
           </div>
-          <h1 className="text-2xl font-bold text-white mb-2">Parabéns!</h1>
-          <p className="text-white/80 text-lg mb-1">Você conquistou a medalha</p>
-          <p className="text-xl font-bold flex items-center justify-center gap-2" style={{ color: "#E8D590" }}>
+          <h1 className="text-2xl font-bold text-white mb-1">Parabéns!</h1>
+          <p className="text-white/80 text-base mb-1">Você conquistou a medalha</p>
+          <p className="text-lg font-bold mb-6 flex items-center justify-center gap-2" style={{ color: "#E8D590" }}>
             <Award className="h-5 w-5" /> {step.medal}
           </p>
+
+          {/* Mensagem da Ana */}
+          <div
+            className="rounded-2xl p-5 text-left"
+            style={{ backgroundColor: "rgba(255,255,255,0.1)", border: "1px solid rgba(255,255,255,0.2)" }}
+          >
+            <div className="flex items-center gap-3 mb-3">
+              <div className="h-10 w-10 rounded-full bg-[#F5F0E8] flex items-center justify-center shrink-0 overflow-hidden">
+                <svg viewBox="0 0 100 100" className="w-full h-full" aria-hidden>
+                  <circle cx="50" cy="50" r="50" fill="#F5F0E8" />
+                  <path d="M22 50 Q22 22 50 22 Q78 22 78 50 L78 60 Q70 50 50 50 Q30 50 22 60 Z" fill="#1B4332" />
+                  <ellipse cx="50" cy="58" rx="22" ry="26" fill="#E8C9A8" />
+                  <ellipse cx="42" cy="58" rx="2" ry="2.5" fill="#1B4332" />
+                  <ellipse cx="58" cy="58" rx="2" ry="2.5" fill="#1B4332" />
+                  <path d="M42 70 Q50 76 58 70" stroke="#1B4332" strokeWidth="1.8" fill="none" strokeLinecap="round" />
+                </svg>
+              </div>
+              <div>
+                <p className="text-sm font-bold" style={{ color: "#C9A84C" }}>
+                  Ana
+                </p>
+                <p className="text-xs text-white/60">
+                  Passo {stepNumber} — {step.name}
+                </p>
+              </div>
+            </div>
+            <p className="text-sm leading-relaxed text-white/90 italic">"{step.message}"</p>
+          </div>
         </div>
       </div>
     );
@@ -374,11 +434,7 @@ export default function JourneyStep() {
             </p>
           </div>
           <div className="flex gap-2 w-full max-w-sm">
-            <Button
-              variant="outline"
-              className="flex-1"
-              onClick={() => navigate(`/app/jornada/${stepNumber - 1}`)}
-            >
+            <Button variant="outline" className="flex-1" onClick={() => navigate(`/app/jornada/${stepNumber - 1}`)}>
               <ArrowLeft className="h-4 w-4 mr-1" /> Ir ao passo anterior
             </Button>
             <Button
@@ -422,7 +478,10 @@ export default function JourneyStep() {
       <div className="max-w-2xl mx-auto px-5 pt-5 space-y-5">
         {/* 1. ÁUDIO */}
         {STEP_AUDIO[stepNumber] && (
-          <div className="rounded-2xl p-4 shadow-md" style={{ background: "linear-gradient(135deg, #1B4332, #2D6A4F)" }}>
+          <div
+            className="rounded-2xl p-4 shadow-md"
+            style={{ background: "linear-gradient(135deg, #1B4332, #2D6A4F)" }}
+          >
             <div className="flex items-center gap-2 mb-3 text-white">
               <Headphones className="h-4 w-4" style={{ color: "#E8D590" }} />
               <div className="flex-1 min-w-0">
@@ -440,15 +499,10 @@ export default function JourneyStep() {
         )}
 
         {/* 2. MENSAGEM IMPACTANTE */}
-        <div
-          className="rounded-2xl p-5 shadow-md"
-          style={{ background: "linear-gradient(135deg, #1B4332, #2D6A4F)" }}
-        >
+        <div className="rounded-2xl p-5 shadow-md" style={{ background: "linear-gradient(135deg, #1B4332, #2D6A4F)" }}>
           <div className="flex items-start gap-3">
             <Sparkles className="h-5 w-5 shrink-0 mt-0.5" style={{ color: "#E8D590" }} />
-            <p className="text-white text-base font-medium leading-snug">
-              {step.message}
-            </p>
+            <p className="text-white text-base font-medium leading-snug">{step.message}</p>
           </div>
         </div>
 
@@ -460,9 +514,7 @@ export default function JourneyStep() {
               Reflexão
             </h2>
           </div>
-          <p className="text-foreground text-sm mb-3 leading-relaxed">
-            {step.question}
-          </p>
+          <p className="text-foreground text-sm mb-3 leading-relaxed">{step.question}</p>
           <Textarea
             value={resposta}
             onChange={(e) => setResposta(e.target.value)}
@@ -506,9 +558,7 @@ export default function JourneyStep() {
               </span>
             )}
           </div>
-          <p className="text-foreground text-sm mb-2 leading-relaxed">
-            {step.activity}
-          </p>
+          <p className="text-foreground text-sm mb-2 leading-relaxed">{step.activity}</p>
           <p className="text-xs text-muted-foreground mb-4 italic">
             Tarefa validada automaticamente: {STEP_TASK_LABEL[stepNumber]}
           </p>
@@ -547,8 +597,8 @@ export default function JourneyStep() {
             background: isCompleted
               ? "linear-gradient(135deg, #C9A84C, #E8D590)"
               : stepTaskDone || isAdmin
-              ? "linear-gradient(135deg, #1B4332, #2D6A4F)"
-              : "#9CA3AF",
+                ? "linear-gradient(135deg, #1B4332, #2D6A4F)"
+                : "#9CA3AF",
           }}
         >
           {completing ? (
