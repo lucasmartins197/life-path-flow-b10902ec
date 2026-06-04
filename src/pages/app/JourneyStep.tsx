@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import confetti from "canvas-confetti";
 import { supabase } from "@/integrations/supabase/client";
@@ -20,7 +20,10 @@ import {
   CheckCircle,
   Lock,
   RefreshCw,
+  PlayCircle,
+  CheckSquare,
 } from "lucide-react";
+import { STEP_QUIZ } from "./quiz_data";
 
 /* ── Áudio do passo (Supabase Storage) ── */
 const AUDIO_BASE = "https://dmrlkxwpbwmzpdecsgnw.supabase.co/storage/v1/object/public/audios-jornada";
@@ -206,6 +209,15 @@ export default function JourneyStep() {
   const [resposta, setResposta] = useState("");
   const [isCompleted, setIsCompleted] = useState(false);
   const [showCelebration, setShowCelebration] = useState(false);
+
+  // Quiz states
+  const [audioPlayed, setAudioPlayed] = useState(false);
+  const [quizAnswers, setQuizAnswers] = useState<Record<number, number>>({});
+  const [quizSubmitted, setQuizSubmitted] = useState(false);
+  const [quizPassed, setQuizPassed] = useState(false);
+  const audioRef = useRef<HTMLAudioElement>(null);
+
+  const quiz = STEP_QUIZ[stepNumber];
 
   const stepUnlocked = isUnlocked(stepNumber);
   const stepTaskDone = taskValidated(stepNumber);
@@ -490,11 +502,122 @@ export default function JourneyStep() {
                 </p>
                 <p className="text-sm font-semibold truncate">{step.name}</p>
               </div>
+              {audioPlayed && (
+                <span
+                  className="text-xs font-bold px-2 py-1 rounded-full flex items-center gap-1"
+                  style={{ background: "rgba(201,168,76,0.2)", color: "#E8D590" }}
+                >
+                  <CheckCircle className="h-3 w-3" /> Ouvido
+                </span>
+              )}
             </div>
-            <audio controls preload="none" className="w-full">
+            <audio
+              ref={audioRef}
+              controls
+              preload="none"
+              className="w-full"
+              onPlay={() => setAudioPlayed(true)}
+              onEnded={() => setAudioPlayed(true)}
+            >
               <source src={STEP_AUDIO[stepNumber]} type="audio/mpeg" />
               Seu navegador não suporta áudio HTML5.
             </audio>
+            {!audioPlayed && (
+              <p className="text-xs mt-2 text-center" style={{ color: "rgba(255,255,255,0.6)" }}>
+                ▶️ Ouça o áudio para liberar o questionário
+              </p>
+            )}
+          </div>
+        )}
+
+        {/* QUIZ — aparece após ouvir o áudio */}
+        {audioPlayed && quiz && !isCompleted && (
+          <div className="rounded-2xl p-5 bg-card border border-border shadow-sm">
+            <div className="flex items-center gap-2 mb-4">
+              <CheckSquare className="h-5 w-5" style={{ color: "#1B4332" }} />
+              <h2 className="text-sm font-bold uppercase tracking-wide" style={{ color: "#1B4332" }}>
+                Questionário do Passo {stepNumber}
+              </h2>
+              {quizPassed && (
+                <span
+                  className="ml-auto text-xs font-bold px-2 py-1 rounded-full flex items-center gap-1"
+                  style={{ background: "#D1FAE5", color: "#065F46" }}
+                >
+                  <CheckCircle className="h-3 w-3" /> Aprovado
+                </span>
+              )}
+            </div>
+
+            <div className="space-y-5">
+              {quiz.questions.map((q, qi) => (
+                <div key={qi}>
+                  <p className="text-sm font-medium text-foreground mb-2">
+                    {qi + 1}. {q.text}
+                  </p>
+                  <div className="space-y-2">
+                    {q.options.map((opt, oi) => {
+                      const selected = quizAnswers[qi] === oi;
+                      const isCorrect = oi === q.correct;
+                      const showResult = quizSubmitted;
+                      let bg = "bg-secondary/40 border-border/30";
+                      if (showResult && selected && isCorrect) bg = "bg-green-50 border-green-400";
+                      else if (showResult && selected && !isCorrect) bg = "bg-red-50 border-red-400";
+                      else if (showResult && isCorrect) bg = "bg-green-50 border-green-300";
+                      else if (selected) bg = "border-primary bg-primary/5";
+                      return (
+                        <button
+                          key={oi}
+                          disabled={quizSubmitted}
+                          onClick={() => !quizSubmitted && setQuizAnswers((prev) => ({ ...prev, [qi]: oi }))}
+                          className={`w-full text-left px-3 py-2.5 rounded-xl border text-sm transition-colors ${bg}`}
+                        >
+                          {opt}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {!quizSubmitted ? (
+              <Button
+                onClick={() => {
+                  const answered = Object.keys(quizAnswers).length;
+                  if (answered < quiz.questions.length) {
+                    toast({ variant: "destructive", title: "Responda todas as perguntas antes de continuar" });
+                    return;
+                  }
+                  const correct = quiz.questions.filter((q, i) => quizAnswers[i] === q.correct).length;
+                  setQuizSubmitted(true);
+                  if (correct >= 2) {
+                    setQuizPassed(true);
+                    toast({ title: `✅ ${correct}/3 corretas! Muito bem!` });
+                  } else {
+                    toast({
+                      variant: "destructive",
+                      title: `❌ ${correct}/3 corretas. Releia o conteúdo e tente novamente.`,
+                    });
+                    setTimeout(() => {
+                      setQuizAnswers({});
+                      setQuizSubmitted(false);
+                    }, 3000);
+                  }
+                }}
+                className="w-full mt-4"
+                style={{ background: "#1B4332", color: "white" }}
+              >
+                Confirmar respostas
+              </Button>
+            ) : quizPassed ? (
+              <p className="text-center text-sm text-green-600 font-medium mt-4">
+                ✅ Questionário concluído! Agora escreva seu depoimento abaixo.
+              </p>
+            ) : (
+              <p className="text-center text-sm text-red-500 mt-4">
+                Revise o conteúdo e tente novamente em instantes...
+              </p>
+            )}
           </div>
         )}
 
@@ -506,31 +629,48 @@ export default function JourneyStep() {
           </div>
         </div>
 
-        {/* 3. PERGUNTA REFLEXIVA */}
+        {/* 3. DEPOIMENTO — aparece após quiz aprovado */}
         <div className="rounded-2xl p-5 bg-card border border-border shadow-sm">
           <div className="flex items-center gap-2 mb-3">
             <MessageSquare className="h-5 w-5" style={{ color: "#1B4332" }} />
             <h2 className="text-sm font-bold uppercase tracking-wide" style={{ color: "#1B4332" }}>
-              Reflexão
+              Seu Depoimento
             </h2>
+            {resposta.trim().length >= 50 && (
+              <span
+                className="ml-auto text-xs font-bold px-2 py-1 rounded-full flex items-center gap-1"
+                style={{ background: "#D1FAE5", color: "#065F46" }}
+              >
+                <CheckCircle className="h-3 w-3" /> Salvo
+              </span>
+            )}
           </div>
-          <p className="text-foreground text-sm mb-3 leading-relaxed">{step.question}</p>
+          {!quizPassed && !isCompleted && (
+            <p className="text-xs text-muted-foreground mb-3 italic">
+              🔒 Complete o questionário para liberar o depoimento
+            </p>
+          )}
+          <p className="text-foreground text-sm mb-3 leading-relaxed">{quiz?.depositoPrompt || step.question}</p>
           <Textarea
             value={resposta}
             onChange={(e) => setResposta(e.target.value)}
-            placeholder="Escreva aqui sua reflexão..."
+            placeholder="Escreva aqui seu depoimento (mínimo 50 caracteres)..."
             rows={5}
             className="resize-none"
+            disabled={!quizPassed && !isCompleted}
           />
-          <div className="flex justify-end mt-3">
+          <div className="flex items-center justify-between mt-3">
+            <span className={`text-xs ${resposta.length >= 50 ? "text-green-600" : "text-muted-foreground"}`}>
+              {resposta.length}/50 mínimo
+            </span>
             <Button
               onClick={saveResposta}
-              disabled={saving || !resposta.trim()}
+              disabled={saving || resposta.trim().length < 50 || (!quizPassed && !isCompleted)}
               variant="outline"
               size="sm"
               style={{ borderColor: "#1B4332", color: "#1B4332" }}
             >
-              {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : "Salvar reflexão"}
+              {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : "Salvar depoimento"}
             </Button>
           </div>
         </div>
@@ -589,14 +729,55 @@ export default function JourneyStep() {
         </div>
 
         {/* CONCLUIR PASSO */}
+        {/* Checklist de requisitos */}
+        {!isCompleted && (
+          <div className="rounded-2xl p-4 bg-card border border-border">
+            <p className="text-xs font-bold uppercase tracking-wide text-muted-foreground mb-3">
+              Para concluir este passo:
+            </p>
+            <div className="space-y-2">
+              <div
+                className={`flex items-center gap-2 text-sm ${audioPlayed ? "text-green-600" : "text-muted-foreground"}`}
+              >
+                {audioPlayed ? <CheckCircle className="h-4 w-4" /> : <Lock className="h-4 w-4" />}
+                Ouvir o áudio
+              </div>
+              <div
+                className={`flex items-center gap-2 text-sm ${quizPassed ? "text-green-600" : "text-muted-foreground"}`}
+              >
+                {quizPassed ? <CheckCircle className="h-4 w-4" /> : <Lock className="h-4 w-4" />}
+                Responder o questionário (2/3 corretas)
+              </div>
+              <div
+                className={`flex items-center gap-2 text-sm ${resposta.trim().length >= 50 ? "text-green-600" : "text-muted-foreground"}`}
+              >
+                {resposta.trim().length >= 50 ? <CheckCircle className="h-4 w-4" /> : <Lock className="h-4 w-4" />}
+                Escrever depoimento (mín. 50 caracteres)
+              </div>
+              <div
+                className={`flex items-center gap-2 text-sm ${stepTaskDone || isAdmin ? "text-green-600" : "text-muted-foreground"}`}
+              >
+                {stepTaskDone || isAdmin ? <CheckCircle className="h-4 w-4" /> : <Lock className="h-4 w-4" />}
+                Completar atividade prática
+              </div>
+            </div>
+          </div>
+        )}
+
         <Button
           onClick={completeStep}
-          disabled={completing || !resposta.trim() || (!stepTaskDone && !isAdmin)}
+          disabled={
+            completing ||
+            !resposta.trim() ||
+            resposta.trim().length < 50 ||
+            (!stepTaskDone && !isAdmin) ||
+            (!quizPassed && !isCompleted)
+          }
           className="w-full h-12 text-white font-semibold disabled:opacity-60"
           style={{
             background: isCompleted
               ? "linear-gradient(135deg, #C9A84C, #E8D590)"
-              : stepTaskDone || isAdmin
+              : (stepTaskDone || isAdmin) && quizPassed && resposta.trim().length >= 50
                 ? "linear-gradient(135deg, #1B4332, #2D6A4F)"
                 : "#9CA3AF",
           }}
@@ -605,11 +786,23 @@ export default function JourneyStep() {
             <Loader2 className="h-5 w-5 animate-spin" />
           ) : isCompleted ? (
             <>
-              <CheckCircle className="h-5 w-5 mr-2" /> Passo concluído — refazer
+              <CheckCircle className="h-5 w-5 mr-2" /> Passo concluído
+            </>
+          ) : !audioPlayed ? (
+            <>
+              <PlayCircle className="h-5 w-5 mr-2" /> Ouça o áudio primeiro
+            </>
+          ) : !quizPassed ? (
+            <>
+              <Lock className="h-5 w-5 mr-2" /> Complete o questionário
+            </>
+          ) : resposta.trim().length < 50 ? (
+            <>
+              <Lock className="h-5 w-5 mr-2" /> Escreva seu depoimento
             </>
           ) : !stepTaskDone && !isAdmin ? (
             <>
-              <Lock className="h-5 w-5 mr-2" /> Complete a tarefa para concluir
+              <Lock className="h-5 w-5 mr-2" /> Complete a atividade prática
             </>
           ) : (
             <>
