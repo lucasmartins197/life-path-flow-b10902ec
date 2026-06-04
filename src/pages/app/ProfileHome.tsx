@@ -2,9 +2,27 @@ import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { z } from "zod";
 import {
-  ChevronLeft, ChevronRight, Camera, Bell, Eye, Anchor, Shield, CreditCard,
-  Lock, LogOut, Trash2, FileText, Star, Award, Flame, Calendar, Footprints,
-  Loader2, Check, X, MapPin,
+  ChevronLeft,
+  ChevronRight,
+  Camera,
+  Bell,
+  Eye,
+  Anchor,
+  Shield,
+  CreditCard,
+  Lock,
+  LogOut,
+  Trash2,
+  FileText,
+  Star,
+  Award,
+  Flame,
+  Calendar,
+  Footprints,
+  Loader2,
+  Check,
+  X,
+  MapPin,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -14,11 +32,14 @@ import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { BottomNavigation } from "@/components/BottomNavigation";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
-} from "@/components/ui/select";
-import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription,
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+  DialogDescription,
 } from "@/components/ui/dialog";
 
 interface ProfileRow {
@@ -79,15 +100,23 @@ const profileSchema = z.object({
   state: z.string().trim().optional().or(z.literal("")),
 });
 
-const passwordSchema = z.object({
-  current: z.string().min(6, "Mínimo 6 caracteres"),
-  next: z.string().min(8, "Mínimo 8 caracteres").max(72, "Máximo 72 caracteres"),
-  confirm: z.string(),
-}).refine((d) => d.next === d.confirm, { message: "Senhas não coincidem", path: ["confirm"] });
+const passwordSchema = z
+  .object({
+    current: z.string().min(6, "Mínimo 6 caracteres"),
+    next: z.string().min(8, "Mínimo 8 caracteres").max(72, "Máximo 72 caracteres"),
+    confirm: z.string(),
+  })
+  .refine((d) => d.next === d.confirm, { message: "Senhas não coincidem", path: ["confirm"] });
 
 function getInitials(name: string | null) {
   if (!name) return "AV";
-  return name.trim().split(/\s+/).map((n) => n[0]).join("").toUpperCase().slice(0, 2);
+  return name
+    .trim()
+    .split(/\s+/)
+    .map((n) => n[0])
+    .join("")
+    .toUpperCase()
+    .slice(0, 2);
 }
 
 function daysSince(iso: string) {
@@ -173,15 +202,16 @@ export default function ProfileHome() {
     setLoading(true);
     try {
       const [profileRes, patientRes, journeyRes] = await Promise.all([
-        supabase.from("profiles")
-          .select("full_name, avatar_url, city, bio, is_public, notifications_enabled, created_at, cpf, date_of_birth, phone, gender, zip_code, street, number, complement, neighborhood, state")
-          .eq("user_id", user.id)
+        supabase
+          .from("profiles")
+          .select(
+            "full_name, avatar_url, city, bio, is_public, notifications_enabled, created_at, cpf, date_of_birth, phone, gender, zip_code, street, number, complement, neighborhood, state",
+          )
+          .eq("id", user.id)
           .maybeSingle(),
-        supabase.from("patient_profiles")
-          .select("current_step, streak_days")
-          .eq("user_id", user.id)
-          .maybeSingle(),
-        supabase.from("journey_progress")
+        supabase.from("patient_profiles").select("current_step, streak_days").eq("user_id", user.id).maybeSingle(),
+        supabase
+          .from("journey_progress")
           .select("step_number, is_completed")
           .eq("user_id", user.id)
           .eq("is_completed", true),
@@ -255,8 +285,7 @@ export default function ProfileHome() {
       if (upErr) throw upErr;
       const { data: pub } = supabase.storage.from("avatars").getPublicUrl(path);
       const url = pub.publicUrl;
-      const { error: updErr } = await supabase.from("profiles")
-        .update({ avatar_url: url }).eq("user_id", user.id);
+      const { error: updErr } = await supabase.from("profiles").update({ avatar_url: url }).eq("id", user.id);
       if (updErr) throw updErr;
       setProfile((p) => (p ? { ...p, avatar_url: url } : p));
       toast({ title: "Foto atualizada" });
@@ -270,11 +299,19 @@ export default function ProfileHome() {
   async function handleSaveProfile() {
     if (!user) return;
     const parsed = profileSchema.safeParse({
-      full_name: draftName, city: draftCity, bio: draftBio,
-      cpf: draftCPF, date_of_birth: draftDOB, phone: draftPhone,
-      gender: draftGender, zip_code: draftZip, street: draftStreet,
-      number: draftNumber, complement: draftComplement,
-      neighborhood: draftNeighborhood, state: draftState,
+      full_name: draftName,
+      city: draftCity,
+      bio: draftBio,
+      cpf: draftCPF,
+      date_of_birth: draftDOB,
+      phone: draftPhone,
+      gender: draftGender,
+      zip_code: draftZip,
+      street: draftStreet,
+      number: draftNumber,
+      complement: draftComplement,
+      neighborhood: draftNeighborhood,
+      state: draftState,
     });
     if (!parsed.success) {
       toast({
@@ -286,38 +323,45 @@ export default function ProfileHome() {
     }
     setSaving(true);
     try {
-      const { error } = await supabase.from("profiles").update({
-        full_name: parsed.data.full_name,
-        city: parsed.data.city || null,
-        bio: parsed.data.bio || null,
-        cpf: parsed.data.cpf ? parsed.data.cpf.replace(/\D/g, "") : null,
-        date_of_birth: parsed.data.date_of_birth || null,
-        phone: parsed.data.phone ? parsed.data.phone.replace(/\D/g, "") : null,
-        gender: parsed.data.gender || null,
-        zip_code: parsed.data.zip_code ? parsed.data.zip_code.replace(/\D/g, "") : null,
-        street: parsed.data.street || null,
-        number: parsed.data.number || null,
-        complement: parsed.data.complement || null,
-        neighborhood: parsed.data.neighborhood || null,
-        state: parsed.data.state || null,
-      }).eq("user_id", user.id);
+      const { error } = await supabase
+        .from("profiles")
+        .update({
+          full_name: parsed.data.full_name,
+          city: parsed.data.city || null,
+          bio: parsed.data.bio || null,
+          cpf: parsed.data.cpf ? parsed.data.cpf.replace(/\D/g, "") : null,
+          date_of_birth: parsed.data.date_of_birth || null,
+          phone: parsed.data.phone ? parsed.data.phone.replace(/\D/g, "") : null,
+          gender: parsed.data.gender || null,
+          zip_code: parsed.data.zip_code ? parsed.data.zip_code.replace(/\D/g, "") : null,
+          street: parsed.data.street || null,
+          number: parsed.data.number || null,
+          complement: parsed.data.complement || null,
+          neighborhood: parsed.data.neighborhood || null,
+          state: parsed.data.state || null,
+        })
+        .eq("id", user.id);
       if (error) throw error;
-      setProfile((p) => p ? {
-        ...p,
-        full_name: parsed.data.full_name,
-        city: parsed.data.city || null,
-        bio: parsed.data.bio || null,
-        cpf: parsed.data.cpf ? parsed.data.cpf.replace(/\D/g, "") : null,
-        date_of_birth: parsed.data.date_of_birth || null,
-        phone: parsed.data.phone ? parsed.data.phone.replace(/\D/g, "") : null,
-        gender: parsed.data.gender || null,
-        zip_code: parsed.data.zip_code ? parsed.data.zip_code.replace(/\D/g, "") : null,
-        street: parsed.data.street || null,
-        number: parsed.data.number || null,
-        complement: parsed.data.complement || null,
-        neighborhood: parsed.data.neighborhood || null,
-        state: parsed.data.state || null,
-      } : p);
+      setProfile((p) =>
+        p
+          ? {
+              ...p,
+              full_name: parsed.data.full_name,
+              city: parsed.data.city || null,
+              bio: parsed.data.bio || null,
+              cpf: parsed.data.cpf ? parsed.data.cpf.replace(/\D/g, "") : null,
+              date_of_birth: parsed.data.date_of_birth || null,
+              phone: parsed.data.phone ? parsed.data.phone.replace(/\D/g, "") : null,
+              gender: parsed.data.gender || null,
+              zip_code: parsed.data.zip_code ? parsed.data.zip_code.replace(/\D/g, "") : null,
+              street: parsed.data.street || null,
+              number: parsed.data.number || null,
+              complement: parsed.data.complement || null,
+              neighborhood: parsed.data.neighborhood || null,
+              state: parsed.data.state || null,
+            }
+          : p,
+      );
       setEditing(false);
       toast({ title: "Perfil atualizado" });
     } catch (e: any) {
@@ -348,7 +392,10 @@ export default function ProfileHome() {
   async function toggleSetting(key: "is_public" | "notifications_enabled", value: boolean) {
     if (!user || !profile) return;
     setProfile({ ...profile, [key]: value });
-    const { error } = await supabase.from("profiles").update({ [key]: value }).eq("user_id", user.id);
+    const { error } = await supabase
+      .from("profiles")
+      .update({ [key]: value })
+      .eq("id", user.id);
     if (error) {
       setProfile({ ...profile, [key]: !value });
       toast({ title: "Erro", description: error.message, variant: "destructive" });
@@ -357,7 +404,9 @@ export default function ProfileHome() {
 
   async function handlePasswordChange() {
     const parsed = passwordSchema.safeParse({
-      current: pwCurrent, next: pwNext, confirm: pwConfirm,
+      current: pwCurrent,
+      next: pwNext,
+      confirm: pwConfirm,
     });
     if (!parsed.success) {
       toast({
@@ -372,14 +421,17 @@ export default function ProfileHome() {
     try {
       // Re-auth to validate current password
       const { error: signErr } = await supabase.auth.signInWithPassword({
-        email: user.email, password: pwCurrent,
+        email: user.email,
+        password: pwCurrent,
       });
       if (signErr) throw new Error("Senha atual incorreta");
       const { error: updErr } = await supabase.auth.updateUser({ password: pwNext });
       if (updErr) throw updErr;
       toast({ title: "Senha alterada" });
       setPwOpen(false);
-      setPwCurrent(""); setPwNext(""); setPwConfirm("");
+      setPwCurrent("");
+      setPwNext("");
+      setPwConfirm("");
     } catch (e: any) {
       toast({ title: "Erro", description: e.message, variant: "destructive" });
     } finally {
@@ -392,10 +444,16 @@ export default function ProfileHome() {
     setDeleting(true);
     try {
       // Soft cleanup of user-owned data; auth user removal would require an edge function with service role
-      await supabase.from("profiles").update({
-        full_name: "Conta excluída",
-        bio: null, city: null, avatar_url: null, is_public: false,
-      }).eq("user_id", user.id);
+      await supabase
+        .from("profiles")
+        .update({
+          full_name: "Conta excluída",
+          bio: null,
+          city: null,
+          avatar_url: null,
+          is_public: false,
+        })
+        .eq("id", user.id);
       await signOut();
       toast({ title: "Conta excluída", description: "Você foi desconectado." });
       navigate("/auth");
@@ -424,7 +482,7 @@ export default function ProfileHome() {
       <header className="bg-card border-b border-border/60 px-5 pt-6 pb-4 sticky top-0 z-30">
         <div className="max-w-lg mx-auto flex items-center justify-between gap-3">
           <button
-            onClick={() => editing ? setEditing(false) : navigate(-1)}
+            onClick={() => (editing ? setEditing(false) : navigate(-1))}
             className="flex items-center gap-1 text-muted-foreground hover:text-foreground"
             aria-label="Voltar"
           >
@@ -442,10 +500,7 @@ export default function ProfileHome() {
               Salvar
             </button>
           ) : (
-            <button
-              onClick={() => setEditing(true)}
-              className="text-sm font-semibold text-primary"
-            >
+            <button onClick={() => setEditing(true)} className="text-sm font-semibold text-primary">
               Editar
             </button>
           )}
@@ -480,13 +535,7 @@ export default function ProfileHome() {
               >
                 {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Camera className="h-4 w-4" />}
               </button>
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/*"
-                className="hidden"
-                onChange={handleAvatarPick}
-              />
+              <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleAvatarPick} />
             </div>
           </div>
 
@@ -681,9 +730,7 @@ export default function ProfileHome() {
             <div>
               <div className="flex items-center justify-between">
                 <Label className="text-xs text-muted-foreground">Bio (aparece na comunidade)</Label>
-                {editing && (
-                  <span className="text-[10px] text-muted-foreground">{draftBio.length}/100</span>
-                )}
+                {editing && <span className="text-[10px] text-muted-foreground">{draftBio.length}/100</span>}
               </div>
               {editing ? (
                 <Textarea
@@ -741,7 +788,9 @@ export default function ProfileHome() {
                       <Lock className="h-5 w-5 text-muted-foreground" />
                     )}
                   </div>
-                  <span className={`text-[10px] text-center leading-tight ${earned ? "text-foreground font-medium" : "text-muted-foreground"}`}>
+                  <span
+                    className={`text-[10px] text-center leading-tight ${earned ? "text-foreground font-medium" : "text-muted-foreground"}`}
+                  >
                     {m.name}
                   </span>
                 </button>
@@ -774,14 +823,21 @@ export default function ProfileHome() {
         {/* SEÇÃO 5 — CONTA */}
         <section className="space-y-2">
           <button
-            onClick={async () => { await supabase.auth.signOut(); navigate("/auth"); }}
+            onClick={async () => {
+              await supabase.auth.signOut();
+              navigate("/auth");
+            }}
             className="w-full h-12 rounded-xl bg-destructive/10 text-destructive font-semibold flex items-center justify-center gap-2 active:scale-[0.98] hover:bg-destructive/15 transition-colors"
           >
             <LogOut className="h-4 w-4" />
             Sair
           </button>
           <button
-            onClick={() => { setDeleteStep(1); setDeleteConfirmText(""); setDeleteOpen(true); }}
+            onClick={() => {
+              setDeleteStep(1);
+              setDeleteConfirmText("");
+              setDeleteOpen(true);
+            }}
             className="w-full h-11 rounded-xl bg-transparent text-destructive text-sm font-medium flex items-center justify-center gap-2 hover:bg-destructive/5"
           >
             <Trash2 className="h-3.5 w-3.5" />
@@ -796,16 +852,8 @@ export default function ProfileHome() {
             <span className="text-sm text-muted-foreground">Versão</span>
             <span className="text-sm font-mono">1.0.0</span>
           </div>
-          <SettingLink
-            icon={FileText}
-            label="Política de Privacidade"
-            onClick={() => window.open("https://apostandonavida.com.br/privacidade", "_blank", "noopener")}
-          />
-          <SettingLink
-            icon={FileText}
-            label="Termos de Uso"
-            onClick={() => window.open("https://apostandonavida.com.br/termos", "_blank", "noopener")}
-          />
+          <SettingLink icon={FileText} label="Política de Privacidade" onClick={() => navigate("/app/privacidade")} />
+          <SettingLink icon={FileText} label="Termos de Uso" onClick={() => navigate("/app/termos")} />
           <SettingLink
             icon={Star}
             label="Avalie o app"
@@ -815,7 +863,8 @@ export default function ProfileHome() {
                 isiOS
                   ? "https://apps.apple.com/app/apostando-na-vida"
                   : "https://play.google.com/store/apps/details?id=br.com.apostandonavida",
-                "_blank", "noopener"
+                "_blank",
+                "noopener",
               );
             }}
             last
@@ -935,21 +984,29 @@ export default function ProfileHome() {
   );
 }
 
-function StatCard({
-  icon: Icon, label, value,
-}: { icon: any; label: string; value: string }) {
+function StatCard({ icon: Icon, label, value }: { icon: any; label: string; value: string }) {
   return (
     <div className="bg-card border border-border/40 rounded-2xl p-4">
       <Icon className="h-4 w-4 text-primary mb-2" />
-      <p className="text-2xl font-bold tracking-tight" style={{ color: "#1B4332" }}>{value}</p>
+      <p className="text-2xl font-bold tracking-tight" style={{ color: "#1B4332" }}>
+        {value}
+      </p>
       <p className="text-xs text-muted-foreground mt-0.5">{label}</p>
     </div>
   );
 }
 
 function SettingLink({
-  icon: Icon, label, onClick, last,
-}: { icon: any; label: string; onClick: () => void; last?: boolean }) {
+  icon: Icon,
+  label,
+  onClick,
+  last,
+}: {
+  icon: any;
+  label: string;
+  onClick: () => void;
+  last?: boolean;
+}) {
   return (
     <button
       onClick={onClick}
@@ -963,8 +1020,16 @@ function SettingLink({
 }
 
 function SettingToggle({
-  icon: Icon, label, checked, onChange,
-}: { icon: any; label: string; checked: boolean; onChange: (v: boolean) => void }) {
+  icon: Icon,
+  label,
+  checked,
+  onChange,
+}: {
+  icon: any;
+  label: string;
+  checked: boolean;
+  onChange: (v: boolean) => void;
+}) {
   return (
     <div className="w-full px-5 py-3.5 flex items-center gap-3 border-b border-border/30">
       <Icon className="h-4 w-4 text-muted-foreground shrink-0" />
