@@ -139,13 +139,19 @@ export function useTherapy() {
       return false;
     }
 
-    // Deduct credit if available
-    if (hasCredit) {
-      await supabase
-        .from("session_credits")
-        .update({ credits_remaining: credits - 1, updated_at: new Date().toISOString() })
-        .eq("user_id", user.id);
+    // Fetch the meeting link via secure RPC and attach it to the appointment
+    try {
+      const { data: link } = await supabase.rpc("get_professional_meeting_link", {
+        _professional_id: professionalId,
+      });
+      if (created?.id && link) {
+        await supabase.from("appointments").update({ meeting_link: link as string }).eq("id", created.id);
+      }
+    } catch (e) {
+      console.warn("Could not attach meeting link", e);
     }
+
+    // Credit deduction is handled server-side by the payment webhook
 
     toast({ title: "Sessão agendada", description: "Sua consulta foi confirmada com sucesso." });
     await Promise.all([fetchAppointments(), fetchCredits()]);
