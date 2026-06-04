@@ -40,6 +40,7 @@ export default function ShieldHome() {
   const [gPhone, setGPhone] = useState("");
   const [gNotify, setGNotify] = useState(true);
   const [savingGuardian, setSavingGuardian] = useState(false);
+  const [showIosInstructions, setShowIosInstructions] = useState(false);
 
   // 21h confirmation modal
   const [showConfirmation, setShowConfirmation] = useState(false);
