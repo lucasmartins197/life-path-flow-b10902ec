@@ -988,7 +988,37 @@ function ReadyScreen({
         <h2 className="text-2xl font-bold tracking-tight mb-2" style={{ color: "#1B4332" }}>
           Sua jornada começa agora, {firstName}!
         </h2>
-        <p className="text-base text-muted-foreground mb-8">O Passo 1 está esperando por você.</p>
+        <p className="text-base text-muted-foreground mb-6">O Passo 1 está esperando por você.</p>
+
+        {/* Mensagem de responsabilidade da Ana */}
+        <div className="w-full max-w-sm rounded-2xl p-5 text-left mb-6" style={{ backgroundColor: "#1B4332" }}>
+          <div className="flex items-center gap-3 mb-3">
+            <div className="h-10 w-10 rounded-full bg-[#F5F0E8] flex items-center justify-center shrink-0 overflow-hidden">
+              <svg viewBox="0 0 100 100" className="w-full h-full" aria-hidden>
+                <circle cx="50" cy="50" r="50" fill="#F5F0E8" />
+                <path d="M22 50 Q22 22 50 22 Q78 22 78 50 L78 60 Q70 50 50 50 Q30 50 22 60 Z" fill="#1B4332" />
+                <ellipse cx="50" cy="58" rx="22" ry="26" fill="#E8C9A8" />
+                <ellipse cx="42" cy="58" rx="2" ry="2.5" fill="#1B4332" />
+                <ellipse cx="58" cy="58" rx="2" ry="2.5" fill="#1B4332" />
+                <path d="M42 70 Q50 76 58 70" stroke="#1B4332" strokeWidth="1.8" fill="none" strokeLinecap="round" />
+              </svg>
+            </div>
+            <div>
+              <p className="text-xs font-semibold" style={{ color: "#C9A84C" }}>
+                Ana
+              </p>
+              <p className="text-xs" style={{ color: "rgba(255,255,255,0.7)" }}>
+                Sua companheira de jornada
+              </p>
+            </div>
+          </div>
+          <p className="text-sm leading-relaxed" style={{ color: "rgba(255,255,255,0.92)" }}>
+            "{firstName}, quero te lembrar de algo importante:{" "}
+            <strong style={{ color: "#C9A84C" }}>tudo que você registrar aqui é para você.</strong> Se mentir no app,
+            você está mentindo para si mesmo — e a única pessoa que perde é você. A honestidade nessa jornada é o que
+            vai te libertar. Estou aqui com você. 💚"
+          </p>
+        </div>
 
         <div
           className="w-full max-w-sm rounded-2xl border-2 p-5 text-left shadow-lg"
@@ -1006,7 +1036,7 @@ function ReadyScreen({
         </div>
       </div>
 
-      <div className="space-y-3 relative z-10">
+      <div className="space-y-3 relative z-10 mt-6">
         <Button
           onClick={onStart}
           disabled={saving}
