@@ -124,15 +124,15 @@ export function useTherapy() {
 
     let hasCredit = credits > 0;
 
-    // Create appointment
-    const { error } = await supabase.from("appointments").insert({
+    // Create appointment (meeting_link is set server-side / via RPC after booking)
+    const { data: created, error } = await supabase.from("appointments").insert({
       user_id: user.id,
       professional_id: professionalId,
       scheduled_at: scheduledAt.toISOString(),
       duration_minutes: 45,
       status: "scheduled",
-      meeting_link: meetingLink,
-    });
+      meeting_link: null,
+    }).select("id").maybeSingle();
 
     if (error) {
       toast({ title: "Erro ao agendar", description: error.message, variant: "destructive" });
