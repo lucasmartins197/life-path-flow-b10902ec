@@ -17,13 +17,7 @@ import { z } from "zod";
 import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -34,13 +28,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { BottomNavigation } from "@/components/BottomNavigation";
 import { useAnchorContacts, AnchorContact } from "@/hooks/useAnchorContacts";
 import { supabase } from "@/integrations/supabase/client";
@@ -64,13 +52,7 @@ const anchorSchema = z.object({
     .min(8, "Telefone inválido")
     .max(20, "Telefone inválido")
     .regex(/^[+\d\s()-]+$/, "Telefone inválido"),
-  email: z
-    .string()
-    .trim()
-    .email("Email inválido")
-    .max(255)
-    .optional()
-    .or(z.literal("")),
+  email: z.string().trim().email("Email inválido").max(255).optional().or(z.literal("")),
 });
 
 interface AnchorSettings {
@@ -139,11 +121,7 @@ export default function AnchorHome() {
   }, [user]);
 
   const loadSettings = async () => {
-    const { data } = await supabase
-      .from("anchor_settings")
-      .select("*")
-      .eq("user_id", user!.id)
-      .maybeSingle();
+    const { data } = await supabase.from("anchor_settings").select("*").eq("user_id", user!.id).maybeSingle();
     if (data) {
       setSettings({
         notify_inactive: data.notify_inactive,
@@ -157,7 +135,7 @@ export default function AnchorHome() {
   const loadAlerts = async () => {
     const { data } = await supabase
       .from("anchor_alerts")
-      .select("id, alert_type, status, sent_at")
+      .select("id, alert_type, sent_at")
       .eq("user_id", user!.id)
       .order("sent_at", { ascending: false })
       .limit(10);
@@ -167,10 +145,9 @@ export default function AnchorHome() {
   const updateSetting = async (key: keyof AnchorSettings, value: boolean) => {
     const next = { ...settings, [key]: value };
     setSettings(next);
-    await supabase.from("anchor_settings").upsert(
-      { user_id: user!.id, ...next, updated_at: new Date().toISOString() },
-      { onConflict: "user_id" }
-    );
+    await supabase
+      .from("anchor_settings")
+      .upsert({ user_id: user!.id, ...next, updated_at: new Date().toISOString() }, { onConflict: "user_id" });
   };
 
   const openCreate = () => {
@@ -260,28 +237,30 @@ export default function AnchorHome() {
 
   const handleSendUpdate = async () => {
     if (!anchor) return;
-    await notifyWebhook("update", {
-      guardian_name: anchor.name,
-      guardian_phone: anchor.phone,
-      guardian_email: anchor.email,
-      user_name: user?.user_metadata?.full_name || "Seu apoiado",
-    });
-    await logAlert("update", "Mensagem de atualização enviada");
-    toast.success("Mensagem enviada ao âncora");
+    // Abre WhatsApp do próprio usuário com mensagem pré-preenchida
+    const userName = user?.user_metadata?.full_name || "Seu apoiado";
+    const phone = anchor.phone.replace(/\D/g, "");
+    const message = encodeURIComponent(
+      `Olá ${anchor.name}! Sou ${userName} e estou usando o app Stake Real para me recuperar. Queria te dar uma atualização: estou bem e continuando minha jornada. Obrigado pelo seu apoio! 💚`,
+    );
+    window.open(`https://wa.me/${phone}?text=${message}`, "_blank");
+    await logAlert("update", "Mensagem de atualização enviada via WhatsApp");
+    toast.success("Abrindo WhatsApp...");
   };
 
   const handleEmergency = async () => {
     if (!anchor) return;
     setSendingEmergency(true);
     try {
-      await notifyWebhook("urgency", {
-        guardian_name: anchor.name,
-        guardian_phone: anchor.phone,
-        guardian_email: anchor.email,
-        user_name: user?.user_metadata?.full_name || "Seu apoiado",
-      });
-      await logAlert("emergency", "Pedido de apoio urgente");
-      toast.success("Seu âncora foi notificado. Ele vai entrar em contato em breve.");
+      // Abre WhatsApp do próprio usuário com mensagem de urgência
+      const userName = user?.user_metadata?.full_name || "Seu apoiado";
+      const phone = anchor.phone.replace(/\D/g, "");
+      const message = encodeURIComponent(
+        `🚨 ${anchor.name}, preciso de ajuda urgente! Estou com muita vontade de apostar e preciso do seu apoio agora. Por favor, me liga ou me manda mensagem o mais rápido possível. - ${userName}`,
+      );
+      window.open(`https://wa.me/${phone}?text=${message}`, "_blank");
+      await logAlert("emergency", "Pedido de apoio urgente enviado via WhatsApp");
+      toast.success("Abrindo WhatsApp para contato urgente...");
     } finally {
       setSendingEmergency(false);
       setConfirmEmergency(false);
@@ -305,9 +284,7 @@ export default function AnchorHome() {
             </div>
             <div>
               <h1 className="text-2xl font-bold text-foreground">Meu Contato Âncora</h1>
-              <p className="text-sm text-muted-foreground mt-0.5">
-                Sua rede de apoio fora do app
-              </p>
+              <p className="text-sm text-muted-foreground mt-0.5">Sua rede de apoio fora do app</p>
             </div>
           </div>
         </div>
@@ -325,8 +302,7 @@ export default function AnchorHome() {
                 <div>
                   <p className="font-semibold text-foreground">{anchor.name}</p>
                   <p className="text-xs text-muted-foreground capitalize">
-                    {RELATIONS.find((r) => r.value === anchor.relationship)?.label ||
-                      anchor.relationship}
+                    {RELATIONS.find((r) => r.value === anchor.relationship)?.label || anchor.relationship}
                   </p>
                   <p className="text-xs text-muted-foreground mt-0.5 flex items-center gap-1">
                     <Phone className="h-3 w-3" />
@@ -336,9 +312,7 @@ export default function AnchorHome() {
               </div>
               <div className="flex items-center gap-2 shrink-0">
                 <CheckCircle2 className="h-4 w-4 text-success" />
-                <span className="text-[10px] font-semibold text-success uppercase tracking-wide">
-                  Ativo
-                </span>
+                <span className="text-[10px] font-semibold text-success uppercase tracking-wide">Ativo</span>
               </div>
             </div>
 
@@ -362,12 +336,8 @@ export default function AnchorHome() {
         ) : (
           <section className="rounded-2xl border-2 border-dashed border-primary/40 p-6 text-center">
             <Anchor className="h-10 w-10 mx-auto text-primary/60 mb-3" />
-            <p className="text-sm text-foreground font-medium">
-              Você ainda não tem um âncora cadastrado
-            </p>
-            <p className="text-xs text-muted-foreground mt-1 mb-4">
-              Escolha alguém de confiança para te acompanhar
-            </p>
+            <p className="text-sm text-foreground font-medium">Você ainda não tem um âncora cadastrado</p>
+            <p className="text-xs text-muted-foreground mt-1 mb-4">Escolha alguém de confiança para te acompanhar</p>
             <button
               onClick={openCreate}
               className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:opacity-90"
@@ -455,15 +425,11 @@ export default function AnchorHome() {
                     <p className="text-sm font-medium text-foreground truncate">
                       {ALERT_LABELS[a.alert_type] || a.alert_type}
                     </p>
-                    <p className="text-[11px] text-muted-foreground">
-                      {new Date(a.sent_at).toLocaleString("pt-BR")}
-                    </p>
+                    <p className="text-[11px] text-muted-foreground">{new Date(a.sent_at).toLocaleString("pt-BR")}</p>
                   </div>
                   <span
                     className={`text-[10px] font-semibold uppercase tracking-wide px-2 py-0.5 rounded-full ${
-                      a.status === "sent"
-                        ? "bg-success/10 text-success"
-                        : "bg-secondary text-muted-foreground"
+                      a.status === "sent" ? "bg-success/10 text-success" : "bg-secondary text-muted-foreground"
                     }`}
                   >
                     {a.status === "sent" ? "Enviado" : a.status}
@@ -479,9 +445,7 @@ export default function AnchorHome() {
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>
-              {editing ? "Editar âncora" : "Cadastrar meu âncora"}
-            </DialogTitle>
+            <DialogTitle>{editing ? "Editar âncora" : "Cadastrar meu âncora"}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 pt-2">
             <div>
@@ -496,10 +460,7 @@ export default function AnchorHome() {
             </div>
             <div>
               <Label>Relação</Label>
-              <Select
-                value={form.relationship}
-                onValueChange={(v) => setForm({ ...form, relationship: v })}
-              >
+              <Select value={form.relationship} onValueChange={(v) => setForm({ ...form, relationship: v })}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
@@ -536,17 +497,10 @@ export default function AnchorHome() {
             {!editing && (
               <div className="flex items-start justify-between gap-3 rounded-xl border border-border p-3">
                 <div className="flex-1">
-                  <p className="text-sm font-medium text-foreground">
-                    Enviar convite ao âncora
-                  </p>
-                  <p className="text-[11px] text-muted-foreground mt-0.5">
-                    Mensagem explicando o app e o papel dele
-                  </p>
+                  <p className="text-sm font-medium text-foreground">Enviar convite ao âncora</p>
+                  <p className="text-[11px] text-muted-foreground mt-0.5">Mensagem explicando o app e o papel dele</p>
                 </div>
-                <Switch
-                  checked={form.sendInvite}
-                  onCheckedChange={(v) => setForm({ ...form, sendInvite: v })}
-                />
+                <Switch checked={form.sendInvite} onCheckedChange={(v) => setForm({ ...form, sendInvite: v })} />
               </div>
             )}
           </div>
@@ -573,8 +527,7 @@ export default function AnchorHome() {
           <AlertDialogHeader>
             <AlertDialogTitle>Acionar contato âncora?</AlertDialogTitle>
             <AlertDialogDescription>
-              Vamos notificar <strong>{anchor?.name}</strong> agora via WhatsApp pedindo
-              apoio urgente. Confirmar?
+              Vamos notificar <strong>{anchor?.name}</strong> agora via WhatsApp pedindo apoio urgente. Confirmar?
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
