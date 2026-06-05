@@ -231,7 +231,7 @@ export default function JourneyStep() {
           .from("jornada_respostas" as any)
           .select("resposta")
           .eq("user_id", user.id)
-          .eq("passo_numero", stepNumber)
+          .eq("step_number", stepNumber)
           .maybeSingle(),
         supabase
           .from("journey_progress")
@@ -252,8 +252,8 @@ export default function JourneyStep() {
     const { error } = await supabase
       .from("jornada_respostas" as any)
       .upsert(
-        { user_id: user.id, passo_numero: stepNumber, resposta: resposta.trim(), updated_at: new Date().toISOString() },
-        { onConflict: "user_id,passo_numero" },
+        { user_id: user.id, step_number: stepNumber, resposta: resposta.trim(), updated_at: new Date().toISOString() },
+        { onConflict: "user_id,step_number" },
       );
     setSaving(false);
     if (error) {
