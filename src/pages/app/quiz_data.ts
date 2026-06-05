@@ -9,6 +9,7 @@ export type QuizQuestion = {
 
 export type StepQuiz = {
   questions: QuizQuestion[];
+  depositoPrompt?: string;
 };
 
 export const STEP_QUIZ: Record<number, StepQuiz> = {
