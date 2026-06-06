@@ -44,7 +44,11 @@ export function FinancePlan({ plan, loading, onRefresh }: FinancePlanProps) {
   if (!plan) return null;
 
   const badge = LEVEL_BADGE[plan.health_level] || LEVEL_BADGE.atencao;
-  const dist = plan.budget_distribution;
+  const dist = plan.budget_distribution || { essenciais_percent: 0, dividas_percent: 0, reserva_percent: 0, pessoal_percent: 0 };
+  const urgentActions = Array.isArray(plan.urgent_actions) ? plan.urgent_actions : [];
+  const debtStrategy = plan.debt_strategy || { method: "", explanation: "", priority_order: [] };
+  const priorityOrder = Array.isArray(debtStrategy.priority_order) ? debtStrategy.priority_order : [];
+  const monthlyGoal = plan.monthly_goal || { description: "", amount: 0 };
 
   return (
     <div className="space-y-4">
