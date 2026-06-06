@@ -44,7 +44,11 @@ export function FinancePlan({ plan, loading, onRefresh }: FinancePlanProps) {
   if (!plan) return null;
 
   const badge = LEVEL_BADGE[plan.health_level] || LEVEL_BADGE.atencao;
-  const dist = plan.budget_distribution;
+  const dist = plan.budget_distribution || { essenciais_percent: 0, dividas_percent: 0, reserva_percent: 0, pessoal_percent: 0 };
+  const urgentActions = Array.isArray(plan.urgent_actions) ? plan.urgent_actions : [];
+  const debtStrategy = plan.debt_strategy || { method: "", explanation: "", priority_order: [] };
+  const priorityOrder = Array.isArray(debtStrategy.priority_order) ? debtStrategy.priority_order : [];
+  const monthlyGoal = plan.monthly_goal || { description: "", amount: 0 };
 
   return (
     <div className="space-y-4">
@@ -73,7 +77,7 @@ export function FinancePlan({ plan, loading, onRefresh }: FinancePlanProps) {
             <AlertTriangle className="h-3.5 w-3.5 text-warning" /> Ações Urgentes
           </p>
           <div className="space-y-2">
-            {plan.urgent_actions.map((action, i) => (
+            {urgentActions.map((action, i) => (
               <div key={i} className="flex items-start gap-2 bg-card rounded-xl p-3 border border-border/40">
                 <CheckCircle className="h-4 w-4 text-primary mt-0.5 shrink-0" />
                 <p className="text-sm text-foreground">{action}</p>
@@ -106,17 +110,17 @@ export function FinancePlan({ plan, loading, onRefresh }: FinancePlanProps) {
         </div>
 
         {/* Debt Strategy */}
-        {plan.debt_strategy.priority_order.length > 0 && (
+        {priorityOrder.length > 0 && (
           <div className="mb-4">
             <p className="text-xs font-semibold text-foreground uppercase tracking-wider mb-2">
-              Estratégia: {plan.debt_strategy.method === "avalanche" ? "Avalanche" : "Bola de Neve"}
+              Estratégia: {debtStrategy.method === "avalanche" ? "Avalanche" : "Bola de Neve"}
             </p>
-            <p className="text-xs text-muted-foreground mb-2">{plan.debt_strategy.explanation}</p>
+            <p className="text-xs text-muted-foreground mb-2">{debtStrategy.explanation}</p>
             <div className="flex items-center gap-1 flex-wrap">
-              {plan.debt_strategy.priority_order.map((d, i) => (
+              {priorityOrder.map((d, i) => (
                 <span key={i} className="flex items-center gap-1">
                   <span className="text-xs bg-primary/10 text-primary px-2 py-1 rounded-lg font-medium">{i + 1}. {d}</span>
-                  {i < plan.debt_strategy.priority_order.length - 1 && <ArrowRight className="h-3 w-3 text-muted-foreground" />}
+                  {i < priorityOrder.length - 1 && <ArrowRight className="h-3 w-3 text-muted-foreground" />}
                 </span>
               ))}
             </div>
@@ -128,8 +132,8 @@ export function FinancePlan({ plan, loading, onRefresh }: FinancePlanProps) {
           <Target className="h-6 w-6 text-primary shrink-0" />
           <div>
             <p className="text-xs text-muted-foreground">Meta do Mês</p>
-            <p className="text-sm font-bold text-foreground">{plan.monthly_goal.description}</p>
-            <p className="text-lg font-bold text-primary">{fmtBRL(plan.monthly_goal.amount)}</p>
+            <p className="text-sm font-bold text-foreground">{monthlyGoal.description}</p>
+            <p className="text-lg font-bold text-primary">{fmtBRL(monthlyGoal.amount || 0)}</p>
           </div>
         </div>
       </div>
