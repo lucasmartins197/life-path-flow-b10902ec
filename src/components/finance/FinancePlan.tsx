@@ -77,7 +77,7 @@ export function FinancePlan({ plan, loading, onRefresh }: FinancePlanProps) {
             <AlertTriangle className="h-3.5 w-3.5 text-warning" /> Ações Urgentes
           </p>
           <div className="space-y-2">
-            {plan.urgent_actions.map((action, i) => (
+            {urgentActions.map((action, i) => (
               <div key={i} className="flex items-start gap-2 bg-card rounded-xl p-3 border border-border/40">
                 <CheckCircle className="h-4 w-4 text-primary mt-0.5 shrink-0" />
                 <p className="text-sm text-foreground">{action}</p>
