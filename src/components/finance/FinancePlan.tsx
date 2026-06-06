@@ -110,17 +110,17 @@ export function FinancePlan({ plan, loading, onRefresh }: FinancePlanProps) {
         </div>
 
         {/* Debt Strategy */}
-        {plan.debt_strategy.priority_order.length > 0 && (
+        {priorityOrder.length > 0 && (
           <div className="mb-4">
             <p className="text-xs font-semibold text-foreground uppercase tracking-wider mb-2">
-              Estratégia: {plan.debt_strategy.method === "avalanche" ? "Avalanche" : "Bola de Neve"}
+              Estratégia: {debtStrategy.method === "avalanche" ? "Avalanche" : "Bola de Neve"}
             </p>
-            <p className="text-xs text-muted-foreground mb-2">{plan.debt_strategy.explanation}</p>
+            <p className="text-xs text-muted-foreground mb-2">{debtStrategy.explanation}</p>
             <div className="flex items-center gap-1 flex-wrap">
-              {plan.debt_strategy.priority_order.map((d, i) => (
+              {priorityOrder.map((d, i) => (
                 <span key={i} className="flex items-center gap-1">
                   <span className="text-xs bg-primary/10 text-primary px-2 py-1 rounded-lg font-medium">{i + 1}. {d}</span>
-                  {i < plan.debt_strategy.priority_order.length - 1 && <ArrowRight className="h-3 w-3 text-muted-foreground" />}
+                  {i < priorityOrder.length - 1 && <ArrowRight className="h-3 w-3 text-muted-foreground" />}
                 </span>
               ))}
             </div>
@@ -132,8 +132,8 @@ export function FinancePlan({ plan, loading, onRefresh }: FinancePlanProps) {
           <Target className="h-6 w-6 text-primary shrink-0" />
           <div>
             <p className="text-xs text-muted-foreground">Meta do Mês</p>
-            <p className="text-sm font-bold text-foreground">{plan.monthly_goal.description}</p>
-            <p className="text-lg font-bold text-primary">{fmtBRL(plan.monthly_goal.amount)}</p>
+            <p className="text-sm font-bold text-foreground">{monthlyGoal.description}</p>
+            <p className="text-lg font-bold text-primary">{fmtBRL(monthlyGoal.amount || 0)}</p>
           </div>
         </div>
       </div>
