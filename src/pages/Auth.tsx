@@ -257,6 +257,10 @@ export default function Auth() {
                       "Entrar"
                     )}
                   </Button>
+
+                  <p className="text-xs text-muted-foreground text-center mt-4 px-2 border-t pt-4">
+                    ⚠️ Este aplicativo tem caráter educativo e de apoio à recuperação. Não é um dispositivo médico e não diagnostica, trata, cura ou previne nenhuma condição médica. Consulte sempre um profissional de saúde para aconselhamento médico, diagnóstico ou tratamento.
+                  </p>
                 </form>
               </TabsContent>
 
@@ -342,6 +346,10 @@ export default function Auth() {
                       "Criar conta"
                     )}
                   </Button>
+
+                  <p className="text-xs text-muted-foreground text-center mt-4 px-2 border-t pt-4">
+                    ⚠️ Este aplicativo tem caráter educativo e de apoio à recuperação. Não é um dispositivo médico e não diagnostica, trata, cura ou previne nenhuma condição médica. Consulte sempre um profissional de saúde para aconselhamento médico, diagnóstico ou tratamento.
+                  </p>
 
                   <p className="text-xs text-muted-foreground text-center">
                     Ao criar uma conta, você concorda com nossos{" "}
