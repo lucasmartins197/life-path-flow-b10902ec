@@ -98,42 +98,43 @@ export default function Auth() {
 
     setIsLoading(true);
 
-    const { error } = await signUp(signupEmail, signupPassword, signupName);
-
-    if (error) {
-      toast({
-        variant: "destructive",
-        title: "Erro no cadastro",
-        description: error.message,
-      });
-      setIsLoading(false);
-      return;
-    }
-
-    // Enviar dados para o webhook do n8n
     try {
-      await fetch("https://apostandonavida.app.n8n.cloud/webhook/validate-user", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          full_name: signupName,
-          email: signupEmail,
-        }),
+      const { error } = await signUp(signupEmail, signupPassword, signupName);
+
+      if (error) {
+        toast({
+          variant: "destructive",
+          title: "Erro no cadastro",
+          description: error.message,
+        });
+        return;
+      }
+
+      // Enviar dados para o webhook do n8n
+      try {
+        await fetch("https://apostandonavida.app.n8n.cloud/webhook/validate-user", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            full_name: signupName,
+            email: signupEmail,
+          }),
+        });
+
+        // signup redirect handled by useEffect when user state updates
+      } catch (webhookError) {
+        console.error("Erro ao enviar para webhook:", webhookError);
+      }
+
+      toast({
+        title: "Conta criada!",
+        description: "Verifique seu email para confirmar o cadastro.",
       });
-
-      // signup redirect handled by useEffect when user state updates
-    } catch (webhookError) {
-      console.error("Erro ao enviar para webhook:", webhookError);
+    } finally {
+      setIsLoading(false);
     }
-
-    toast({
-      title: "Conta criada!",
-      description: "Verifique seu email para confirmar o cadastro.",
-    });
-
-    setIsLoading(false);
   }
 
   return (
@@ -145,7 +146,7 @@ export default function Auth() {
             <div className="w-12 h-12 rounded-2xl bg-white/20 flex items-center justify-center">
               <Heart className="h-6 w-6" />
             </div>
-            <h1 className="text-2xl lg:text-3xl font-display font-bold">Stake Real</h1>
+            <h1 className="text-2xl lg:text-3xl font-display font-bold">Saindo do Jogo</h1>
           </div>
 
           <h2 className="text-3xl lg:text-4xl font-display font-bold mb-6">Sua jornada de transformação começa aqui</h2>
