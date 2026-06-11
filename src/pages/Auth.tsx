@@ -48,29 +48,31 @@ export default function Auth() {
     e.preventDefault();
     setIsLoading(true);
 
-    const { error } = await signIn(loginEmail, loginPassword);
+    try {
+      const { error } = await signIn(loginEmail, loginPassword);
 
-    if (error) {
-      const msg = error.message?.toLowerCase() || "";
-      const description =
-        msg.includes("invalid login credentials") || msg.includes("invalid_credentials")
-          ? "Senha incorreta. Verifique e tente novamente."
-          : msg.includes("email not confirmed")
-            ? "Confirme seu email antes de entrar."
-            : error.message;
-      toast({
-        variant: "destructive",
-        title: "Erro no login",
-        description,
-      });
-    } else {
-      toast({
-        title: "Bem-vindo de volta!",
-        description: "Login realizado com sucesso.",
-      });
+      if (error) {
+        const msg = error.message?.toLowerCase() || "";
+        const description =
+          msg.includes("invalid login credentials") || msg.includes("invalid_credentials")
+            ? "Senha incorreta. Verifique e tente novamente."
+            : msg.includes("email not confirmed")
+              ? "Confirme seu email antes de entrar."
+              : error.message;
+        toast({
+          variant: "destructive",
+          title: "Erro no login",
+          description,
+        });
+      } else {
+        toast({
+          title: "Bem-vindo de volta!",
+          description: "Login realizado com sucesso.",
+        });
+      }
+    } finally {
+      setIsLoading(false);
     }
-
-    setIsLoading(false);
   }
 
   async function handleSignup(e: React.FormEvent) {
@@ -96,42 +98,43 @@ export default function Auth() {
 
     setIsLoading(true);
 
-    const { error } = await signUp(signupEmail, signupPassword, signupName);
-
-    if (error) {
-      toast({
-        variant: "destructive",
-        title: "Erro no cadastro",
-        description: error.message,
-      });
-      setIsLoading(false);
-      return;
-    }
-
-    // Enviar dados para o webhook do n8n
     try {
-      await fetch("https://apostandonavida.app.n8n.cloud/webhook/validate-user", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          full_name: signupName,
-          email: signupEmail,
-        }),
+      const { error } = await signUp(signupEmail, signupPassword, signupName);
+
+      if (error) {
+        toast({
+          variant: "destructive",
+          title: "Erro no cadastro",
+          description: error.message,
+        });
+        return;
+      }
+
+      // Enviar dados para o webhook do n8n
+      try {
+        await fetch("https://apostandonavida.app.n8n.cloud/webhook/validate-user", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            full_name: signupName,
+            email: signupEmail,
+          }),
+        });
+
+        // signup redirect handled by useEffect when user state updates
+      } catch (webhookError) {
+        console.error("Erro ao enviar para webhook:", webhookError);
+      }
+
+      toast({
+        title: "Conta criada!",
+        description: "Verifique seu email para confirmar o cadastro.",
       });
-
-      // signup redirect handled by useEffect when user state updates
-    } catch (webhookError) {
-      console.error("Erro ao enviar para webhook:", webhookError);
+    } finally {
+      setIsLoading(false);
     }
-
-    toast({
-      title: "Conta criada!",
-      description: "Verifique seu email para confirmar o cadastro.",
-    });
-
-    setIsLoading(false);
   }
 
   return (
@@ -143,7 +146,7 @@ export default function Auth() {
             <div className="w-12 h-12 rounded-2xl bg-white/20 flex items-center justify-center">
               <Heart className="h-6 w-6" />
             </div>
-            <h1 className="text-2xl lg:text-3xl font-display font-bold">Stake Real</h1>
+            <h1 className="text-2xl lg:text-3xl font-display font-bold">Saindo do Jogo</h1>
           </div>
 
           <h2 className="text-3xl lg:text-4xl font-display font-bold mb-6">Sua jornada de transformação começa aqui</h2>
@@ -254,6 +257,10 @@ export default function Auth() {
                       "Entrar"
                     )}
                   </Button>
+
+                  <p className="text-xs text-muted-foreground text-center mt-4 px-2 border-t pt-4">
+                    ⚠️ Este aplicativo tem caráter educativo e de apoio à recuperação. Não é um dispositivo médico e não diagnostica, trata, cura ou previne nenhuma condição médica. Consulte sempre um profissional de saúde para aconselhamento médico, diagnóstico ou tratamento.
+                  </p>
                 </form>
               </TabsContent>
 
@@ -339,6 +346,10 @@ export default function Auth() {
                       "Criar conta"
                     )}
                   </Button>
+
+                  <p className="text-xs text-muted-foreground text-center mt-4 px-2 border-t pt-4">
+                    ⚠️ Este aplicativo tem caráter educativo e de apoio à recuperação. Não é um dispositivo médico e não diagnostica, trata, cura ou previne nenhuma condição médica. Consulte sempre um profissional de saúde para aconselhamento médico, diagnóstico ou tratamento.
+                  </p>
 
                   <p className="text-xs text-muted-foreground text-center">
                     Ao criar uma conta, você concorda com nossos{" "}
