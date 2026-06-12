@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, User, MapPin, CheckCircle } from "lucide-react";
+import { Loader2, User, MapPin, CheckCircle, Shield } from "lucide-react";
 
 const BRAZILIAN_STATES = [
   "AC", "AL", "AP", "AM", "BA", "CE", "DF", "ES", "GO", "MA",
@@ -17,7 +17,7 @@ const BRAZILIAN_STATES = [
 ];
 
 export default function OnboardingProfile() {
-  const [step, setStep] = useState(1);
+  const [step, setStep] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const { user, profile } = useAuth();
   const navigate = useNavigate();
@@ -130,27 +130,62 @@ export default function OnboardingProfile() {
       <Card className="w-full max-w-lg border-0 shadow-xl">
         <CardHeader className="text-center">
           <div className="mx-auto w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mb-4">
-            {step === 1 ? (
+            {step === 0 ? (
+              <Shield className="h-8 w-8 text-yellow-600" />
+            ) : step === 1 ? (
               <User className="h-8 w-8 text-primary" />
             ) : (
               <MapPin className="h-8 w-8 text-primary" />
             )}
           </div>
           <CardTitle className="text-2xl font-display">
-            {step === 1 ? "Dados Pessoais" : "Endereço"}
+            {step === 0 ? "Aviso de Saúde" : step === 1 ? "Dados Pessoais" : "Endereço"}
           </CardTitle>
           <CardDescription>
-            {step === 1 
-              ? "Complete seu cadastro para continuar" 
-              : "Informe seu endereço de residência"}
+            {step === 0 
+              ? "Leia antes de continuar" 
+              : step === 1 
+                ? "Complete seu cadastro para continuar" 
+                : "Informe seu endereço de residência"}
           </CardDescription>
           <div className="flex justify-center gap-2 mt-4">
+            <div className={`w-3 h-3 rounded-full ${step >= 0 ? "bg-primary" : "bg-muted"}`} />
             <div className={`w-3 h-3 rounded-full ${step >= 1 ? "bg-primary" : "bg-muted"}`} />
             <div className={`w-3 h-3 rounded-full ${step >= 2 ? "bg-primary" : "bg-muted"}`} />
           </div>
         </CardHeader>
         <CardContent>
-          {step === 1 ? (
+          {step === 0 ? (
+            <div className="space-y-6">
+              <div className="flex items-center justify-center">
+                <div className="w-16 h-16 rounded-full bg-yellow-100 flex items-center justify-center">
+                  <span className="text-3xl">⚠️</span>
+                </div>
+              </div>
+              <div className="bg-muted rounded-xl p-4 space-y-3 text-sm text-muted-foreground">
+                <p className="font-semibold text-foreground text-base">Aviso Importante</p>
+                <p>
+                  Este aplicativo tem caráter <strong>educativo e de apoio à recuperação</strong>. 
+                  Não é um dispositivo médico e não diagnostica, trata, cura ou previne 
+                  nenhuma condição médica.
+                </p>
+                <p>
+                  Consulte sempre um <strong>médico ou profissional de saúde qualificado</strong> para 
+                  aconselhamento médico, diagnóstico ou tratamento.
+                </p>
+                <p>
+                  Em caso de crise, procure imediatamente um profissional de saúde ou 
+                  ligue para o CVV: <strong>188</strong>.
+                </p>
+              </div>
+              <Button
+                className="w-full btn-premium-primary"
+                onClick={() => setStep(1)}
+              >
+                Li e concordo — Continuar
+              </Button>
+            </div>
+          ) : step === 1 ? (
             <form onSubmit={handleStep1} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="phone">Telefone *</Label>
