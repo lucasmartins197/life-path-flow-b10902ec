@@ -45,7 +45,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         console.warn("Auth loading timeout reached, forcing ready state");
         setIsLoading(false);
       }
-    }, 3000);
+    }, 8000);
 
     supabase.auth
       .getSession()
@@ -77,6 +77,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((event, currentSession) => {
       if (!isMounted) return;
+      if (event === "INITIAL_SESSION") return;
       setSession(currentSession);
       setUser(currentSession?.user ?? null);
       if (currentSession?.user) {
@@ -107,10 +108,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   async function fetchUserData(userId: string, userEmail: string | null = null) {
     try {
-      let { data: profileData } = await supabase.from("profiles").select("*").eq("id", userId).maybeSingle();
+      const controller = new AbortController();
+      const fetchTimeout = setTimeout(() => controller.abort(), 6000);
+
+      let { data: profileData } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("id", userId)
+        .maybeSingle()
+        .abortSignal(controller.signal);
 
       if (!profileData) {
-        const res = await supabase.from("profiles").select("*").eq("user_id", userId).maybeSingle();
+        const res = await supabase
+          .from("profiles")
+          .select("*")
+          .eq("user_id", userId)
+          .maybeSingle()
+          .abortSignal(controller.signal);
         profileData = res.data;
       }
 
@@ -135,12 +149,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         });
       }
 
-      const { data: rolesData } = await supabase.from("user_roles").select("role").eq("user_id", userId);
+      const { data: rolesData } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", userId)
+        .abortSignal(controller.signal);
+
+      clearTimeout(fetchTimeout);
+
       if (rolesData) {
         setRoles(rolesData.map((r) => r.role as AppRole));
       }
-    } catch (error) {
-      console.error("Error fetching user data:", error);
+    } catch (error: any) {
+      if (error?.name === "AbortError") {
+        console.warn("fetchUserData aborted due to timeout");
+      } else {
+        console.error("Error fetching user data:", error);
+      }
     }
   }
 
