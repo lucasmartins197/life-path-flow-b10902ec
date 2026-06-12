@@ -108,23 +108,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   async function fetchUserData(userId: string, userEmail: string | null = null) {
     try {
-      const controller = new AbortController();
-      const fetchTimeout = setTimeout(() => controller.abort(), 6000);
+      const withTimeout = <T,>(promise: Promise<T>): Promise<T> => {
+        return Promise.race([
+          promise,
+          new Promise<T>((_, reject) =>
+            setTimeout(() => reject(new Error("TIMEOUT")), 6000)
+          ),
+        ]);
+      };
 
-      let { data: profileData } = await supabase
-        .from("profiles")
-        .select("*")
-        .eq("id", userId)
-        .maybeSingle()
-        .abortSignal(controller.signal);
+      let { data: profileData } = await withTimeout(
+        supabase.from("profiles").select("*").eq("id", userId).maybeSingle()
+      );
 
       if (!profileData) {
-        const res = await supabase
-          .from("profiles")
-          .select("*")
-          .eq("user_id", userId)
-          .maybeSingle()
-          .abortSignal(controller.signal);
+        const res = await withTimeout(
+          supabase.from("profiles").select("*").eq("user_id", userId).maybeSingle()
+        );
         profileData = res.data;
       }
 
@@ -149,19 +149,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         });
       }
 
-      const { data: rolesData } = await supabase
-        .from("user_roles")
-        .select("role")
-        .eq("user_id", userId)
-        .abortSignal(controller.signal);
-
-      clearTimeout(fetchTimeout);
+      const { data: rolesData } = await withTimeout(
+        supabase.from("user_roles").select("role").eq("user_id", userId)
+      );
 
       if (rolesData) {
         setRoles(rolesData.map((r) => r.role as AppRole));
       }
     } catch (error: any) {
-      if (error?.name === "AbortError") {
+      if (error?.message === "TIMEOUT") {
         console.warn("fetchUserData aborted due to timeout");
       } else {
         console.error("Error fetching user data:", error);
