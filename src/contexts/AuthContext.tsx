@@ -108,9 +108,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   async function fetchUserData(userId: string, userEmail: string | null = null) {
     try {
-      const withTimeout = <T,>(promise: Promise<T>): Promise<T> => {
+      const withTimeout = <T,>(promise: PromiseLike<T>): Promise<T> => {
         return Promise.race([
-          promise,
+          Promise.resolve(promise),
           new Promise<T>((_, reject) =>
             setTimeout(() => reject(new Error("TIMEOUT")), 6000)
           ),
