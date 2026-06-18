@@ -71,26 +71,17 @@ export default function RoutineHome() {
   const [generating, setGenerating] = useState(false);
   const [setupOpen, setSetupOpen] = useState(false);
   const [tab, setTab] = useState<"hoje"|"historico">("hoje");
-  // Modal leitura
-  const [readModal, setReadModal] = useState(false);
-  const [readTask, setReadTask] = useState<DailyTask | null>(null);
-  const [pagesRead, setPagesRead] = useState("");
-  const [savingRead, setSavingRead] = useState(false);
-  // Modal esporte
-  const [sportModal, setSportModal] = useState(false);
-  const [sportTask, setSportTask] = useState<DailyTask | null>(null);
-  const [sportDesc, setSportDesc] = useState("");
-  const [savingSport, setSavingSport] = useState(false);
-  // Modal lazer
-  const [lazerModal, setLazerModal] = useState(false);
-  const [lazerTask, setLazerTask] = useState<DailyTask | null>(null);
-  const [lazerDesc, setLazerDesc] = useState("");
-  const [savingLazer, setSavingLazer] = useState(false);
-  // Modal espiritualidade
-  const [espModal, setEspModal] = useState(false);
-  const [espTask, setEspTask] = useState<DailyTask | null>(null);
-  const [espDesc, setEspDesc] = useState("");
-  const [savingEsp, setSavingEsp] = useState(false);
+  // Modal de conclusão unificado
+  const [doneModal, setDoneModal] = useState(false);
+  const [activeTask, setActiveTask] = useState<DailyTask | null>(null);
+  const [respostaTexto, setRespostaTexto] = useState("");
+  const [distanciaKm, setDistanciaKm] = useState("");
+  const [tempoMin, setTempoMin] = useState("");
+  const [savingDone, setSavingDone] = useState(false);
+  // Feedback da IA
+  const [feedbackModal, setFeedbackModal] = useState(false);
+  const [feedbackText, setFeedbackText] = useState("");
+  const [feedbackCategoria, setFeedbackCategoria] = useState<string>("");
 
   useEffect(() => { if (user) loadAll(); }, [user]);
 
