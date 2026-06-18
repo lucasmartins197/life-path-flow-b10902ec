@@ -29,6 +29,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { BottomNavigation } from "@/components/BottomNavigation";
@@ -147,7 +148,7 @@ function formatZipCode(value: string) {
 
 export default function ProfileHome() {
   const navigate = useNavigate();
-  const { user, signOut } = useAuth();
+  const { user, signOut, roles } = useAuth();
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -822,6 +823,15 @@ export default function ProfileHome() {
 
         {/* SEÇÃO 5 — CONTA */}
         <section className="space-y-2">
+          {roles.includes("admin") && (
+            <Button
+              variant="outline"
+              onClick={() => navigate("/admin")}
+              className="w-full h-12 rounded-xl font-semibold flex items-center justify-center gap-2"
+            >
+              Painel Admin
+            </Button>
+          )}
           <button
             onClick={async () => {
               await supabase.auth.signOut();
