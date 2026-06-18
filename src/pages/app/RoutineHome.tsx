@@ -462,93 +462,110 @@ export default function RoutineHome() {
       <BottomNavigation />
       <PortoSeguroButton />
 
-      {/* Modal Leitura */}
-      <Sheet open={readModal} onOpenChange={setReadModal}>
+      {/* Modal unificado de conclusão */}
+      <Sheet open={doneModal} onOpenChange={setDoneModal}>
         <SheetContent side="bottom" className="rounded-t-3xl p-0">
           <div className="px-6 pt-6 pb-10 space-y-4">
-            <SheetTitle className="text-lg font-bold">Como foi sua leitura?</SheetTitle>
-            {readTask?.conteudo_ia && <p className="text-sm text-muted-foreground">{readTask.conteudo_ia}</p>}
-            <div className="flex gap-2 flex-wrap">
-              <a href="https://www.gutenberg.org" target="_blank" rel="noreferrer"
-                className="flex items-center gap-1 text-xs font-medium px-3 py-1.5 rounded-xl"
-                style={{background:"#7C3AED15",color:"#7C3AED"}}>
-                <ExternalLink className="h-3 w-3"/>Project Gutenberg
-              </a>
-              <a href="https://openlibrary.org" target="_blank" rel="noreferrer"
-                className="flex items-center gap-1 text-xs font-medium px-3 py-1.5 rounded-xl"
-                style={{background:"#7C3AED15",color:"#7C3AED"}}>
-                <ExternalLink className="h-3 w-3"/>Open Library
-              </a>
-              <a href="https://bdlb.bn.gov.br" target="_blank" rel="noreferrer"
-                className="flex items-center gap-1 text-xs font-medium px-3 py-1.5 rounded-xl"
-                style={{background:"#7C3AED15",color:"#7C3AED"}}>
-                <ExternalLink className="h-3 w-3"/>Biblioteca Digital BR
-              </a>
+            <SheetTitle className="text-lg font-bold">
+              {activeTask?.categoria === "leitura" && "Como foi sua leitura?"}
+              {activeTask?.categoria === "esporte" && "Como foi seu treino?"}
+              {activeTask?.categoria === "lazer" && "Como foi seu momento de lazer?"}
+              {activeTask?.categoria === "espiritualidade" && "Como foi sua prática espiritual?"}
+              {activeTask?.categoria === "gratidao" && "Sua gratidão de hoje"}
+            </SheetTitle>
+            {activeTask?.conteudo_ia && (
+              <p className="text-sm text-muted-foreground">{activeTask.conteudo_ia}</p>
+            )}
+
+            {activeTask?.categoria === "leitura" && (
+              <div>
+                <label className="text-sm font-medium mb-1 block">
+                  Escreva um resumo do que você entendeu da leitura de hoje
+                </label>
+                <Textarea
+                  placeholder="O que mais te marcou? O que você aprendeu?"
+                  value={respostaTexto}
+                  onChange={e => setRespostaTexto(e.target.value)}
+                  className="min-h-[120px]"
+                />
+              </div>
+            )}
+
+            {activeTask?.categoria === "esporte" && (
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-sm font-medium mb-1 block">Distância (km)</label>
+                  <Input
+                    type="number" inputMode="decimal" step="0.1" placeholder="Ex: 5"
+                    value={distanciaKm} onChange={e => setDistanciaKm(e.target.value)}
+                    className="h-12 text-lg"
+                  />
+                </div>
+                <div>
+                  <label className="text-sm font-medium mb-1 block">Tempo (min)</label>
+                  <Input
+                    type="number" inputMode="numeric" placeholder="Ex: 30"
+                    value={tempoMin} onChange={e => setTempoMin(e.target.value)}
+                    className="h-12 text-lg"
+                  />
+                </div>
+              </div>
+            )}
+
+            {(activeTask?.categoria === "lazer"
+              || activeTask?.categoria === "espiritualidade"
+              || activeTask?.categoria === "gratidao") && (
+              <div>
+                <label className="text-sm font-medium mb-1 block">Quer compartilhar como foi? (opcional)</label>
+                <Textarea
+                  placeholder="Conte em poucas palavras..."
+                  value={respostaTexto}
+                  onChange={e => setRespostaTexto(e.target.value)}
+                  className="min-h-[100px]"
+                />
+              </div>
+            )}
+
+            <Button onClick={concluirTarefa} disabled={savingDone}
+              className="w-full h-12 text-base font-bold rounded-2xl text-white"
+              style={{ background: "linear-gradient(135deg,#1B4332,#2D6A4F)" }}>
+              {savingDone ? <Loader2 className="h-4 w-4 animate-spin" /> : "Concluir tarefa"}
+            </Button>
+          </div>
+        </SheetContent>
+      </Sheet>
+
+      {/* Modal de feedback da IA */}
+      <Sheet open={feedbackModal} onOpenChange={setFeedbackModal}>
+        <SheetContent side="bottom" className="rounded-t-3xl p-0">
+          <div className="px-6 pt-6 pb-10 space-y-4">
+            <div className="flex items-center gap-2">
+              <div className="w-10 h-10 rounded-2xl flex items-center justify-center"
+                style={{ background: "linear-gradient(135deg,#1B4332,#2D6A4F)" }}>
+                <Sparkles className="h-5 w-5 text-white" />
+              </div>
+              <div>
+                <SheetTitle className="text-base font-bold">Mensagem da Lia</SheetTitle>
+                <p className="text-xs text-muted-foreground">
+                  {CAT[feedbackCategoria]?.label || "Tarefa concluída"}
+                </p>
+              </div>
             </div>
-            <div>
-              <label className="text-sm font-medium mb-1 block">Quantas páginas você leu hoje?</label>
-              <Input type="number" placeholder="Ex: 15" value={pagesRead}
-                onChange={e => setPagesRead(e.target.value)} className="text-lg h-12" />
+            <div className="rounded-2xl p-4 border"
+              style={{ background: "#F8FAF7", borderColor: "#1B433220" }}>
+              <p className="text-sm leading-relaxed whitespace-pre-line" style={{ color: "#1B4332" }}>
+                {feedbackText}
+              </p>
             </div>
-            <Button onClick={saveReading} disabled={savingRead || !pagesRead}
+            <Button onClick={() => setFeedbackModal(false)}
               className="w-full h-12 text-base font-bold rounded-2xl text-white"
-              style={{background:"linear-gradient(135deg,#1B4332,#2D6A4F)"}}>
-              {savingRead ? <Loader2 className="h-4 w-4 animate-spin" /> : "Salvar progresso"}
+              style={{ background: "linear-gradient(135deg,#1B4332,#2D6A4F)" }}>
+              Continuar
             </Button>
           </div>
         </SheetContent>
       </Sheet>
 
-      {/* Modal Esporte */}
-      <Sheet open={sportModal} onOpenChange={setSportModal}>
-        <SheetContent side="bottom" className="rounded-t-3xl p-0">
-          <div className="px-6 pt-6 pb-10 space-y-4">
-            <SheetTitle className="text-lg font-bold">Como foi o treino?</SheetTitle>
-            {sportTask?.conteudo_ia && <p className="text-sm text-muted-foreground">{sportTask.conteudo_ia}</p>}
-            <Input placeholder="Ex: Fiz o treino completo, me senti bem..." value={sportDesc}
-              onChange={e => setSportDesc(e.target.value)} className="h-12" />
-            <Button onClick={saveSport} disabled={savingSport}
-              className="w-full h-12 text-base font-bold rounded-2xl text-white"
-              style={{background:"linear-gradient(135deg,#1B4332,#2D6A4F)"}}>
-              {savingSport ? <Loader2 className="h-4 w-4 animate-spin" /> : "Salvar"}
-            </Button>
-          </div>
-        </SheetContent>
-      </Sheet>
-
-      {/* Modal Lazer */}
-      <Sheet open={lazerModal} onOpenChange={setLazerModal}>
-        <SheetContent side="bottom" className="rounded-t-3xl p-0">
-          <div className="px-6 pt-6 pb-10 space-y-4">
-            <SheetTitle className="text-lg font-bold">Como foi seu momento de lazer?</SheetTitle>
-            {lazerTask?.conteudo_ia && <p className="text-sm text-muted-foreground">{lazerTask.conteudo_ia}</p>}
-            <Input placeholder="Ex: Assisti um filme, joguei com meu filho..." value={lazerDesc}
-              onChange={e => setLazerDesc(e.target.value)} className="h-12" />
-            <Button onClick={saveLazer} disabled={savingLazer}
-              className="w-full h-12 text-base font-bold rounded-2xl text-white"
-              style={{background:"linear-gradient(135deg,#1B4332,#2D6A4F)"}}>
-              {savingLazer ? <Loader2 className="h-4 w-4 animate-spin" /> : "Salvar"}
-            </Button>
-          </div>
-        </SheetContent>
-      </Sheet>
-
-      {/* Modal Espiritualidade */}
-      <Sheet open={espModal} onOpenChange={setEspModal}>
-        <SheetContent side="bottom" className="rounded-t-3xl p-0">
-          <div className="px-6 pt-6 pb-10 space-y-4">
-            <SheetTitle className="text-lg font-bold">Como foi sua prática espiritual?</SheetTitle>
-            {espTask?.conteudo_ia && <p className="text-sm text-muted-foreground">{espTask.conteudo_ia}</p>}
-            <Input placeholder="Ex: Meditei 10 minutos, orei pela manhã..." value={espDesc}
-              onChange={e => setEspDesc(e.target.value)} className="h-12" />
-            <Button onClick={saveEsp} disabled={savingEsp}
-              className="w-full h-12 text-base font-bold rounded-2xl text-white"
-              style={{background:"linear-gradient(135deg,#1B4332,#2D6A4F)"}}>
-              {savingEsp ? <Loader2 className="h-4 w-4 animate-spin" /> : "Salvar"}
-            </Button>
-          </div>
-        </SheetContent>
-      </Sheet>
 
       {/* Setup Sheet */}
       <SetupSheet open={setupOpen} onOpenChange={setSetupOpen} userId={user!.id}
