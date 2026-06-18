@@ -47,10 +47,11 @@ const EMPTY_PREFS: Prefs = {
 };
 
 const CAT: Record<string, { label: string; icon: React.ReactNode; color: string }> = {
-  leitura:        { label: "Leitura",        icon: <BookOpen className="h-5 w-5" />,  color: "#7C3AED" },
+  leitura:        { label: "Leitura",         icon: <BookOpen className="h-5 w-5" />,  color: "#7C3AED" },
   esporte:        { label: "Esporte",         icon: <Dumbbell className="h-5 w-5" />,  color: "#059669" },
   lazer:          { label: "Lazer",           icon: <Smile className="h-5 w-5" />,     color: "#D97706" },
   espiritualidade:{ label: "Espiritualidade", icon: <Leaf className="h-5 w-5" />,      color: "#2563EB" },
+  gratidao:       { label: "Gratidão",        icon: <Sparkles className="h-5 w-5" />,  color: "#EA580C" },
 };
 
 const DIAS = ["seg","ter","qua","qui","sex","sab","dom"];
