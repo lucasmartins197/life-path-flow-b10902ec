@@ -219,90 +219,64 @@ export default function RoutineHome() {
     setGenerating(false);
   }
 
-  // Abrir modal correto por categoria
+  // Abrir modal unificado de conclusão
   function openModal(task: DailyTask) {
     if (task.concluido) return;
-    if (task.categoria === "leitura") { setReadTask(task); setPagesRead(""); setReadModal(true); }
-    else if (task.categoria === "esporte") { setSportTask(task); setSportDesc(""); setSportModal(true); }
-    else if (task.categoria === "lazer") { setLazerTask(task); setLazerDesc(""); setLazerModal(true); }
-    else if (task.categoria === "espiritualidade") { setEspTask(task); setEspDesc(""); setEspModal(true); }
+    setActiveTask(task);
+    setRespostaTexto("");
+    setDistanciaKm("");
+    setTempoMin("");
+    setDoneModal(true);
   }
 
-  // Salvar leitura
-  async function saveReading() {
-    if (!readTask || !pagesRead) { toast.error("Informe quantas páginas leu."); return; }
-    setSavingRead(true);
-    const pages = parseInt(pagesRead);
-    // Atualizar ou criar reading_progress
-    const { data: existing } = await supabase
-      .from("reading_progress").select("*")
-      .eq("user_id", user!.id).eq("ativo", true)
-      .order("created_at", { ascending: false }).limit(1).maybeSingle();
-    if (existing) {
-      const rp = existing as any;
-      await supabase.from("reading_progress").update({
-        pagina_atual: (rp.pagina_atual || 0) + pages,
-        updated_at: new Date().toISOString(),
-      }).eq("id", rp.id);
+  async function concluirTarefa() {
+    if (!activeTask) return;
+    const cat = activeTask.categoria;
+
+    const body: Record<string, unknown> = { task_id: activeTask.id };
+    let progressoLabel = "";
+
+    if (cat === "esporte") {
+      const km = parseFloat(distanciaKm.replace(",", "."));
+      const min = parseInt(tempoMin, 10);
+      if (!km || !min) { toast.error("Informe distância e tempo."); return; }
+      body.metricas_usuario = { distancia_km: km, tempo_min: min };
+      progressoLabel = `${km} km · ${min} min`;
+    } else if (cat === "leitura") {
+      if (!respostaTexto.trim()) { toast.error("Escreva um resumo da leitura."); return; }
+      body.resposta_usuario = respostaTexto.trim();
+      progressoLabel = "Leitura registrada";
     } else {
-      const titulo = readTask.conteudo_ia.match(/"([^"]+)"/)?.[1] || "Livro atual";
-      await supabase.from("reading_progress").insert({
-        user_id: user!.id, livro_titulo: titulo,
-        pagina_atual: pages, paginas_por_dia: pages,
-        total_paginas: 0, ativo: true,
-      });
+      if (respostaTexto.trim()) body.resposta_usuario = respostaTexto.trim();
+      progressoLabel = "Concluído";
     }
-    await supabase.from("daily_tasks").update({
-      concluido: true, concluido_em: new Date().toISOString(),
-      progresso: `Leu ${pages} páginas`,
-    }).eq("id", readTask.id);
-    setTasks(prev => prev.map(t => t.id === readTask.id ? { ...t, concluido: true } : t));
-    toast.success(`Ótimo! ${pages} páginas registradas.`);
-    setReadModal(false);
-    setSavingRead(false);
+
+    setSavingDone(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("concluir-tarefa", { body });
+      if (error) throw error;
+      const feedback = (data as any)?.feedback || "";
+
+      setTasks(prev => prev.map(t => t.id === activeTask.id
+        ? { ...t, concluido: true, concluido_em: new Date().toISOString(), progresso: progressoLabel }
+        : t));
+      setDoneModal(false);
+
+      if (feedback) {
+        setFeedbackText(feedback);
+        setFeedbackCategoria(cat);
+        setFeedbackModal(true);
+      } else {
+        toast.success("Tarefa concluída!");
+      }
+    } catch (e: any) {
+      console.error("concluir-tarefa error:", e);
+      toast.error("Erro ao concluir: " + (e?.message || "tente novamente"));
+    } finally {
+      setSavingDone(false);
+    }
   }
 
-  // Salvar esporte
-  async function saveSport() {
-    if (!sportTask) return;
-    setSavingSport(true);
-    await supabase.from("daily_tasks").update({
-      concluido: true, concluido_em: new Date().toISOString(),
-      progresso: sportDesc || "Treino realizado",
-    }).eq("id", sportTask.id);
-    setTasks(prev => prev.map(t => t.id === sportTask.id ? { ...t, concluido: true } : t));
-    toast.success("Treino registrado!");
-    setSportModal(false);
-    setSavingSport(false);
-  }
-
-  // Salvar lazer
-  async function saveLazer() {
-    if (!lazerTask) return;
-    setSavingLazer(true);
-    await supabase.from("daily_tasks").update({
-      concluido: true, concluido_em: new Date().toISOString(),
-      progresso: lazerDesc || "Lazer realizado",
-    }).eq("id", lazerTask.id);
-    setTasks(prev => prev.map(t => t.id === lazerTask.id ? { ...t, concluido: true } : t));
-    toast.success("Lazer registrado!");
-    setLazerModal(false);
-    setSavingLazer(false);
-  }
-
-  // Salvar espiritualidade
-  async function saveEsp() {
-    if (!espTask) return;
-    setSavingEsp(true);
-    await supabase.from("daily_tasks").update({
-      concluido: true, concluido_em: new Date().toISOString(),
-      progresso: "Prática realizada",
-    }).eq("id", espTask.id);
-    setTasks(prev => prev.map(t => t.id === espTask.id ? { ...t, concluido: true } : t));
-    toast.success("Prática registrada!");
-    setEspModal(false);
-    setSavingEsp(false);
-  }
 
   const doneTasks = tasks.filter(t => t.concluido === true).length;
   const progress = tasks.length > 0 ? Math.round((doneTasks / tasks.length) * 100) : 0;
