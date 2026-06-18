@@ -7,9 +7,10 @@ import { PortoSeguroButton } from "@/components/PortoSeguroButton";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Settings, Loader2, BookOpen, Dumbbell, Smile, Leaf,
-  CheckCircle2, Circle, ExternalLink, ChevronRight
+  CheckCircle2, Circle, ExternalLink, ChevronRight, Sparkles
 } from "lucide-react";
 
 /* ─── Types ─── */
