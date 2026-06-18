@@ -148,7 +148,7 @@ function formatZipCode(value: string) {
 
 export default function ProfileHome() {
   const navigate = useNavigate();
-  const { user, signOut } = useAuth();
+  const { user, signOut, roles } = useAuth();
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
