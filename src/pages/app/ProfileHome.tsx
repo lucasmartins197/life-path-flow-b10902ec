@@ -823,6 +823,15 @@ export default function ProfileHome() {
 
         {/* SEÇÃO 5 — CONTA */}
         <section className="space-y-2">
+          {roles.includes("admin") && (
+            <Button
+              variant="outline"
+              onClick={() => navigate("/admin")}
+              className="w-full h-12 rounded-xl font-semibold flex items-center justify-center gap-2"
+            >
+              Painel Admin
+            </Button>
+          )}
           <button
             onClick={async () => {
               await supabase.auth.signOut();
