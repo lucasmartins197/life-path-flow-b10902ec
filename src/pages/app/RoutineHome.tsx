@@ -7,9 +7,10 @@ import { PortoSeguroButton } from "@/components/PortoSeguroButton";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Settings, Loader2, BookOpen, Dumbbell, Smile, Leaf,
-  CheckCircle2, Circle, ExternalLink, ChevronRight
+  CheckCircle2, Circle, ExternalLink, ChevronRight, Sparkles
 } from "lucide-react";
 
 /* ─── Types ─── */
@@ -46,10 +47,11 @@ const EMPTY_PREFS: Prefs = {
 };
 
 const CAT: Record<string, { label: string; icon: React.ReactNode; color: string }> = {
-  leitura:        { label: "Leitura",        icon: <BookOpen className="h-5 w-5" />,  color: "#7C3AED" },
+  leitura:        { label: "Leitura",         icon: <BookOpen className="h-5 w-5" />,  color: "#7C3AED" },
   esporte:        { label: "Esporte",         icon: <Dumbbell className="h-5 w-5" />,  color: "#059669" },
   lazer:          { label: "Lazer",           icon: <Smile className="h-5 w-5" />,     color: "#D97706" },
   espiritualidade:{ label: "Espiritualidade", icon: <Leaf className="h-5 w-5" />,      color: "#2563EB" },
+  gratidao:       { label: "Gratidão",        icon: <Sparkles className="h-5 w-5" />,  color: "#EA580C" },
 };
 
 const DIAS = ["seg","ter","qua","qui","sex","sab","dom"];
@@ -70,26 +72,17 @@ export default function RoutineHome() {
   const [generating, setGenerating] = useState(false);
   const [setupOpen, setSetupOpen] = useState(false);
   const [tab, setTab] = useState<"hoje"|"historico">("hoje");
-  // Modal leitura
-  const [readModal, setReadModal] = useState(false);
-  const [readTask, setReadTask] = useState<DailyTask | null>(null);
-  const [pagesRead, setPagesRead] = useState("");
-  const [savingRead, setSavingRead] = useState(false);
-  // Modal esporte
-  const [sportModal, setSportModal] = useState(false);
-  const [sportTask, setSportTask] = useState<DailyTask | null>(null);
-  const [sportDesc, setSportDesc] = useState("");
-  const [savingSport, setSavingSport] = useState(false);
-  // Modal lazer
-  const [lazerModal, setLazerModal] = useState(false);
-  const [lazerTask, setLazerTask] = useState<DailyTask | null>(null);
-  const [lazerDesc, setLazerDesc] = useState("");
-  const [savingLazer, setSavingLazer] = useState(false);
-  // Modal espiritualidade
-  const [espModal, setEspModal] = useState(false);
-  const [espTask, setEspTask] = useState<DailyTask | null>(null);
-  const [espDesc, setEspDesc] = useState("");
-  const [savingEsp, setSavingEsp] = useState(false);
+  // Modal de conclusão unificado
+  const [doneModal, setDoneModal] = useState(false);
+  const [activeTask, setActiveTask] = useState<DailyTask | null>(null);
+  const [respostaTexto, setRespostaTexto] = useState("");
+  const [distanciaKm, setDistanciaKm] = useState("");
+  const [tempoMin, setTempoMin] = useState("");
+  const [savingDone, setSavingDone] = useState(false);
+  // Feedback da IA
+  const [feedbackModal, setFeedbackModal] = useState(false);
+  const [feedbackText, setFeedbackText] = useState("");
+  const [feedbackCategoria, setFeedbackCategoria] = useState<string>("");
 
   useEffect(() => { if (user) loadAll(); }, [user]);
 
@@ -227,90 +220,64 @@ export default function RoutineHome() {
     setGenerating(false);
   }
 
-  // Abrir modal correto por categoria
+  // Abrir modal unificado de conclusão
   function openModal(task: DailyTask) {
     if (task.concluido) return;
-    if (task.categoria === "leitura") { setReadTask(task); setPagesRead(""); setReadModal(true); }
-    else if (task.categoria === "esporte") { setSportTask(task); setSportDesc(""); setSportModal(true); }
-    else if (task.categoria === "lazer") { setLazerTask(task); setLazerDesc(""); setLazerModal(true); }
-    else if (task.categoria === "espiritualidade") { setEspTask(task); setEspDesc(""); setEspModal(true); }
+    setActiveTask(task);
+    setRespostaTexto("");
+    setDistanciaKm("");
+    setTempoMin("");
+    setDoneModal(true);
   }
 
-  // Salvar leitura
-  async function saveReading() {
-    if (!readTask || !pagesRead) { toast.error("Informe quantas páginas leu."); return; }
-    setSavingRead(true);
-    const pages = parseInt(pagesRead);
-    // Atualizar ou criar reading_progress
-    const { data: existing } = await supabase
-      .from("reading_progress").select("*")
-      .eq("user_id", user!.id).eq("ativo", true)
-      .order("created_at", { ascending: false }).limit(1).maybeSingle();
-    if (existing) {
-      const rp = existing as any;
-      await supabase.from("reading_progress").update({
-        pagina_atual: (rp.pagina_atual || 0) + pages,
-        updated_at: new Date().toISOString(),
-      }).eq("id", rp.id);
+  async function concluirTarefa() {
+    if (!activeTask) return;
+    const cat = activeTask.categoria;
+
+    const body: Record<string, unknown> = { task_id: activeTask.id };
+    let progressoLabel = "";
+
+    if (cat === "esporte") {
+      const km = parseFloat(distanciaKm.replace(",", "."));
+      const min = parseInt(tempoMin, 10);
+      if (!km || !min) { toast.error("Informe distância e tempo."); return; }
+      body.metricas_usuario = { distancia_km: km, tempo_min: min };
+      progressoLabel = `${km} km · ${min} min`;
+    } else if (cat === "leitura") {
+      if (!respostaTexto.trim()) { toast.error("Escreva um resumo da leitura."); return; }
+      body.resposta_usuario = respostaTexto.trim();
+      progressoLabel = "Leitura registrada";
     } else {
-      const titulo = readTask.conteudo_ia.match(/"([^"]+)"/)?.[1] || "Livro atual";
-      await supabase.from("reading_progress").insert({
-        user_id: user!.id, livro_titulo: titulo,
-        pagina_atual: pages, paginas_por_dia: pages,
-        total_paginas: 0, ativo: true,
-      });
+      if (respostaTexto.trim()) body.resposta_usuario = respostaTexto.trim();
+      progressoLabel = "Concluído";
     }
-    await supabase.from("daily_tasks").update({
-      concluido: true, concluido_em: new Date().toISOString(),
-      progresso: `Leu ${pages} páginas`,
-    }).eq("id", readTask.id);
-    setTasks(prev => prev.map(t => t.id === readTask.id ? { ...t, concluido: true } : t));
-    toast.success(`Ótimo! ${pages} páginas registradas.`);
-    setReadModal(false);
-    setSavingRead(false);
+
+    setSavingDone(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("concluir-tarefa", { body });
+      if (error) throw error;
+      const feedback = (data as any)?.feedback || "";
+
+      setTasks(prev => prev.map(t => t.id === activeTask.id
+        ? { ...t, concluido: true, concluido_em: new Date().toISOString(), progresso: progressoLabel }
+        : t));
+      setDoneModal(false);
+
+      if (feedback) {
+        setFeedbackText(feedback);
+        setFeedbackCategoria(cat);
+        setFeedbackModal(true);
+      } else {
+        toast.success("Tarefa concluída!");
+      }
+    } catch (e: any) {
+      console.error("concluir-tarefa error:", e);
+      toast.error("Erro ao concluir: " + (e?.message || "tente novamente"));
+    } finally {
+      setSavingDone(false);
+    }
   }
 
-  // Salvar esporte
-  async function saveSport() {
-    if (!sportTask) return;
-    setSavingSport(true);
-    await supabase.from("daily_tasks").update({
-      concluido: true, concluido_em: new Date().toISOString(),
-      progresso: sportDesc || "Treino realizado",
-    }).eq("id", sportTask.id);
-    setTasks(prev => prev.map(t => t.id === sportTask.id ? { ...t, concluido: true } : t));
-    toast.success("Treino registrado!");
-    setSportModal(false);
-    setSavingSport(false);
-  }
-
-  // Salvar lazer
-  async function saveLazer() {
-    if (!lazerTask) return;
-    setSavingLazer(true);
-    await supabase.from("daily_tasks").update({
-      concluido: true, concluido_em: new Date().toISOString(),
-      progresso: lazerDesc || "Lazer realizado",
-    }).eq("id", lazerTask.id);
-    setTasks(prev => prev.map(t => t.id === lazerTask.id ? { ...t, concluido: true } : t));
-    toast.success("Lazer registrado!");
-    setLazerModal(false);
-    setSavingLazer(false);
-  }
-
-  // Salvar espiritualidade
-  async function saveEsp() {
-    if (!espTask) return;
-    setSavingEsp(true);
-    await supabase.from("daily_tasks").update({
-      concluido: true, concluido_em: new Date().toISOString(),
-      progresso: "Prática realizada",
-    }).eq("id", espTask.id);
-    setTasks(prev => prev.map(t => t.id === espTask.id ? { ...t, concluido: true } : t));
-    toast.success("Prática registrada!");
-    setEspModal(false);
-    setSavingEsp(false);
-  }
 
   const doneTasks = tasks.filter(t => t.concluido === true).length;
   const progress = tasks.length > 0 ? Math.round((doneTasks / tasks.length) * 100) : 0;
@@ -496,93 +463,110 @@ export default function RoutineHome() {
       <BottomNavigation />
       <PortoSeguroButton />
 
-      {/* Modal Leitura */}
-      <Sheet open={readModal} onOpenChange={setReadModal}>
+      {/* Modal unificado de conclusão */}
+      <Sheet open={doneModal} onOpenChange={setDoneModal}>
         <SheetContent side="bottom" className="rounded-t-3xl p-0">
           <div className="px-6 pt-6 pb-10 space-y-4">
-            <SheetTitle className="text-lg font-bold">Como foi sua leitura?</SheetTitle>
-            {readTask?.conteudo_ia && <p className="text-sm text-muted-foreground">{readTask.conteudo_ia}</p>}
-            <div className="flex gap-2 flex-wrap">
-              <a href="https://www.gutenberg.org" target="_blank" rel="noreferrer"
-                className="flex items-center gap-1 text-xs font-medium px-3 py-1.5 rounded-xl"
-                style={{background:"#7C3AED15",color:"#7C3AED"}}>
-                <ExternalLink className="h-3 w-3"/>Project Gutenberg
-              </a>
-              <a href="https://openlibrary.org" target="_blank" rel="noreferrer"
-                className="flex items-center gap-1 text-xs font-medium px-3 py-1.5 rounded-xl"
-                style={{background:"#7C3AED15",color:"#7C3AED"}}>
-                <ExternalLink className="h-3 w-3"/>Open Library
-              </a>
-              <a href="https://bdlb.bn.gov.br" target="_blank" rel="noreferrer"
-                className="flex items-center gap-1 text-xs font-medium px-3 py-1.5 rounded-xl"
-                style={{background:"#7C3AED15",color:"#7C3AED"}}>
-                <ExternalLink className="h-3 w-3"/>Biblioteca Digital BR
-              </a>
+            <SheetTitle className="text-lg font-bold">
+              {activeTask?.categoria === "leitura" && "Como foi sua leitura?"}
+              {activeTask?.categoria === "esporte" && "Como foi seu treino?"}
+              {activeTask?.categoria === "lazer" && "Como foi seu momento de lazer?"}
+              {activeTask?.categoria === "espiritualidade" && "Como foi sua prática espiritual?"}
+              {activeTask?.categoria === "gratidao" && "Sua gratidão de hoje"}
+            </SheetTitle>
+            {activeTask?.conteudo_ia && (
+              <p className="text-sm text-muted-foreground">{activeTask.conteudo_ia}</p>
+            )}
+
+            {activeTask?.categoria === "leitura" && (
+              <div>
+                <label className="text-sm font-medium mb-1 block">
+                  Escreva um resumo do que você entendeu da leitura de hoje
+                </label>
+                <Textarea
+                  placeholder="O que mais te marcou? O que você aprendeu?"
+                  value={respostaTexto}
+                  onChange={e => setRespostaTexto(e.target.value)}
+                  className="min-h-[120px]"
+                />
+              </div>
+            )}
+
+            {activeTask?.categoria === "esporte" && (
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-sm font-medium mb-1 block">Distância (km)</label>
+                  <Input
+                    type="number" inputMode="decimal" step="0.1" placeholder="Ex: 5"
+                    value={distanciaKm} onChange={e => setDistanciaKm(e.target.value)}
+                    className="h-12 text-lg"
+                  />
+                </div>
+                <div>
+                  <label className="text-sm font-medium mb-1 block">Tempo (min)</label>
+                  <Input
+                    type="number" inputMode="numeric" placeholder="Ex: 30"
+                    value={tempoMin} onChange={e => setTempoMin(e.target.value)}
+                    className="h-12 text-lg"
+                  />
+                </div>
+              </div>
+            )}
+
+            {(activeTask?.categoria === "lazer"
+              || activeTask?.categoria === "espiritualidade"
+              || activeTask?.categoria === "gratidao") && (
+              <div>
+                <label className="text-sm font-medium mb-1 block">Quer compartilhar como foi? (opcional)</label>
+                <Textarea
+                  placeholder="Conte em poucas palavras..."
+                  value={respostaTexto}
+                  onChange={e => setRespostaTexto(e.target.value)}
+                  className="min-h-[100px]"
+                />
+              </div>
+            )}
+
+            <Button onClick={concluirTarefa} disabled={savingDone}
+              className="w-full h-12 text-base font-bold rounded-2xl text-white"
+              style={{ background: "linear-gradient(135deg,#1B4332,#2D6A4F)" }}>
+              {savingDone ? <Loader2 className="h-4 w-4 animate-spin" /> : "Concluir tarefa"}
+            </Button>
+          </div>
+        </SheetContent>
+      </Sheet>
+
+      {/* Modal de feedback da IA */}
+      <Sheet open={feedbackModal} onOpenChange={setFeedbackModal}>
+        <SheetContent side="bottom" className="rounded-t-3xl p-0">
+          <div className="px-6 pt-6 pb-10 space-y-4">
+            <div className="flex items-center gap-2">
+              <div className="w-10 h-10 rounded-2xl flex items-center justify-center"
+                style={{ background: "linear-gradient(135deg,#1B4332,#2D6A4F)" }}>
+                <Sparkles className="h-5 w-5 text-white" />
+              </div>
+              <div>
+                <SheetTitle className="text-base font-bold">Mensagem da Lia</SheetTitle>
+                <p className="text-xs text-muted-foreground">
+                  {CAT[feedbackCategoria]?.label || "Tarefa concluída"}
+                </p>
+              </div>
             </div>
-            <div>
-              <label className="text-sm font-medium mb-1 block">Quantas páginas você leu hoje?</label>
-              <Input type="number" placeholder="Ex: 15" value={pagesRead}
-                onChange={e => setPagesRead(e.target.value)} className="text-lg h-12" />
+            <div className="rounded-2xl p-4 border"
+              style={{ background: "#F8FAF7", borderColor: "#1B433220" }}>
+              <p className="text-sm leading-relaxed whitespace-pre-line" style={{ color: "#1B4332" }}>
+                {feedbackText}
+              </p>
             </div>
-            <Button onClick={saveReading} disabled={savingRead || !pagesRead}
+            <Button onClick={() => setFeedbackModal(false)}
               className="w-full h-12 text-base font-bold rounded-2xl text-white"
-              style={{background:"linear-gradient(135deg,#1B4332,#2D6A4F)"}}>
-              {savingRead ? <Loader2 className="h-4 w-4 animate-spin" /> : "Salvar progresso"}
+              style={{ background: "linear-gradient(135deg,#1B4332,#2D6A4F)" }}>
+              Continuar
             </Button>
           </div>
         </SheetContent>
       </Sheet>
 
-      {/* Modal Esporte */}
-      <Sheet open={sportModal} onOpenChange={setSportModal}>
-        <SheetContent side="bottom" className="rounded-t-3xl p-0">
-          <div className="px-6 pt-6 pb-10 space-y-4">
-            <SheetTitle className="text-lg font-bold">Como foi o treino?</SheetTitle>
-            {sportTask?.conteudo_ia && <p className="text-sm text-muted-foreground">{sportTask.conteudo_ia}</p>}
-            <Input placeholder="Ex: Fiz o treino completo, me senti bem..." value={sportDesc}
-              onChange={e => setSportDesc(e.target.value)} className="h-12" />
-            <Button onClick={saveSport} disabled={savingSport}
-              className="w-full h-12 text-base font-bold rounded-2xl text-white"
-              style={{background:"linear-gradient(135deg,#1B4332,#2D6A4F)"}}>
-              {savingSport ? <Loader2 className="h-4 w-4 animate-spin" /> : "Salvar"}
-            </Button>
-          </div>
-        </SheetContent>
-      </Sheet>
-
-      {/* Modal Lazer */}
-      <Sheet open={lazerModal} onOpenChange={setLazerModal}>
-        <SheetContent side="bottom" className="rounded-t-3xl p-0">
-          <div className="px-6 pt-6 pb-10 space-y-4">
-            <SheetTitle className="text-lg font-bold">Como foi seu momento de lazer?</SheetTitle>
-            {lazerTask?.conteudo_ia && <p className="text-sm text-muted-foreground">{lazerTask.conteudo_ia}</p>}
-            <Input placeholder="Ex: Assisti um filme, joguei com meu filho..." value={lazerDesc}
-              onChange={e => setLazerDesc(e.target.value)} className="h-12" />
-            <Button onClick={saveLazer} disabled={savingLazer}
-              className="w-full h-12 text-base font-bold rounded-2xl text-white"
-              style={{background:"linear-gradient(135deg,#1B4332,#2D6A4F)"}}>
-              {savingLazer ? <Loader2 className="h-4 w-4 animate-spin" /> : "Salvar"}
-            </Button>
-          </div>
-        </SheetContent>
-      </Sheet>
-
-      {/* Modal Espiritualidade */}
-      <Sheet open={espModal} onOpenChange={setEspModal}>
-        <SheetContent side="bottom" className="rounded-t-3xl p-0">
-          <div className="px-6 pt-6 pb-10 space-y-4">
-            <SheetTitle className="text-lg font-bold">Como foi sua prática espiritual?</SheetTitle>
-            {espTask?.conteudo_ia && <p className="text-sm text-muted-foreground">{espTask.conteudo_ia}</p>}
-            <Input placeholder="Ex: Meditei 10 minutos, orei pela manhã..." value={espDesc}
-              onChange={e => setEspDesc(e.target.value)} className="h-12" />
-            <Button onClick={saveEsp} disabled={savingEsp}
-              className="w-full h-12 text-base font-bold rounded-2xl text-white"
-              style={{background:"linear-gradient(135deg,#1B4332,#2D6A4F)"}}>
-              {savingEsp ? <Loader2 className="h-4 w-4 animate-spin" /> : "Salvar"}
-            </Button>
-          </div>
-        </SheetContent>
-      </Sheet>
 
       {/* Setup Sheet */}
       <SetupSheet open={setupOpen} onOpenChange={setSetupOpen} userId={user!.id}
