@@ -74,6 +74,14 @@ export function FinancePlan({ plan, loading, onRefresh }: FinancePlanProps) {
         {/* Diagnosis */}
         <p className="text-sm text-foreground/80 leading-relaxed mb-4">{plan.diagnosis}</p>
 
+        {/* Coach Message — orientação direta da Ana */}
+        {plan.coach_message && (
+          <div className="mb-4 bg-card border border-primary/30 rounded-xl p-3 flex items-start gap-2">
+            <Sparkles className="h-4 w-4 text-primary mt-0.5 shrink-0" />
+            <p className="text-sm text-foreground leading-relaxed">{plan.coach_message}</p>
+          </div>
+        )}
+
         {/* Urgent Actions */}
         <div className="mb-4">
           <p className="text-xs font-semibold text-foreground uppercase tracking-wider mb-2 flex items-center gap-1.5">
@@ -88,6 +96,23 @@ export function FinancePlan({ plan, loading, onRefresh }: FinancePlanProps) {
             ))}
           </div>
         </div>
+
+        {/* Practical Tips */}
+        {practicalTips.length > 0 && (
+          <div className="mb-4">
+            <p className="text-xs font-semibold text-foreground uppercase tracking-wider mb-2 flex items-center gap-1.5">
+              <Lightbulb className="h-3.5 w-3.5 text-accent" /> Dicas Práticas
+            </p>
+            <div className="space-y-2">
+              {practicalTips.map((tip, i) => (
+                <div key={i} className="flex items-start gap-2 bg-accent/5 border border-accent/20 rounded-xl p-3">
+                  <span className="text-xs font-bold text-accent mt-0.5 shrink-0">{i + 1}.</span>
+                  <p className="text-sm text-foreground/90 leading-relaxed">{tip}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Budget Distribution */}
         <div className="mb-4">
