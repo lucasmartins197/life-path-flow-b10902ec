@@ -5,7 +5,7 @@ import { useCommunityFeed, CommunityPost, PostComment, ReactionType } from "@/ho
 import { useAuth } from "@/contexts/AuthContext";
 import {
   Heart, MessageCircle, Send, Plus, Users, ChevronLeft,
-  Camera, MoreHorizontal, Flag, X, Image as ImageIcon, Video, UserPlus, UserCheck
+  Camera, MoreHorizontal, Flag, X, Image as ImageIcon, Video, UserPlus, UserCheck, Trash2
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -26,6 +26,7 @@ import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { supabase } from "@/integrations/supabase/client";
 import { Shield } from "lucide-react";
+import { toast } from "sonner";
 
 const MOOD_CONFIG: Record<string, { label: string; color: string }> = {
   motivado: { label: "Motivado", color: "bg-emerald-100 text-emerald-800" },
@@ -356,7 +357,7 @@ function CommentsDrawer({
 }
 
 function PostCard({
-  post, currentUserId, onReact, onComment, onReport, onToggleFollow,
+  post, currentUserId, onReact, onComment, onReport, onToggleFollow, onDelete,
 }: {
   post: CommunityPost;
   currentUserId?: string;
@@ -364,6 +365,7 @@ function PostCard({
   onComment: () => void;
   onReport: () => void;
   onToggleFollow: () => void;
+  onDelete: () => Promise<boolean>;
 }) {
   const isOwn = post.user_id === currentUserId;
   const totalReactions =
@@ -371,9 +373,24 @@ function PostCard({
     (post.reactions_count?.forca || 0) +
     (post.reactions_count?.gratidao || 0) +
     (post.reactions_count?.apoio || 0);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+
+  const handleDelete = async () => {
+    setDeleting(true);
+    const ok = await onDelete();
+    setDeleting(false);
+    setShowDeleteDialog(false);
+    if (ok) {
+      toast.success("Publicação excluída");
+    } else {
+      toast.error("Erro ao excluir publicação");
+    }
+  };
 
   return (
-    <Card className="border-0 shadow-[0_1px_3px_rgba(0,0,0,0.06)] rounded-2xl overflow-hidden bg-white">
+    <>
+      <Card className="border-0 shadow-[0_1px_3px_rgba(0,0,0,0.06)] rounded-2xl overflow-hidden bg-white">
       <div className="px-4 pt-4 pb-2 flex items-start gap-3">
         <AnonAvatar userId={post.user_id} />
         <div className="flex-1 min-w-0">
@@ -410,6 +427,11 @@ function PostCard({
             </button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
+            {isOwn && (
+              <DropdownMenuItem onClick={() => setShowDeleteDialog(true)} className="text-destructive gap-2">
+                <Trash2 className="h-4 w-4" /> Excluir publicação
+              </DropdownMenuItem>
+            )}
             <DropdownMenuItem onClick={onReport} className="text-destructive gap-2">
               <Flag className="h-4 w-4" /> Reportar
             </DropdownMenuItem>
@@ -484,7 +506,26 @@ function PostCard({
         </button>
       </div>
     </Card>
-  );
+
+    <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+      <DialogContent className="max-w-sm">
+        <DialogHeader>
+          <DialogTitle className="text-lg">Excluir publicação</DialogTitle>
+          <DialogDescription className="text-sm text-muted-foreground mt-1">
+            Tem certeza que deseja excluir esta publicação? Esta ação não pode ser desfeita.
+          </DialogDescription>
+        </DialogHeader>
+        <div className="flex gap-2 justify-end mt-2">
+          <Button variant="outline" size="sm" onClick={() => setShowDeleteDialog(false)} disabled={deleting}>
+            Cancelar
+          </Button>
+          <Button variant="destructive" size="sm" onClick={handleDelete} disabled={deleting}>
+            {deleting ? "Excluindo..." : "Excluir"}
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
+  </>);
 }
 
 export default function CommunityHome() {
@@ -492,7 +533,7 @@ export default function CommunityHome() {
   const { user } = useAuth();
   const {
     posts, loading, createPost, toggleReaction, toggleFollow,
-    addComment, reportPost, uploadPostImage, uploadPostVideo, fetchComments,
+    addComment, reportPost, deletePost, uploadPostImage, uploadPostVideo, fetchComments,
   } = useCommunityFeed();
   const [showCreate, setShowCreate] = useState(false);
   const [commentsPostId, setCommentsPostId] = useState<string | null>(null);
@@ -638,6 +679,7 @@ export default function CommunityHome() {
               onComment={() => setCommentsPostId(post.id)}
               onReport={() => reportPost(post.id, "Conteúdo inadequado")}
               onToggleFollow={() => toggleFollow(post.user_id)}
+              onDelete={() => deletePost(post.id)}
             />
           ))
         )}

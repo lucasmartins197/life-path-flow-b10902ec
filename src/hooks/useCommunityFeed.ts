@@ -252,6 +252,21 @@ export function useCommunityFeed() {
     toast({ title: "Conteúdo reportado", description: "O post foi ocultado do seu feed." });
   };
 
+  const deletePost = async (postId: string): Promise<boolean> => {
+    if (!user) return false;
+    const { error } = await supabase
+      .from("community_posts")
+      .delete()
+      .eq("id", postId)
+      .eq("user_id", user.id);
+    if (error) {
+      console.error("Erro ao excluir post:", error);
+      return false;
+    }
+    setPosts((prev) => prev.filter((p) => p.id !== postId));
+    return true;
+  };
+
   const uploadPostImage = async (file: File): Promise<string | null> => {
     if (!user) return null;
     const ext = file.name.split(".").pop();
@@ -330,6 +345,7 @@ export function useCommunityFeed() {
     fetchComments,
     addComment,
     reportPost,
+    deletePost,
     uploadPostImage,
     uploadPostVideo,
     refreshPosts: fetchPosts,
