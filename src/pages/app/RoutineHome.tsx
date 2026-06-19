@@ -36,6 +36,7 @@ interface Prefs {
   esporte_tipos: string[];
   esporte_nivel: string;
   esporte_dias: string[];
+  esporte_dias_por_tipo: Record<string, string[]>;
   esporte_tempo: number;
   lazer_ativo: boolean;
   espiritualidade_ativo: boolean;
@@ -44,11 +45,12 @@ interface Prefs {
 
 const EMPTY_PREFS: Prefs = {
   leitura_ativo: false, leitura_tipo: "",
-  esporte_ativo: false, esporte_tipos: [], esporte_nivel: "", esporte_dias: [], esporte_tempo: 30,
+  esporte_ativo: false, esporte_tipos: [], esporte_nivel: "", esporte_dias: [], esporte_dias_por_tipo: {}, esporte_tempo: 30,
   lazer_ativo: false, espiritualidade_ativo: false, configurado: false,
 };
 
 // Normaliza prefs vindas do banco — converte esporte_tipo (string legado) em esporte_tipos[]
+// e garante esporte_dias_por_tipo a partir de esporte_dias quando ausente.
 function normalizePrefs(raw: any): Prefs {
   const merged: any = { ...EMPTY_PREFS, ...(raw || {}) };
   let tipos: string[] = [];
@@ -59,6 +61,23 @@ function normalizePrefs(raw: any): Prefs {
     tipos = [raw.esporte_tipo];
   }
   merged.esporte_tipos = tipos;
+
+  const diasLegado: string[] = Array.isArray(raw?.esporte_dias) ? raw.esporte_dias : [];
+  let diasPorTipo: Record<string, string[]> = {};
+  if (raw?.esporte_dias_por_tipo && typeof raw.esporte_dias_por_tipo === "object" && !Array.isArray(raw.esporte_dias_por_tipo)) {
+    for (const t of tipos) {
+      const v = (raw.esporte_dias_por_tipo as any)[t];
+      diasPorTipo[t] = Array.isArray(v) ? v.filter((x: any) => typeof x === "string") : [];
+    }
+  }
+  // Fallback: se nenhum tipo tem dias específicos, usa esporte_dias legado para todos
+  const algumPreenchido = Object.values(diasPorTipo).some(arr => arr && arr.length > 0);
+  if (!algumPreenchido) {
+    diasPorTipo = {};
+    for (const t of tipos) diasPorTipo[t] = [...diasLegado];
+  }
+  merged.esporte_dias_por_tipo = diasPorTipo;
+  merged.esporte_dias = diasLegado;
   return merged as Prefs;
 }
 
