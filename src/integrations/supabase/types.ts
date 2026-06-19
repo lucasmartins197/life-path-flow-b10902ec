@@ -2714,27 +2714,33 @@ export type Database = {
       weekly_class: {
         Row: {
           created_at: string
-          created_by: string | null
+          description: string | null
           id: string
-          link: string
+          is_live: boolean
           scheduled_at: string
+          title: string
           updated_at: string
+          video_url: string | null
         }
         Insert: {
           created_at?: string
-          created_by?: string | null
+          description?: string | null
           id?: string
-          link?: string
+          is_live?: boolean
           scheduled_at?: string
+          title: string
           updated_at?: string
+          video_url?: string | null
         }
         Update: {
           created_at?: string
-          created_by?: string | null
+          description?: string | null
           id?: string
-          link?: string
+          is_live?: boolean
           scheduled_at?: string
+          title?: string
           updated_at?: string
+          video_url?: string | null
         }
         Relationships: []
       }
