@@ -640,8 +640,13 @@ export type Database = {
           created_at: string
           data: string
           descricao: string
+          feedback_ia: string | null
           id: string
+          meta_km: number | null
+          meta_paginas: number | null
+          metricas_usuario: Json | null
           progresso: string | null
+          resposta_usuario: string | null
           titulo: string
           updated_at: string
           user_id: string
@@ -654,8 +659,13 @@ export type Database = {
           created_at?: string
           data?: string
           descricao?: string
+          feedback_ia?: string | null
           id?: string
+          meta_km?: number | null
+          meta_paginas?: number | null
+          metricas_usuario?: Json | null
           progresso?: string | null
+          resposta_usuario?: string | null
           titulo: string
           updated_at?: string
           user_id: string
@@ -668,8 +678,13 @@ export type Database = {
           created_at?: string
           data?: string
           descricao?: string
+          feedback_ia?: string | null
           id?: string
+          meta_km?: number | null
+          meta_paginas?: number | null
+          metricas_usuario?: Json | null
           progresso?: string | null
+          resposta_usuario?: string | null
           titulo?: string
           updated_at?: string
           user_id?: string
