@@ -203,14 +203,19 @@ export default function RoutineHome() {
     }
 
     if (prefs.esporte_ativo && Array.isArray(prefs.esporte_dias) && prefs.esporte_dias.includes(hoje)) {
-      const ia = await getIA("esporte");
-      const metaKm = prefs.esporte_tipo === "corrida"
+      const tipos = Array.isArray(prefs.esporte_tipos) ? prefs.esporte_tipos : [];
+      // Alterna entre modalidades por dia da semana ativo (1º dia ativo = tipo[0], 2º = tipo[1], ...)
+      const diasOrdenados = DIAS.filter(d => prefs.esporte_dias.includes(d));
+      const idxDia = Math.max(0, diasOrdenados.indexOf(hoje));
+      const tipoHoje = tipos.length > 0 ? tipos[idxDia % tipos.length] : "";
+      const ia = await getIA("esporte", `Modalidade de hoje: ${tipoHoje}`);
+      const metaKm = tipoHoje === "corrida"
         ? (prefs.esporte_nivel === "Avançado" ? 8 : prefs.esporte_nivel === "Intermediário" ? 5 : 3)
         : null;
       newTasks.push({
         user_id: user!.id, categoria: "esporte",
-        titulo: prefs.esporte_tipo === "academia" ? "Treino na academia" : "Treino de corrida",
-        descricao: `${prefs.esporte_tipo} — ${prefs.esporte_nivel} — ${prefs.esporte_tempo}min`,
+        titulo: tipoHoje === "academia" ? "Treino na academia" : "Treino de corrida",
+        descricao: `${tipoHoje} — ${prefs.esporte_nivel} — ${prefs.esporte_tempo}min`,
         conteudo_ia: ia, data: d, concluido: false,
         meta_km: metaKm,
       });
