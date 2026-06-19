@@ -336,31 +336,38 @@ export default function RoutineHome() {
     updateFields.progresso = progressoLabel;
 
     setSavingDone(true);
+    let feedback = "";
+    let precisaReescrever = false;
+    let aiError = false;
+
     try {
-      // Call AI for feedback
-      let feedback = "";
       if (aiPayload) {
         const { data, error } = await supabase.functions.invoke("routine-ai", { body: aiPayload });
-        if (error) console.error("routine-ai error:", error);
-        feedback = (data as any)?.feedback || (data as any)?.message || "";
-      }
-
-      // LEITURA: check rejection keywords — if rejected, don't save, ask retry
-      if (cat === "leitura" && feedback) {
-        const lower = feedback.toLowerCase();
-        const rejeitada = ["reescreva", "tente novamente", "muito vago", "insuficiente", "não é um resumo", "nao e um resumo"]
-          .some(k => lower.includes(k));
-        if (rejeitada) {
-          setLeituraRejeicao(feedback);
-          setRespostaTexto("");
-          setLeituraTentativa(t => t + 1);
-          setSavingDone(false);
-          return;
+        if (error) {
+          console.error("routine-ai error:", error);
+          aiError = true;
+        } else {
+          feedback = (data as any)?.feedback || (data as any)?.message || "";
+          precisaReescrever = (data as any)?.precisaReescrever === true;
         }
       }
+    } catch (e: any) {
+      console.error("routine-ai exception:", e);
+      aiError = true;
+    }
 
-      if (feedback) updateFields.feedback_ia = feedback;
+    // LEITURA: if AI says needs rewrite, don't save yet — keep modal open
+    if (cat === "leitura" && precisaReescrever) {
+      setLeituraRejeicao(feedback);
+      setRespostaTexto("");
+      setLeituraTentativa(t => t + 1);
+      setSavingDone(false);
+      return;
+    }
 
+    if (feedback) updateFields.feedback_ia = feedback;
+
+    try {
       // Update task
       const { error: upErr } = await supabase
         .from("daily_tasks")
@@ -388,7 +395,9 @@ export default function RoutineHome() {
       setLeituraRejeicao("");
       setLeituraTentativa(1);
 
-      if (feedback) {
+      if (aiError) {
+        toast.success("Tarefa concluída!");
+      } else if (feedback) {
         setFeedbackText(feedback);
         setFeedbackCategoria(cat);
         setFeedbackModal(true);
