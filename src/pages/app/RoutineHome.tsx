@@ -804,7 +804,7 @@ function SetupSheet({ open, onOpenChange, userId, existingPrefs, onSaved }: {
       setLeituraAtivo(existingPrefs.leitura_ativo || false);
       setLeituraTipo(existingPrefs.leitura_tipo || "");
       setEsporteAtivo(existingPrefs.esporte_ativo || false);
-      setEsporteTipo(existingPrefs.esporte_tipo || "");
+      setEsporteTipos(Array.isArray(existingPrefs.esporte_tipos) ? existingPrefs.esporte_tipos : []);
       setEsporteNivel(existingPrefs.esporte_nivel || "");
       setEsporteDias(Array.isArray(existingPrefs.esporte_dias) ? existingPrefs.esporte_dias : []);
       setEsporteTempo(existingPrefs.esporte_tempo || 30);
