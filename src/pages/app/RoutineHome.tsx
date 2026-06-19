@@ -33,7 +33,7 @@ interface Prefs {
   leitura_ativo: boolean;
   leitura_tipo: string;
   esporte_ativo: boolean;
-  esporte_tipo: string;
+  esporte_tipos: string[];
   esporte_nivel: string;
   esporte_dias: string[];
   esporte_tempo: number;
@@ -44,9 +44,23 @@ interface Prefs {
 
 const EMPTY_PREFS: Prefs = {
   leitura_ativo: false, leitura_tipo: "",
-  esporte_ativo: false, esporte_tipo: "", esporte_nivel: "", esporte_dias: [], esporte_tempo: 30,
+  esporte_ativo: false, esporte_tipos: [], esporte_nivel: "", esporte_dias: [], esporte_tempo: 30,
   lazer_ativo: false, espiritualidade_ativo: false, configurado: false,
 };
+
+// Normaliza prefs vindas do banco — converte esporte_tipo (string legado) em esporte_tipos[]
+function normalizePrefs(raw: any): Prefs {
+  const merged: any = { ...EMPTY_PREFS, ...(raw || {}) };
+  let tipos: string[] = [];
+  if (Array.isArray(raw?.esporte_tipos)) {
+    tipos = raw.esporte_tipos.filter((t: any) => typeof t === "string" && t.length > 0);
+  }
+  if (tipos.length === 0 && typeof raw?.esporte_tipo === "string" && raw.esporte_tipo) {
+    tipos = [raw.esporte_tipo];
+  }
+  merged.esporte_tipos = tipos;
+  return merged as Prefs;
+}
 
 const CAT: Record<string, { label: string; icon: React.ReactNode; color: string }> = {
   leitura:        { label: "Leitura",         icon: <BookOpen className="h-5 w-5" />,  color: "#7C3AED" },
@@ -101,7 +115,7 @@ export default function RoutineHome() {
     const { data } = await supabase
       .from("routine_preferences").select("*")
       .eq("user_id", user!.id).maybeSingle();
-    if (data) setPrefs({ ...EMPTY_PREFS, ...(data as any) });
+    if (data) setPrefs(normalizePrefs(data));
   }
 
   async function loadTasks() {
@@ -189,14 +203,19 @@ export default function RoutineHome() {
     }
 
     if (prefs.esporte_ativo && Array.isArray(prefs.esporte_dias) && prefs.esporte_dias.includes(hoje)) {
-      const ia = await getIA("esporte");
-      const metaKm = prefs.esporte_tipo === "corrida"
+      const tipos = Array.isArray(prefs.esporte_tipos) ? prefs.esporte_tipos : [];
+      // Alterna entre modalidades por dia da semana ativo (1º dia ativo = tipo[0], 2º = tipo[1], ...)
+      const diasOrdenados = DIAS.filter(d => prefs.esporte_dias.includes(d));
+      const idxDia = Math.max(0, diasOrdenados.indexOf(hoje));
+      const tipoHoje = tipos.length > 0 ? tipos[idxDia % tipos.length] : "";
+      const ia = await getIA("esporte", `Modalidade de hoje: ${tipoHoje}`);
+      const metaKm = tipoHoje === "corrida"
         ? (prefs.esporte_nivel === "Avançado" ? 8 : prefs.esporte_nivel === "Intermediário" ? 5 : 3)
         : null;
       newTasks.push({
         user_id: user!.id, categoria: "esporte",
-        titulo: prefs.esporte_tipo === "academia" ? "Treino na academia" : "Treino de corrida",
-        descricao: `${prefs.esporte_tipo} — ${prefs.esporte_nivel} — ${prefs.esporte_tempo}min`,
+        titulo: tipoHoje === "academia" ? "Treino na academia" : "Treino de corrida",
+        descricao: `${tipoHoje} — ${prefs.esporte_nivel} — ${prefs.esporte_tempo}min`,
         conteudo_ia: ia, data: d, concluido: false,
         meta_km: metaKm,
       });
@@ -773,7 +792,7 @@ function SetupSheet({ open, onOpenChange, userId, existingPrefs, onSaved }: {
   const [leituraAtivo, setLeituraAtivo] = useState(false);
   const [leituraTipo, setLeituraTipo] = useState("");
   const [esporteAtivo, setEsporteAtivo] = useState(false);
-  const [esporteTipo, setEsporteTipo] = useState("");
+  const [esporteTipos, setEsporteTipos] = useState<string[]>([]);
   const [esporteNivel, setEsporteNivel] = useState("");
   const [esporteDias, setEsporteDias] = useState<string[]>([]);
   const [esporteTempo, setEsporteTempo] = useState(30);
@@ -785,7 +804,7 @@ function SetupSheet({ open, onOpenChange, userId, existingPrefs, onSaved }: {
       setLeituraAtivo(existingPrefs.leitura_ativo || false);
       setLeituraTipo(existingPrefs.leitura_tipo || "");
       setEsporteAtivo(existingPrefs.esporte_ativo || false);
-      setEsporteTipo(existingPrefs.esporte_tipo || "");
+      setEsporteTipos(Array.isArray(existingPrefs.esporte_tipos) ? existingPrefs.esporte_tipos : []);
       setEsporteNivel(existingPrefs.esporte_nivel || "");
       setEsporteDias(Array.isArray(existingPrefs.esporte_dias) ? existingPrefs.esporte_dias : []);
       setEsporteTempo(existingPrefs.esporte_tempo || 30);
@@ -833,7 +852,7 @@ function SetupSheet({ open, onOpenChange, userId, existingPrefs, onSaved }: {
     const { error } = await supabase.from("routine_preferences").upsert({
       user_id: userId,
       leitura_ativo: leituraAtivo, leitura_tipo: leituraTipo,
-      esporte_ativo: esporteAtivo, esporte_tipo: esporteTipo,
+      esporte_ativo: esporteAtivo, esporte_tipos: esporteTipos,
       esporte_nivel: esporteNivel, esporte_dias: esporteDias,
       esporte_tempo: esporteTempo,
       lazer_ativo: lazerAtivo,
@@ -869,10 +888,10 @@ function SetupSheet({ open, onOpenChange, userId, existingPrefs, onSaved }: {
             <CatCard id="esporte" label="Esporte" icon={<Dumbbell className="h-5 w-5"/>}
               color="#059669" ativo={esporteAtivo} onToggle={() => setEsporteAtivo(p => !p)}>
               <div>
-                <p className="text-xs font-medium text-muted-foreground mb-2">Modalidade</p>
+                <p className="text-xs font-medium text-muted-foreground mb-2">Modalidade (pode selecionar mais de uma)</p>
                 <div className="flex gap-2">
-                  <Chip label="Academia" sel={esporteTipo==="academia"} onSel={() => setEsporteTipo("academia")} color="#059669" />
-                  <Chip label="Corrida" sel={esporteTipo==="corrida"} onSel={() => setEsporteTipo("corrida")} color="#059669" />
+                  <Chip label="Academia" sel={esporteTipos.includes("academia")} onSel={() => setEsporteTipos(p => p.includes("academia") ? p.filter(x => x !== "academia") : [...p, "academia"])} color="#059669" />
+                  <Chip label="Corrida" sel={esporteTipos.includes("corrida")} onSel={() => setEsporteTipos(p => p.includes("corrida") ? p.filter(x => x !== "corrida") : [...p, "corrida"])} color="#059669" />
                 </div>
               </div>
               <div>
