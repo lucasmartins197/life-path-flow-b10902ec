@@ -225,6 +225,16 @@ export function useCommunityFeed() {
       toast({ title: "Erro", description: error.message, variant: "destructive" });
       return false;
     }
+    // Notify post owner
+    const post = posts.find((p) => p.id === postId);
+    if (post && post.user_id !== user.id) {
+      await supabase.from("notifications").insert({
+        user_id: post.user_id,
+        actor_id: user.id,
+        type: "comment",
+        post_id: postId,
+      });
+    }
     setPosts((prev) =>
       prev.map((p) => (p.id === postId ? { ...p, comments_count: p.comments_count + 1 } : p))
     );
