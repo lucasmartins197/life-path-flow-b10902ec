@@ -155,6 +155,17 @@ export function FinancePlan({ plan, loading, onRefresh }: FinancePlanProps) {
           </div>
         )}
 
+        {/* Recovery Milestone */}
+        {plan.recovery_milestone && (
+          <div className="mb-3 bg-accent/10 border border-accent/30 rounded-xl p-3 flex items-start gap-2">
+            <Trophy className="h-4 w-4 text-accent mt-0.5 shrink-0" />
+            <div>
+              <p className="text-[10px] uppercase tracking-wider text-accent font-semibold">Marco de Recuperação</p>
+              <p className="text-sm text-foreground/90 leading-relaxed mt-0.5">{plan.recovery_milestone}</p>
+            </div>
+          </div>
+        )}
+
         {/* Monthly Goal */}
         <div className="bg-primary/10 rounded-xl p-4 flex items-center gap-3">
           <Target className="h-6 w-6 text-primary shrink-0" />
