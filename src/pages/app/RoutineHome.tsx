@@ -728,16 +728,20 @@ export default function RoutineHome() {
                 </p>
               </div>
             </div>
-            <div className="rounded-2xl p-4 border"
-              style={{ background: "#F8FAF7", borderColor: "#1B433220" }}>
-              <p className="text-sm leading-relaxed whitespace-pre-line" style={{ color: "#1B4332" }}>
+            <div className="rounded-2xl p-4 border-2"
+              style={{
+                background: feedbackCategoria === "leitura" ? "#F0FDF4" : "#F8FAF7",
+                borderColor: feedbackCategoria === "leitura" ? "#22C55E" : "#1B433220",
+              }}>
+              <p className="text-sm leading-relaxed whitespace-pre-line"
+                style={{ color: feedbackCategoria === "leitura" ? "#166534" : "#1B4332" }}>
                 {feedbackText}
               </p>
             </div>
             <Button onClick={() => setFeedbackModal(false)}
               className="w-full h-12 text-base font-bold rounded-2xl text-white"
               style={{ background: "linear-gradient(135deg,#1B4332,#2D6A4F)" }}>
-              Continuar
+              {feedbackCategoria === "leitura" ? "Entendi" : "Continuar"}
             </Button>
           </div>
         </SheetContent>
