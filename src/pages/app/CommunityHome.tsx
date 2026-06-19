@@ -390,6 +390,7 @@ function PostCard({
 
   return (
     <>
+      <Card className="border-0 shadow-[0_1px_3px_rgba(0,0,0,0.06)] rounded-2xl overflow-hidden bg-white">
       <div className="px-4 pt-4 pb-2 flex items-start gap-3">
         <AnonAvatar userId={post.user_id} />
         <div className="flex-1 min-w-0">
