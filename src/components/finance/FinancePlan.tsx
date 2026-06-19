@@ -1,10 +1,12 @@
-import { useState } from "react";
-import { RefreshCw, AlertTriangle, CheckCircle, Target, ArrowRight } from "lucide-react";
+import { RefreshCw, AlertTriangle, CheckCircle, Target, ArrowRight, Sparkles, Lightbulb, Trophy } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface FinancePlanProps {
   plan: {
     diagnosis: string;
+    coach_message?: string;
+    practical_tips?: string[];
+    recovery_milestone?: string;
     urgent_actions: string[];
     budget_distribution: { essenciais_percent: number; dividas_percent: number; reserva_percent: number; pessoal_percent: number };
     debt_strategy: { method: string; explanation: string; priority_order: string[] };
@@ -46,6 +48,7 @@ export function FinancePlan({ plan, loading, onRefresh }: FinancePlanProps) {
   const badge = LEVEL_BADGE[plan.health_level] || LEVEL_BADGE.atencao;
   const dist = plan.budget_distribution || { essenciais_percent: 0, dividas_percent: 0, reserva_percent: 0, pessoal_percent: 0 };
   const urgentActions = Array.isArray(plan.urgent_actions) ? plan.urgent_actions : [];
+  const practicalTips = Array.isArray(plan.practical_tips) ? plan.practical_tips : [];
   const debtStrategy = plan.debt_strategy || { method: "", explanation: "", priority_order: [] };
   const priorityOrder = Array.isArray(debtStrategy.priority_order) ? debtStrategy.priority_order : [];
   const monthlyGoal = plan.monthly_goal || { description: "", amount: 0 };
@@ -71,6 +74,14 @@ export function FinancePlan({ plan, loading, onRefresh }: FinancePlanProps) {
         {/* Diagnosis */}
         <p className="text-sm text-foreground/80 leading-relaxed mb-4">{plan.diagnosis}</p>
 
+        {/* Coach Message — orientação direta da Ana */}
+        {plan.coach_message && (
+          <div className="mb-4 bg-card border border-primary/30 rounded-xl p-3 flex items-start gap-2">
+            <Sparkles className="h-4 w-4 text-primary mt-0.5 shrink-0" />
+            <p className="text-sm text-foreground leading-relaxed">{plan.coach_message}</p>
+          </div>
+        )}
+
         {/* Urgent Actions */}
         <div className="mb-4">
           <p className="text-xs font-semibold text-foreground uppercase tracking-wider mb-2 flex items-center gap-1.5">
@@ -85,6 +96,23 @@ export function FinancePlan({ plan, loading, onRefresh }: FinancePlanProps) {
             ))}
           </div>
         </div>
+
+        {/* Practical Tips */}
+        {practicalTips.length > 0 && (
+          <div className="mb-4">
+            <p className="text-xs font-semibold text-foreground uppercase tracking-wider mb-2 flex items-center gap-1.5">
+              <Lightbulb className="h-3.5 w-3.5 text-accent" /> Dicas Práticas
+            </p>
+            <div className="space-y-2">
+              {practicalTips.map((tip, i) => (
+                <div key={i} className="flex items-start gap-2 bg-accent/5 border border-accent/20 rounded-xl p-3">
+                  <span className="text-xs font-bold text-accent mt-0.5 shrink-0">{i + 1}.</span>
+                  <p className="text-sm text-foreground/90 leading-relaxed">{tip}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Budget Distribution */}
         <div className="mb-4">
@@ -123,6 +151,17 @@ export function FinancePlan({ plan, loading, onRefresh }: FinancePlanProps) {
                   {i < priorityOrder.length - 1 && <ArrowRight className="h-3 w-3 text-muted-foreground" />}
                 </span>
               ))}
+            </div>
+          </div>
+        )}
+
+        {/* Recovery Milestone */}
+        {plan.recovery_milestone && (
+          <div className="mb-3 bg-accent/10 border border-accent/30 rounded-xl p-3 flex items-start gap-2">
+            <Trophy className="h-4 w-4 text-accent mt-0.5 shrink-0" />
+            <div>
+              <p className="text-[10px] uppercase tracking-wider text-accent font-semibold">Marco de Recuperação</p>
+              <p className="text-sm text-foreground/90 leading-relaxed mt-0.5">{plan.recovery_milestone}</p>
             </div>
           </div>
         )}
