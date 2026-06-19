@@ -165,6 +165,17 @@ export function useCommunityFeed() {
         user_id: user.id,
         reaction_type: reaction,
       } as any);
+
+      // Notify post owner (skip if reacting to own post)
+      if (post && post.user_id !== user.id) {
+        await supabase.from("notifications").insert({
+          user_id: post.user_id,
+          actor_id: user.id,
+          type: "reaction",
+          post_id: postId,
+          reaction_type: reaction,
+        });
+      }
     }
     setPosts((prev) =>
       prev.map((p) => {
@@ -213,6 +224,16 @@ export function useCommunityFeed() {
     if (error) {
       toast({ title: "Erro", description: error.message, variant: "destructive" });
       return false;
+    }
+    // Notify post owner
+    const post = posts.find((p) => p.id === postId);
+    if (post && post.user_id !== user.id) {
+      await supabase.from("notifications").insert({
+        user_id: post.user_id,
+        actor_id: user.id,
+        type: "comment",
+        post_id: postId,
+      });
     }
     setPosts((prev) =>
       prev.map((p) => (p.id === postId ? { ...p, comments_count: p.comments_count + 1 } : p))

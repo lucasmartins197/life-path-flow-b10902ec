@@ -9,6 +9,7 @@ import {
 import {
   Sheet, SheetContent, SheetHeader, SheetTitle,
 } from "@/components/ui/sheet";
+import { NotificationBell } from "@/components/NotificationBell";
 
 const mainItems = [
   { id: "home",      label: "Início",    icon: House,    path: "/app" },
@@ -55,6 +56,7 @@ export function BottomNavigation() {
 
   return (
     <>
+      <NotificationBell />
       <nav className="bottom-nav">
         <div className="bottom-nav-content">
           {mainItems.map((item) => {
