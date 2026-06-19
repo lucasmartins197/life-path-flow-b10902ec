@@ -114,7 +114,7 @@ function CreatePostDialog({
   const [mood, setMood] = useState<string | null>(null);
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
-  const [anonymous, setAnonymous] = useState<boolean>(true);
+  const [anonymous, setAnonymous] = useState<boolean>(false);
   const [uploading, setUploading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const imgRef = useRef<HTMLInputElement>(null);
