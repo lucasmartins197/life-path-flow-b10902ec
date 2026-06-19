@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
+import { toast } from "sonner";
 import { 
   Users, 
   UserCheck, 
@@ -20,7 +21,8 @@ import {
   ArrowUpRight,
   Download,
   RefreshCw,
-  UserPlus
+  UserPlus,
+  ArrowLeft
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -85,36 +87,42 @@ export default function AdminHome() {
       description: "Revisar e aprovar novos profissionais",
       icon: UserCheck,
       path: "/admin/profissionais",
+      available: true,
     },
     { 
       title: "Conteúdo da Jornada", 
       description: "Editar passos e conteúdos",
       icon: FileText,
-      path: "/admin/conteudo"
+      path: "/admin/conteudo",
+      available: false,
     },
     { 
       title: "Gerenciar Vídeos", 
       description: "Upload e gestão de vídeos",
       icon: Video,
-      path: "/admin/videos"
+      path: "/admin/videos",
+      available: false,
     },
     { 
       title: "Planos e Assinaturas", 
       description: "Configurar planos Stripe",
       icon: DollarSign,
-      path: "/admin/planos"
+      path: "/admin/planos",
+      available: false,
     },
     { 
       title: "Relatórios", 
       description: "Análises e métricas",
       icon: BarChart3,
-      path: "/admin/relatorios"
+      path: "/admin/relatorios",
+      available: false,
     },
     { 
       title: "Auditoria", 
       description: "Logs e segurança",
       icon: Shield,
-      path: "/admin/auditoria"
+      path: "/admin/auditoria",
+      available: false,
     },
   ];
 
@@ -123,11 +131,21 @@ export default function AdminHome() {
       {/* Header */}
       <header className="sticky top-0 z-40 bg-primary text-primary-foreground">
         <div className="container flex items-center justify-between h-16 px-4">
-          <div>
-            <p className="text-sm text-primary-foreground/70">Painel Master</p>
-            <h1 className="text-lg font-display font-semibold">
-              {profile?.full_name || "Administrador"}
-            </h1>
+          <div className="flex items-center gap-3">
+            <Button 
+              variant="ghost" 
+              size="icon"
+              onClick={() => navigate("/app")}
+              className="text-primary-foreground/80 hover:text-primary-foreground hover:bg-white/10 -ml-2"
+            >
+              <ArrowLeft className="h-5 w-5" />
+            </Button>
+            <div>
+              <p className="text-sm text-primary-foreground/70">Painel Master</p>
+              <h1 className="text-lg font-display font-semibold">
+                {profile?.full_name || "Administrador"}
+              </h1>
+            </div>
           </div>
           
           <div className="flex items-center gap-2">
@@ -336,7 +354,13 @@ export default function AdminHome() {
               <Card 
                 key={index} 
                 className="card-premium cursor-pointer"
-                onClick={() => navigate(module.path)}
+                onClick={() => {
+                  if (module.available) {
+                    navigate(module.path);
+                  } else {
+                    toast("Em breve");
+                  }
+                }}
               >
                 <CardHeader className="pb-2">
                   <div className="flex items-center justify-between">
