@@ -300,7 +300,13 @@ export default function RoutineHome() {
       // Extract book title from descricao: Continue: "TÍTULO" — página N
       const m = activeTask.descricao?.match(/"([^"]+)"/);
       const livro = m?.[1] || "o livro de hoje";
-      aiPayload = { type: "feedback_leitura", resumo, livro, user_id: user!.id };
+      aiPayload = {
+        type: "feedback_leitura",
+        resumo,
+        livro,
+        tentativa: leituraTentativa,
+        user_id: user!.id,
+      };
       updateFields.resposta_usuario = resumo;
       progressoLabel = "Leitura registrada";
     } else if (cat === "esporte") {
