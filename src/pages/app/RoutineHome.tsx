@@ -792,7 +792,7 @@ function SetupSheet({ open, onOpenChange, userId, existingPrefs, onSaved }: {
   const [leituraAtivo, setLeituraAtivo] = useState(false);
   const [leituraTipo, setLeituraTipo] = useState("");
   const [esporteAtivo, setEsporteAtivo] = useState(false);
-  const [esporteTipo, setEsporteTipo] = useState("");
+  const [esporteTipos, setEsporteTipos] = useState<string[]>([]);
   const [esporteNivel, setEsporteNivel] = useState("");
   const [esporteDias, setEsporteDias] = useState<string[]>([]);
   const [esporteTempo, setEsporteTempo] = useState(30);
