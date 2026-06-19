@@ -85,6 +85,9 @@ export default function RoutineHome() {
   const [feedbackModal, setFeedbackModal] = useState(false);
   const [feedbackText, setFeedbackText] = useState("");
   const [feedbackCategoria, setFeedbackCategoria] = useState<string>("");
+  // Leitura: retry loop
+  const [leituraTentativa, setLeituraTentativa] = useState(1);
+  const [leituraRejeicao, setLeituraRejeicao] = useState<string>("");
 
   useEffect(() => { if (user) loadAll(); }, [user]);
 
