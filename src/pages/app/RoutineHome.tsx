@@ -147,6 +147,7 @@ export default function RoutineHome() {
     // Verificar progresso de leitura anterior
     let leituraDescricao = `Tema preferido: ${prefs.leitura_tipo || "livre"}`;
     let leituraIA = "";
+    let leituraMetaPaginas: number | null = null;
     if (prefs.leitura_ativo) {
       const { data: readProg } = await supabase
         .from("reading_progress").select("*")
@@ -155,8 +156,10 @@ export default function RoutineHome() {
       if (readProg) {
         const rp = readProg as any;
         const falta = (rp.total_paginas || 0) - (rp.pagina_atual || 0);
+        const passo = rp.paginas_por_dia || 15;
+        leituraMetaPaginas = (rp.pagina_atual || 0) + passo;
         leituraDescricao = `Continue: "${rp.livro_titulo}" — página ${rp.pagina_atual || 0}`;
-        leituraIA = `Continue lendo "${rp.livro_titulo}". Você está na página ${rp.pagina_atual || 0}${rp.total_paginas ? ` de ${rp.total_paginas}` : ""}. Meta de hoje: ler mais ${rp.paginas_por_dia || 15} páginas. ${falta > 0 ? `Faltam ${falta} páginas para terminar.` : ""}`;
+        leituraIA = `Continue lendo "${rp.livro_titulo}". Você está na página ${rp.pagina_atual || 0}${rp.total_paginas ? ` de ${rp.total_paginas}` : ""}. Meta de hoje: ler mais ${passo} páginas. ${falta > 0 ? `Faltam ${falta} páginas para terminar.` : ""}`;
       }
     }
 
@@ -178,16 +181,21 @@ export default function RoutineHome() {
         user_id: user!.id, categoria: "leitura",
         titulo: "Leitura do dia", descricao: leituraDescricao,
         conteudo_ia: ia, data: d, concluido: false,
+        meta_paginas: leituraMetaPaginas,
       });
     }
 
     if (prefs.esporte_ativo && Array.isArray(prefs.esporte_dias) && prefs.esporte_dias.includes(hoje)) {
       const ia = await getIA("esporte");
+      const metaKm = prefs.esporte_tipo === "corrida"
+        ? (prefs.esporte_nivel === "Avançado" ? 8 : prefs.esporte_nivel === "Intermediário" ? 5 : 3)
+        : null;
       newTasks.push({
         user_id: user!.id, categoria: "esporte",
         titulo: prefs.esporte_tipo === "academia" ? "Treino na academia" : "Treino de corrida",
         descricao: `${prefs.esporte_tipo} — ${prefs.esporte_nivel} — ${prefs.esporte_tempo}min`,
         conteudo_ia: ia, data: d, concluido: false,
+        meta_km: metaKm,
       });
     }
 
