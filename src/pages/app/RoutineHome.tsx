@@ -875,11 +875,17 @@ function SetupSheet({ open, onOpenChange, userId, existingPrefs, onSaved }: {
       return;
     }
     setSaving(true);
+    // União dos dias entre todos os tipos — mantém esporte_dias legado coerente
+    const diasUniao = Array.from(new Set(
+      esporteTipos.flatMap(t => Array.isArray(esporteDiasPorTipo[t]) ? esporteDiasPorTipo[t] : [])
+    ));
     const { error } = await supabase.from("routine_preferences").upsert({
       user_id: userId,
       leitura_ativo: leituraAtivo, leitura_tipo: leituraTipo,
       esporte_ativo: esporteAtivo, esporte_tipos: esporteTipos,
-      esporte_nivel: esporteNivel, esporte_dias: esporteDias,
+      esporte_nivel: esporteNivel,
+      esporte_dias: diasUniao.length > 0 ? diasUniao : esporteDias,
+      esporte_dias_por_tipo: esporteDiasPorTipo,
       esporte_tempo: esporteTempo,
       lazer_ativo: lazerAtivo,
       espiritualidade_ativo: espAtivo,
