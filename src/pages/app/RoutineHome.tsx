@@ -115,7 +115,7 @@ export default function RoutineHome() {
     const { data } = await supabase
       .from("routine_preferences").select("*")
       .eq("user_id", user!.id).maybeSingle();
-    if (data) setPrefs({ ...EMPTY_PREFS, ...(data as any) });
+    if (data) setPrefs(normalizePrefs(data));
   }
 
   async function loadTasks() {
