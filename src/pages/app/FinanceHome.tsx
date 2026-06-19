@@ -302,6 +302,9 @@ export default function FinanceHome() {
                 totalDebts={totalDebts}
                 healthScore={plan?.health_score || 0}
                 healthLevel={plan?.health_level || "atencao"}
+                debts={debtsArray}
+                coachMessage={plan?.coach_message}
+                monthTransactions={transactions}
               />
             </TabsContent>
 
