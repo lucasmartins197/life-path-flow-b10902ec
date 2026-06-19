@@ -87,7 +87,7 @@ export default function EvolutionHome() {
     setLoading(true);
     const [profileRes, prontuariosRes, onboardingRes, journeyRes, checkinsRes, tasksRes, therapyRes, storiesRes] = await Promise.all([
       supabase.from("profiles").select("full_name").eq("user_id", user!.id).maybeSingle(),
-      supabase.from("prontuarios").select("*").eq("user_id", user!.id).order("gerado_em", { ascending: false }),
+      supabase.from("prontuarios").select("*").eq("user_id", user!.id).order("gerado_em", { ascending: false }).limit(6),
       supabase.from("onboarding_clinico").select("*").eq("user_id", user!.id).maybeSingle(),
       supabase.from("journey_progress").select("step_number, completed").eq("user_id", user!.id),
       supabase.from("gambling_streak").select("confirmation_date, stayed_clean").eq("user_id", user!.id).eq("stayed_clean", true).gte("confirmation_date", weekStartStr),
