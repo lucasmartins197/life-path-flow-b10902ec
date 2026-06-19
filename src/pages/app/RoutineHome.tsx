@@ -687,11 +687,24 @@ export default function RoutineHome() {
               </div>
             )}
 
-            <Button onClick={concluirTarefa} disabled={savingDone}
-              className="w-full h-12 text-base font-bold rounded-2xl text-white"
-              style={{ background: "linear-gradient(135deg,#1B4332,#2D6A4F)" }}>
-              {savingDone ? <Loader2 className="h-4 w-4 animate-spin" /> : "Concluir tarefa"}
-            </Button>
+            <div className="flex gap-2">
+              {activeTask?.categoria === "leitura" && leituraRejeicao && (
+                <Button onClick={pularLeitura} disabled={savingDone}
+                  variant="outline"
+                  className="h-12 px-4 rounded-2xl font-semibold">
+                  Pular
+                </Button>
+              )}
+              <Button onClick={concluirTarefa} disabled={savingDone}
+                className="flex-1 h-12 text-base font-bold rounded-2xl text-white"
+                style={{ background: "linear-gradient(135deg,#1B4332,#2D6A4F)" }}>
+                {savingDone ? <Loader2 className="h-4 w-4 animate-spin" /> : (
+                  activeTask?.categoria === "leitura" && leituraRejeicao
+                    ? "Tentar novamente"
+                    : "Concluir tarefa"
+                )}
+              </Button>
+            </div>
           </div>
         </SheetContent>
       </Sheet>
