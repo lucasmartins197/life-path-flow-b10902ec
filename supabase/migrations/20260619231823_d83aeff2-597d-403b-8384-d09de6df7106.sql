@@ -1,0 +1,1 @@
+ALTER TABLE public.routine_preferences ADD COLUMN IF NOT EXISTS esporte_dias_por_tipo jsonb;
