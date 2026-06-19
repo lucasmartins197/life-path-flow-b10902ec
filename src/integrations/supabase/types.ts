@@ -2226,6 +2226,7 @@ export type Database = {
           espiritualidade_ativo: boolean
           esporte_ativo: boolean
           esporte_dias: string[]
+          esporte_dias_por_tipo: Json | null
           esporte_nivel: string
           esporte_tempo: number
           esporte_tipo: string
@@ -2243,6 +2244,7 @@ export type Database = {
           espiritualidade_ativo?: boolean
           esporte_ativo?: boolean
           esporte_dias?: string[]
+          esporte_dias_por_tipo?: Json | null
           esporte_nivel?: string
           esporte_tempo?: number
           esporte_tipo?: string
@@ -2260,6 +2262,7 @@ export type Database = {
           espiritualidade_ativo?: boolean
           esporte_ativo?: boolean
           esporte_dias?: string[]
+          esporte_dias_por_tipo?: Json | null
           esporte_nivel?: string
           esporte_tempo?: number
           esporte_tipo?: string

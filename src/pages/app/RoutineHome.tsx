@@ -36,6 +36,7 @@ interface Prefs {
   esporte_tipos: string[];
   esporte_nivel: string;
   esporte_dias: string[];
+  esporte_dias_por_tipo: Record<string, string[]>;
   esporte_tempo: number;
   lazer_ativo: boolean;
   espiritualidade_ativo: boolean;
@@ -44,11 +45,12 @@ interface Prefs {
 
 const EMPTY_PREFS: Prefs = {
   leitura_ativo: false, leitura_tipo: "",
-  esporte_ativo: false, esporte_tipos: [], esporte_nivel: "", esporte_dias: [], esporte_tempo: 30,
+  esporte_ativo: false, esporte_tipos: [], esporte_nivel: "", esporte_dias: [], esporte_dias_por_tipo: {}, esporte_tempo: 30,
   lazer_ativo: false, espiritualidade_ativo: false, configurado: false,
 };
 
 // Normaliza prefs vindas do banco — converte esporte_tipo (string legado) em esporte_tipos[]
+// e garante esporte_dias_por_tipo a partir de esporte_dias quando ausente.
 function normalizePrefs(raw: any): Prefs {
   const merged: any = { ...EMPTY_PREFS, ...(raw || {}) };
   let tipos: string[] = [];
@@ -59,6 +61,23 @@ function normalizePrefs(raw: any): Prefs {
     tipos = [raw.esporte_tipo];
   }
   merged.esporte_tipos = tipos;
+
+  const diasLegado: string[] = Array.isArray(raw?.esporte_dias) ? raw.esporte_dias : [];
+  let diasPorTipo: Record<string, string[]> = {};
+  if (raw?.esporte_dias_por_tipo && typeof raw.esporte_dias_por_tipo === "object" && !Array.isArray(raw.esporte_dias_por_tipo)) {
+    for (const t of tipos) {
+      const v = (raw.esporte_dias_por_tipo as any)[t];
+      diasPorTipo[t] = Array.isArray(v) ? v.filter((x: any) => typeof x === "string") : [];
+    }
+  }
+  // Fallback: se nenhum tipo tem dias específicos, usa esporte_dias legado para todos
+  const algumPreenchido = Object.values(diasPorTipo).some(arr => arr && arr.length > 0);
+  if (!algumPreenchido) {
+    diasPorTipo = {};
+    for (const t of tipos) diasPorTipo[t] = [...diasLegado];
+  }
+  merged.esporte_dias_por_tipo = diasPorTipo;
+  merged.esporte_dias = diasLegado;
   return merged as Prefs;
 }
 
@@ -202,23 +221,24 @@ export default function RoutineHome() {
       });
     }
 
-    if (prefs.esporte_ativo && Array.isArray(prefs.esporte_dias) && prefs.esporte_dias.includes(hoje)) {
+    if (prefs.esporte_ativo) {
       const tipos = Array.isArray(prefs.esporte_tipos) ? prefs.esporte_tipos : [];
-      // Alterna entre modalidades por dia da semana ativo (1º dia ativo = tipo[0], 2º = tipo[1], ...)
-      const diasOrdenados = DIAS.filter(d => prefs.esporte_dias.includes(d));
-      const idxDia = Math.max(0, diasOrdenados.indexOf(hoje));
-      const tipoHoje = tipos.length > 0 ? tipos[idxDia % tipos.length] : "";
-      const ia = await getIA("esporte", `Modalidade de hoje: ${tipoHoje}`);
-      const metaKm = tipoHoje === "corrida"
-        ? (prefs.esporte_nivel === "Avançado" ? 8 : prefs.esporte_nivel === "Intermediário" ? 5 : 3)
-        : null;
-      newTasks.push({
-        user_id: user!.id, categoria: "esporte",
-        titulo: tipoHoje === "academia" ? "Treino na academia" : "Treino de corrida",
-        descricao: `${tipoHoje} — ${prefs.esporte_nivel} — ${prefs.esporte_tempo}min`,
-        conteudo_ia: ia, data: d, concluido: false,
-        meta_km: metaKm,
-      });
+      const diasPorTipo = prefs.esporte_dias_por_tipo || {};
+      for (const tipo of tipos) {
+        const diasTipo = Array.isArray(diasPorTipo[tipo]) ? diasPorTipo[tipo] : [];
+        if (!diasTipo.includes(hoje)) continue;
+        const ia = await getIA("esporte", `Modalidade de hoje: ${tipo}`);
+        const metaKm = tipo === "corrida"
+          ? (prefs.esporte_nivel === "Avançado" ? 8 : prefs.esporte_nivel === "Intermediário" ? 5 : 3)
+          : null;
+        newTasks.push({
+          user_id: user!.id, categoria: "esporte",
+          titulo: tipo === "academia" ? "Treino na academia" : "Treino de corrida",
+          descricao: `${tipo} — ${prefs.esporte_nivel} — ${prefs.esporte_tempo}min`,
+          conteudo_ia: ia, data: d, concluido: false,
+          meta_km: metaKm,
+        });
+      }
     }
 
     if (prefs.lazer_ativo) {
@@ -795,6 +815,7 @@ function SetupSheet({ open, onOpenChange, userId, existingPrefs, onSaved }: {
   const [esporteTipos, setEsporteTipos] = useState<string[]>([]);
   const [esporteNivel, setEsporteNivel] = useState("");
   const [esporteDias, setEsporteDias] = useState<string[]>([]);
+  const [esporteDiasPorTipo, setEsporteDiasPorTipo] = useState<Record<string, string[]>>({});
   const [esporteTempo, setEsporteTempo] = useState(30);
   const [lazerAtivo, setLazerAtivo] = useState(false);
   const [espAtivo, setEspAtivo] = useState(false);
@@ -807,14 +828,19 @@ function SetupSheet({ open, onOpenChange, userId, existingPrefs, onSaved }: {
       setEsporteTipos(Array.isArray(existingPrefs.esporte_tipos) ? existingPrefs.esporte_tipos : []);
       setEsporteNivel(existingPrefs.esporte_nivel || "");
       setEsporteDias(Array.isArray(existingPrefs.esporte_dias) ? existingPrefs.esporte_dias : []);
+      setEsporteDiasPorTipo(existingPrefs.esporte_dias_por_tipo && typeof existingPrefs.esporte_dias_por_tipo === "object" ? existingPrefs.esporte_dias_por_tipo : {});
       setEsporteTempo(existingPrefs.esporte_tempo || 30);
       setLazerAtivo(existingPrefs.lazer_ativo || false);
       setEspAtivo(existingPrefs.espiritualidade_ativo || false);
     }
   }, [open, existingPrefs]);
 
-  const toggleDia = (d: string) =>
-    setEsporteDias(prev => prev.includes(d) ? prev.filter(x => x !== d) : [...prev, d]);
+  const toggleDiaTipo = (tipo: string, d: string) =>
+    setEsporteDiasPorTipo(prev => {
+      const atual = Array.isArray(prev[tipo]) ? prev[tipo] : [];
+      const novo = atual.includes(d) ? atual.filter(x => x !== d) : [...atual, d];
+      return { ...prev, [tipo]: novo };
+    });
 
   const Chip = ({ label, sel, onSel, color }: { label: string; sel: boolean; onSel: () => void; color: string }) => (
     <button onClick={onSel} className="px-3 py-1.5 rounded-xl text-xs font-medium border transition-all active:scale-95"
@@ -849,11 +875,17 @@ function SetupSheet({ open, onOpenChange, userId, existingPrefs, onSaved }: {
       return;
     }
     setSaving(true);
+    // União dos dias entre todos os tipos — mantém esporte_dias legado coerente
+    const diasUniao = Array.from(new Set(
+      esporteTipos.flatMap(t => Array.isArray(esporteDiasPorTipo[t]) ? esporteDiasPorTipo[t] : [])
+    ));
     const { error } = await supabase.from("routine_preferences").upsert({
       user_id: userId,
       leitura_ativo: leituraAtivo, leitura_tipo: leituraTipo,
       esporte_ativo: esporteAtivo, esporte_tipos: esporteTipos,
-      esporte_nivel: esporteNivel, esporte_dias: esporteDias,
+      esporte_nivel: esporteNivel,
+      esporte_dias: diasUniao.length > 0 ? diasUniao : esporteDias,
+      esporte_dias_por_tipo: esporteDiasPorTipo,
       esporte_tempo: esporteTempo,
       lazer_ativo: lazerAtivo,
       espiritualidade_ativo: espAtivo,
@@ -902,18 +934,46 @@ function SetupSheet({ open, onOpenChange, userId, existingPrefs, onSaved }: {
                   ))}
                 </div>
               </div>
-              <div>
-                <p className="text-xs font-medium text-muted-foreground mb-2">Dias por semana</p>
-                <div className="flex gap-1.5 flex-wrap">
-                  {DIAS.map(d => (
-                    <button key={d} onClick={() => toggleDia(d)}
-                      className="w-9 h-9 rounded-xl text-xs font-bold transition-all active:scale-95"
-                      style={esporteDias.includes(d) ? {background:"#059669",color:"#fff"} : {background:"#F3F4F6",color:"#374151"}}>
-                      {DIAS_LABEL[d]}
-                    </button>
-                  ))}
+              {esporteTipos.length === 0 ? null : esporteTipos.length === 1 ? (
+                <div>
+                  <p className="text-xs font-medium text-muted-foreground mb-2">Dias de treino</p>
+                  <div className="flex gap-1.5 flex-wrap">
+                    {DIAS.map(d => {
+                      const tipo = esporteTipos[0];
+                      const dias = esporteDiasPorTipo[tipo] || [];
+                      const sel = dias.includes(d);
+                      return (
+                        <button key={d} onClick={() => toggleDiaTipo(tipo, d)}
+                          className="w-9 h-9 rounded-xl text-xs font-bold transition-all active:scale-95"
+                          style={sel ? {background:"#059669",color:"#fff"} : {background:"#F3F4F6",color:"#374151"}}>
+                          {DIAS_LABEL[d]}
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
-              </div>
+              ) : (
+                esporteTipos.map(tipo => (
+                  <div key={tipo}>
+                    <p className="text-xs font-medium text-muted-foreground mb-2">
+                      {tipo === "academia" ? "Academia" : tipo === "corrida" ? "Corrida" : tipo} — Quais dias?
+                    </p>
+                    <div className="flex gap-1.5 flex-wrap">
+                      {DIAS.map(d => {
+                        const dias = esporteDiasPorTipo[tipo] || [];
+                        const sel = dias.includes(d);
+                        return (
+                          <button key={d} onClick={() => toggleDiaTipo(tipo, d)}
+                            className="w-9 h-9 rounded-xl text-xs font-bold transition-all active:scale-95"
+                            style={sel ? {background:"#059669",color:"#fff"} : {background:"#F3F4F6",color:"#374151"}}>
+                            {DIAS_LABEL[d]}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                ))
+              )}
               <div>
                 <p className="text-xs font-medium text-muted-foreground mb-2">Tempo por treino</p>
                 <div className="flex gap-2">
