@@ -33,7 +33,7 @@ interface Prefs {
   leitura_ativo: boolean;
   leitura_tipo: string;
   esporte_ativo: boolean;
-  esporte_tipo: string;
+  esporte_tipos: string[];
   esporte_nivel: string;
   esporte_dias: string[];
   esporte_tempo: number;
@@ -44,9 +44,23 @@ interface Prefs {
 
 const EMPTY_PREFS: Prefs = {
   leitura_ativo: false, leitura_tipo: "",
-  esporte_ativo: false, esporte_tipo: "", esporte_nivel: "", esporte_dias: [], esporte_tempo: 30,
+  esporte_ativo: false, esporte_tipos: [], esporte_nivel: "", esporte_dias: [], esporte_tempo: 30,
   lazer_ativo: false, espiritualidade_ativo: false, configurado: false,
 };
+
+// Normaliza prefs vindas do banco — converte esporte_tipo (string legado) em esporte_tipos[]
+function normalizePrefs(raw: any): Prefs {
+  const merged: any = { ...EMPTY_PREFS, ...(raw || {}) };
+  let tipos: string[] = [];
+  if (Array.isArray(raw?.esporte_tipos)) {
+    tipos = raw.esporte_tipos.filter((t: any) => typeof t === "string" && t.length > 0);
+  }
+  if (tipos.length === 0 && typeof raw?.esporte_tipo === "string" && raw.esporte_tipo) {
+    tipos = [raw.esporte_tipo];
+  }
+  merged.esporte_tipos = tipos;
+  return merged as Prefs;
+}
 
 const CAT: Record<string, { label: string; icon: React.ReactNode; color: string }> = {
   leitura:        { label: "Leitura",         icon: <BookOpen className="h-5 w-5" />,  color: "#7C3AED" },
