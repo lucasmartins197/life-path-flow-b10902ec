@@ -75,14 +75,14 @@ export function useCommunityFeed() {
         { data: allReacts },
         { data: follows },
       ] = await Promise.all([
-        supabase.from("patient_profiles").select("user_id, current_step").in("user_id", userIds),
+        supabase.from("patient_profiles").select("user_id, streak_days").in("user_id", userIds),
         supabase.from("profiles").select("user_id, full_name, avatar_url").in("user_id", userIds),
         supabase.from("post_likes").select("post_id, reaction_type").eq("user_id", user.id).in("post_id", postIds),
         supabase.from("post_likes").select("post_id, reaction_type").in("post_id", postIds),
         supabase.from("user_follows").select("following_id").eq("follower_id", user.id),
       ]);
 
-      const stepMap = new Map(patientProfiles?.map((p) => [p.user_id, p.current_step]) || []);
+      const stepMap = new Map(patientProfiles?.map((p) => [p.user_id, p.streak_days]) || []);
       const profileMap = new Map<string, any>(userProfiles?.map((p: any) => [p.user_id, p]) || []);
       const followSet = new Set(follows?.map((f) => f.following_id) || []);
       setFollowingIds(followSet);
@@ -107,7 +107,7 @@ export function useCommunityFeed() {
         const realName = prof?.full_name?.trim();
         return {
           ...p,
-          author_name: p.anonymous || !realName ? anonName(p.user_id) : realName,
+          author_name: p.anonymous ? anonName(p.user_id) : (realName || "Usuário"),
           author_avatar: p.anonymous ? undefined : prof?.avatar_url || undefined,
           author_step: stepMap.get(p.user_id) || undefined,
           has_liked: mine.includes("heart"),
