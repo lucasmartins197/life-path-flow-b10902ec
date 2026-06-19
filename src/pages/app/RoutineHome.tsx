@@ -888,10 +888,10 @@ function SetupSheet({ open, onOpenChange, userId, existingPrefs, onSaved }: {
             <CatCard id="esporte" label="Esporte" icon={<Dumbbell className="h-5 w-5"/>}
               color="#059669" ativo={esporteAtivo} onToggle={() => setEsporteAtivo(p => !p)}>
               <div>
-                <p className="text-xs font-medium text-muted-foreground mb-2">Modalidade</p>
+                <p className="text-xs font-medium text-muted-foreground mb-2">Modalidade (pode selecionar mais de uma)</p>
                 <div className="flex gap-2">
-                  <Chip label="Academia" sel={esporteTipo==="academia"} onSel={() => setEsporteTipo("academia")} color="#059669" />
-                  <Chip label="Corrida" sel={esporteTipo==="corrida"} onSel={() => setEsporteTipo("corrida")} color="#059669" />
+                  <Chip label="Academia" sel={esporteTipos.includes("academia")} onSel={() => setEsporteTipos(p => p.includes("academia") ? p.filter(x => x !== "academia") : [...p, "academia"])} color="#059669" />
+                  <Chip label="Corrida" sel={esporteTipos.includes("corrida")} onSel={() => setEsporteTipos(p => p.includes("corrida") ? p.filter(x => x !== "corrida") : [...p, "corrida"])} color="#059669" />
                 </div>
               </div>
               <div>
