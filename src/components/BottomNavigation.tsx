@@ -56,6 +56,7 @@ export function BottomNavigation() {
 
   return (
     <>
+      <NotificationBell />
       <nav className="bottom-nav">
         <div className="bottom-nav-content">
           {mainItems.map((item) => {
