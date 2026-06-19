@@ -73,6 +73,8 @@ export default function EvolutionHome() {
   const [streakDays, setStreakDays] = useState(0);
   const [userName, setUserName] = useState("");
   const [activeTab, setActiveTab] = useState<"semana" | "prontuarios" | "historico">("semana");
+  const [gerando, setGerando] = useState(false);
+  const [expandedHistorico, setExpandedHistorico] = useState<Record<string, boolean>>({});
 
   const weekStart = new Date();
   weekStart.setDate(weekStart.getDate() - 7);
