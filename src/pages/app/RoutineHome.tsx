@@ -25,6 +25,8 @@ interface DailyTask {
   concluido: boolean;
   concluido_em: string | null;
   progresso: string | null;
+  meta_paginas: number | null;
+  meta_km: number | null;
 }
 
 interface Prefs {
@@ -145,6 +147,7 @@ export default function RoutineHome() {
     // Verificar progresso de leitura anterior
     let leituraDescricao = `Tema preferido: ${prefs.leitura_tipo || "livre"}`;
     let leituraIA = "";
+    let leituraMetaPaginas: number | null = null;
     if (prefs.leitura_ativo) {
       const { data: readProg } = await supabase
         .from("reading_progress").select("*")
@@ -153,8 +156,10 @@ export default function RoutineHome() {
       if (readProg) {
         const rp = readProg as any;
         const falta = (rp.total_paginas || 0) - (rp.pagina_atual || 0);
+        const passo = rp.paginas_por_dia || 15;
+        leituraMetaPaginas = (rp.pagina_atual || 0) + passo;
         leituraDescricao = `Continue: "${rp.livro_titulo}" — página ${rp.pagina_atual || 0}`;
-        leituraIA = `Continue lendo "${rp.livro_titulo}". Você está na página ${rp.pagina_atual || 0}${rp.total_paginas ? ` de ${rp.total_paginas}` : ""}. Meta de hoje: ler mais ${rp.paginas_por_dia || 15} páginas. ${falta > 0 ? `Faltam ${falta} páginas para terminar.` : ""}`;
+        leituraIA = `Continue lendo "${rp.livro_titulo}". Você está na página ${rp.pagina_atual || 0}${rp.total_paginas ? ` de ${rp.total_paginas}` : ""}. Meta de hoje: ler mais ${passo} páginas. ${falta > 0 ? `Faltam ${falta} páginas para terminar.` : ""}`;
       }
     }
 
@@ -176,16 +181,21 @@ export default function RoutineHome() {
         user_id: user!.id, categoria: "leitura",
         titulo: "Leitura do dia", descricao: leituraDescricao,
         conteudo_ia: ia, data: d, concluido: false,
+        meta_paginas: leituraMetaPaginas,
       });
     }
 
     if (prefs.esporte_ativo && Array.isArray(prefs.esporte_dias) && prefs.esporte_dias.includes(hoje)) {
       const ia = await getIA("esporte");
+      const metaKm = prefs.esporte_tipo === "corrida"
+        ? (prefs.esporte_nivel === "Avançado" ? 8 : prefs.esporte_nivel === "Intermediário" ? 5 : 3)
+        : null;
       newTasks.push({
         user_id: user!.id, categoria: "esporte",
         titulo: prefs.esporte_tipo === "academia" ? "Treino na academia" : "Treino de corrida",
         descricao: `${prefs.esporte_tipo} — ${prefs.esporte_nivel} — ${prefs.esporte_tempo}min`,
         conteudo_ia: ia, data: d, concluido: false,
+        meta_km: metaKm,
       });
     }
 
@@ -477,6 +487,18 @@ export default function RoutineHome() {
             {activeTask?.conteudo_ia && (
               <p className="text-sm text-muted-foreground">{activeTask.conteudo_ia}</p>
             )}
+            {activeTask?.categoria === "leitura" && activeTask?.meta_paginas != null && (
+              <div className="rounded-xl px-3 py-2 text-sm font-semibold"
+                style={{ background: "#7C3AED15", color: "#7C3AED" }}>
+                Meta de hoje: chegar à página {activeTask.meta_paginas}
+              </div>
+            )}
+            {activeTask?.categoria === "esporte" && activeTask?.meta_km != null && (
+              <div className="rounded-xl px-3 py-2 text-sm font-semibold"
+                style={{ background: "#05966915", color: "#059669" }}>
+                Meta de hoje: {activeTask.meta_km} km
+              </div>
+            )}
 
             {activeTask?.categoria === "leitura" && (
               <div>
@@ -546,7 +568,7 @@ export default function RoutineHome() {
                 <Sparkles className="h-5 w-5 text-white" />
               </div>
               <div>
-                <SheetTitle className="text-base font-bold">Mensagem da Lia</SheetTitle>
+                <SheetTitle className="text-base font-bold">Feedback da Ana</SheetTitle>
                 <p className="text-xs text-muted-foreground">
                   {CAT[feedbackCategoria]?.label || "Tarefa concluída"}
                 </p>
