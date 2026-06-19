@@ -7,6 +7,14 @@ import { Checkbox } from "@/components/ui/checkbox";
 
 interface FinanceOnboardingProps {
   onComplete: (data: { income: any; fixed_expenses: any[]; debts: any[]; goal: string; goal_deadline: string }) => void;
+  onClose?: () => void;
+  initialData?: {
+    income?: any;
+    fixed_expenses?: any[];
+    debts?: any[];
+    goal?: string;
+    goal_deadline?: string | null;
+  } | null;
 }
 
 const STEPS = [
@@ -16,17 +24,58 @@ const STEPS = [
   { icon: Target, title: "Objetivo", subtitle: "O que quer alcançar?" },
 ];
 
-export function FinanceOnboarding({ onComplete }: FinanceOnboardingProps) {
+// Convert ISO date to months-from-now string for the Select
+const isoToMonths = (iso?: string | null): string => {
+  if (!iso) return "6";
+  const target = new Date(iso);
+  if (isNaN(target.getTime())) return "6";
+  const now = new Date();
+  const months = Math.max(
+    1,
+    Math.round((target.getFullYear() - now.getFullYear()) * 12 + (target.getMonth() - now.getMonth())),
+  );
+  const allowed = ["3", "6", "12", "24"];
+  return allowed.includes(String(months)) ? String(months) : "6";
+};
+
+export function FinanceOnboarding({ onComplete, onClose, initialData }: FinanceOnboardingProps) {
   const [step, setStep] = useState(0);
-  const [income, setIncome] = useState({ monthly: "", frequency: "mensal", variable: false, variable_avg: "" });
-  const [expenses, setExpenses] = useState([
-    { name: "Aluguel/Financiamento", amount: "" },
-    { name: "Água/Luz/Internet", amount: "" },
-    { name: "Plano de Saúde", amount: "" },
-  ]);
-  const [debts, setDebts] = useState<any[]>([]);
-  const [goal, setGoal] = useState("");
-  const [goalDeadline, setGoalDeadline] = useState("6");
+
+  const initIncome = initialData?.income || {};
+  const [income, setIncome] = useState({
+    monthly: initIncome.monthly != null ? String(initIncome.monthly) : "",
+    frequency: initIncome.frequency || "mensal",
+    variable: !!initIncome.variable,
+    variable_avg: initIncome.variable_avg != null ? String(initIncome.variable_avg) : "",
+  });
+
+  const [expenses, setExpenses] = useState(
+    Array.isArray(initialData?.fixed_expenses) && initialData!.fixed_expenses!.length > 0
+      ? initialData!.fixed_expenses!.map((e: any) => ({
+          name: e.name || "",
+          amount: e.amount != null ? String(e.amount) : "",
+        }))
+      : [
+          { name: "Aluguel/Financiamento", amount: "" },
+          { name: "Água/Luz/Internet", amount: "" },
+          { name: "Plano de Saúde", amount: "" },
+        ],
+  );
+
+  const [debts, setDebts] = useState<any[]>(
+    Array.isArray(initialData?.debts)
+      ? initialData!.debts!.map((d: any) => ({
+          type: d.type || "",
+          bank: d.bank || "",
+          total: d.total != null ? String(d.total) : "",
+          monthly_payment: d.monthly_payment != null ? String(d.monthly_payment) : "",
+          interest_rate: d.interest_rate != null ? String(d.interest_rate) : "",
+        }))
+      : [],
+  );
+
+  const [goal, setGoal] = useState(initialData?.goal || "");
+  const [goalDeadline, setGoalDeadline] = useState(isoToMonths(initialData?.goal_deadline));
 
   const addExpense = () => setExpenses([...expenses, { name: "", amount: "" }]);
   const removeExpense = (i: number) => setExpenses(expenses.filter((_, idx) => idx !== i));
@@ -82,14 +131,25 @@ export function FinanceOnboarding({ onComplete }: FinanceOnboardingProps) {
       <div className="bg-card w-full max-w-lg rounded-t-3xl sm:rounded-3xl max-h-[90vh] overflow-y-auto shadow-lg border border-border/60">
         {/* Header */}
         <div className="sticky top-0 bg-card z-10 px-6 pt-6 pb-4 border-b border-border/40">
-          <div className="flex items-center gap-3 mb-3">
-            <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
-              <StepIcon className="h-5 w-5 text-primary" />
+          <div className="flex items-start justify-between gap-3 mb-3">
+            <div className="flex items-center gap-3 flex-1 min-w-0">
+              <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+                <StepIcon className="h-5 w-5 text-primary" />
+              </div>
+              <div className="min-w-0">
+                <h2 className="text-lg font-bold text-foreground truncate">{STEPS[step].title}</h2>
+                <p className="text-xs text-muted-foreground truncate">{STEPS[step].subtitle}</p>
+              </div>
             </div>
-            <div>
-              <h2 className="text-lg font-bold text-foreground">{STEPS[step].title}</h2>
-              <p className="text-xs text-muted-foreground">{STEPS[step].subtitle}</p>
-            </div>
+            {onClose && (
+              <button
+                onClick={onClose}
+                aria-label="Fechar"
+                className="p-2 -m-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors shrink-0"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            )}
           </div>
           {/* Progress */}
           <div className="flex gap-1.5">
@@ -291,7 +351,7 @@ export function FinanceOnboarding({ onComplete }: FinanceOnboardingProps) {
             </Button>
           ) : (
             <Button onClick={handleFinish} className="flex-1 bg-primary text-primary-foreground">
-              Concluir
+              Salvar
             </Button>
           )}
         </div>
