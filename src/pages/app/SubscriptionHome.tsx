@@ -1,7 +1,7 @@
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
-import { ArrowLeft, Check, CreditCard, Crown, Loader2, X, ShieldCheck } from "lucide-react";
+import { ArrowLeft, Check, CreditCard, Crown, Loader2, X, ShieldCheck, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -26,7 +26,9 @@ export default function SubscriptionHome() {
   const [canceling, setCanceling] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
 
-  const isActive = profile?.subscription_status === "active";
+  const isActive = profile?.subscription_status === "active" || profile?.subscription_status === "canceling";
+  const isCanceling = profile?.subscription_status === "canceling";
+  const isPastDue = profile?.subscription_status === "past_due";
   const subscriptionEnd = profile?.subscription_end;
   const startDate =
     (profile as any)?.stripe_subscription_created_at ||
@@ -223,35 +225,71 @@ export default function SubscriptionHome() {
           </Card>
         )}
 
+        {isPastDue && (
+          <Card className="border-red-300 bg-red-50">
+            <CardContent className="p-6 space-y-4">
+              <div className="flex items-center gap-2">
+                <AlertTriangle className="h-6 w-6 text-red-700" />
+                <span className="font-bold text-lg text-red-900">Pagamento recusado</span>
+              </div>
+              <p className="text-sm text-red-800">
+                Atualize seu método de pagamento para continuar com acesso ao app.
+              </p>
+              <Button
+                onClick={handleSubscribe}
+                disabled={loading}
+                className="w-full bg-red-600 hover:bg-red-700 text-white h-12 text-base"
+              >
+                {loading ? (
+                  <Loader2 className="h-5 w-5 animate-spin mr-2" />
+                ) : (
+                  <CreditCard className="h-5 w-5 mr-2" />
+                )}
+                Atualizar pagamento
+              </Button>
+            </CardContent>
+          </Card>
+        )}
+
         {isActive ? (
           <>
             {/* Active Subscription Card */}
-            <Card className="border-green-300 bg-green-50">
+            <Card className={isCanceling ? "border-amber-300 bg-amber-50" : "border-green-300 bg-green-50"}>
               <CardContent className="p-6 space-y-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <ShieldCheck className="h-6 w-6 text-green-700" />
-                    <span className="font-bold text-lg text-green-900">Assinatura Ativa</span>
+                    <ShieldCheck className={isCanceling ? "h-6 w-6 text-amber-700" : "h-6 w-6 text-green-700"} />
+                    <span className={isCanceling ? "font-bold text-lg text-amber-900" : "font-bold text-lg text-green-900"}>
+                      Assinatura Ativa
+                    </span>
                   </div>
-                  <Badge className="bg-green-600 text-white border-0">Ativo</Badge>
+                  <Badge className={isCanceling ? "bg-amber-600 text-white border-0" : "bg-green-600 text-white border-0"}>
+                    {isCanceling ? "Cancelamento agendado" : "Ativo"}
+                  </Badge>
                 </div>
+
+                {isCanceling && subscriptionEnd && (
+                  <div className="rounded-lg bg-amber-100 border border-amber-200 p-3 text-sm text-amber-900">
+                    Cancelamento agendado para {new Date(subscriptionEnd).toLocaleDateString("pt-BR")}. Você tem acesso até essa data.
+                  </div>
+                )}
 
                 <div className="space-y-3 pt-2">
                   <div className="flex justify-between text-sm">
-                    <span className="text-green-900/70">Plano</span>
-                    <span className="font-semibold text-green-900">Premium</span>
+                    <span className={isCanceling ? "text-amber-900/70" : "text-green-900/70"}>Plano</span>
+                    <span className={isCanceling ? "font-semibold text-amber-900" : "font-semibold text-green-900"}>Premium</span>
                   </div>
                   <div className="flex justify-between text-sm">
-                    <span className="text-green-900/70">Valor</span>
-                    <span className="font-semibold text-green-900">R$ 79,90/mês</span>
+                    <span className={isCanceling ? "text-amber-900/70" : "text-green-900/70"}>Valor</span>
+                    <span className={isCanceling ? "font-semibold text-amber-900" : "font-semibold text-green-900"}>R$ 79,90/mês</span>
                   </div>
                   <div className="flex justify-between text-sm">
-                    <span className="text-green-900/70">Início</span>
-                    <span className="font-semibold text-green-900">{fmtDate(startDate)}</span>
+                    <span className={isCanceling ? "text-amber-900/70" : "text-green-900/70"}>Início</span>
+                    <span className={isCanceling ? "font-semibold text-amber-900" : "font-semibold text-green-900"}>{fmtDate(startDate)}</span>
                   </div>
                   <div className="flex justify-between text-sm">
-                    <span className="text-green-900/70">Próxima renovação</span>
-                    <span className="font-semibold text-green-900">{fmtDate(renewalDate)}</span>
+                    <span className={isCanceling ? "text-amber-900/70" : "text-green-900/70"}>Próxima renovação</span>
+                    <span className={isCanceling ? "font-semibold text-amber-900" : "font-semibold text-green-900"}>{fmtDate(renewalDate)}</span>
                   </div>
                 </div>
               </CardContent>
@@ -282,22 +320,25 @@ export default function SubscriptionHome() {
             </Button>
 
             {/* Cancel Button */}
-            <Button
-              variant="destructive"
-              className="w-full h-12"
-              onClick={() => setConfirmOpen(true)}
-              disabled={canceling}
-            >
-              {canceling ? <Loader2 className="h-5 w-5 animate-spin mr-2" /> : null}
-              Cancelar assinatura
-            </Button>
+            {!isCanceling && (
+              <Button
+                variant="destructive"
+                className="w-full h-12"
+                onClick={() => setConfirmOpen(true)}
+                disabled={canceling}
+              >
+                {canceling ? <Loader2 className="h-5 w-5 animate-spin mr-2" /> : null}
+                Cancelar renovação automática
+              </Button>
+            )}
 
             <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
               <AlertDialogContent>
                 <AlertDialogHeader>
-                  <AlertDialogTitle>Tem certeza?</AlertDialogTitle>
+                  <AlertDialogTitle>Cancelar renovação automática?</AlertDialogTitle>
                   <AlertDialogDescription>
-                    Você perderá acesso ao app imediatamente após o cancelamento.
+                    Você continuará com acesso até o final do período pago.
+                    Após essa data, sua assinatura será encerrada.
                     Essa ação não pode ser desfeita.
                   </AlertDialogDescription>
                 </AlertDialogHeader>
