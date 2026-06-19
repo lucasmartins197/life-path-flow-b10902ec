@@ -17,7 +17,7 @@ interface NotificationRow {
   id: string;
   user_id: string;
   actor_id: string;
-  type: "reaction" | "comment";
+  type: "reaction" | "comment" | "weekly_class";
   post_id: string | null;
   reaction_type: string | null;
   read: boolean;
