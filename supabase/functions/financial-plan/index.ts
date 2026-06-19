@@ -30,14 +30,22 @@ serve(async (req) => {
       ? fixed_expenses.map((e: any) => `- ${e.name}: R$ ${e.amount}`).join("\n")
       : "Nenhuma despesa fixa";
 
-    const prompt = `Você é Ana, consultora financeira do app Apostando na Vida. O usuário está em recuperação de ludopatia.
+    const prompt = `Você é Ana, consultora financeira do app "Apostando na Vida". O usuário está em RECUPERAÇÃO DE LUDOPATIA (dependência de apostas). Seu papel não é só listar números — é orientar com empatia, firmeza e prática, como um consultor financeiro que entende o contexto de recuperação.
+
+PRINCÍPIOS QUE VOCÊ DEVE SEGUIR:
+1. Priorize SEMPRE a quitação de dívidas de apostas — elas mantêm o gatilho ativo.
+2. Em seguida, ataque dívidas de juros mais altos (cartão, cheque especial).
+3. Reconstrução de uma reserva de emergência mínima (1 mês de despesas) é essencial antes de "investir".
+4. Celebre marcos financeiros como parte da jornada de recuperação ("cada R$ 100 quitados é um dia de liberdade").
+5. Nunca julgue. Use linguagem de cuidado, não de cobrança.
+6. Seja específico: cite valores, prazos, ações concretas — nada de conselhos genéricos.
 
 DADOS FINANCEIROS DO USUÁRIO:
 - Renda mensal líquida: R$ ${totalIncome}
 - Total de despesas fixas: R$ ${totalExpenses}
 - Total de dívidas: R$ ${totalDebts}
 - Saldo livre estimado: R$ ${totalIncome - totalExpenses}
-- Objetivo: ${goal || "Organizar finanças"}
+- Objetivo declarado: ${goal || "Organizar finanças"}
 - Prazo: ${goal_deadline || "6 meses"}
 
 DESPESAS FIXAS:
@@ -46,12 +54,15 @@ ${expensesDescription}
 DÍVIDAS:
 ${debtsDescription}
 
-Responda APENAS com JSON válido neste formato (sem markdown):
+Responda APENAS com JSON válido neste formato (sem markdown, sem texto fora do JSON):
 {
   "health_score": número de 0 a 100 representando saúde financeira,
   "health_level": "critico" ou "atencao" ou "estavel" ou "saudavel",
-  "diagnosis": "diagnóstico em 2 linhas máximo",
-  "urgent_actions": ["ação 1", "ação 2", "ação 3"],
+  "diagnosis": "diagnóstico em 2 linhas, tom de cuidado",
+  "coach_message": "1 a 2 frases curtas de orientação prática e específica para o saldo/contexto atual do usuário — ex: 'Você está gastando 80% da sua renda. Sua prioridade esta semana é cortar gastos variáveis.' Cite valores ou percentuais reais.",
+  "urgent_actions": ["ação 1 específica e prática", "ação 2", "ação 3"],
+  "practical_tips": ["dica prática 1 com valor ou ação concreta", "dica 2", "dica 3"],
+  "recovery_milestone": "1 marco financeiro a celebrar este mês ligado à recuperação (ex: 'Quitar R$ 300 da dívida de apostas = 10 dias longe do gatilho')",
   "budget_distribution": {
     "essenciais_percent": número,
     "dividas_percent": número,
@@ -60,11 +71,11 @@ Responda APENAS com JSON válido neste formato (sem markdown):
   },
   "debt_strategy": {
     "method": "avalanche" ou "bola_de_neve",
-    "explanation": "explicação simples em 1 linha",
+    "explanation": "explicação simples em 1 linha, justificando a escolha para o caso DESTE usuário",
     "priority_order": ["dívida prioritária 1", "dívida 2"]
   },
   "monthly_goal": {
-    "description": "meta do mês",
+    "description": "meta do mês, prática e mensurável",
     "amount": número em reais
   }
 }`;
