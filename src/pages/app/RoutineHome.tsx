@@ -240,7 +240,43 @@ export default function RoutineHome() {
     setRespostaTexto("");
     setDistanciaKm("");
     setTempoMin("");
+    setLeituraTentativa(1);
+    setLeituraRejeicao("");
     setDoneModal(true);
+  }
+
+  function pularLeitura() {
+    setLeituraRejeicao("");
+    setLeituraTentativa(1);
+    if (activeTask) {
+      // marca como concluída sem feedback aprovado
+      finalizarSemFeedback(activeTask);
+    }
+  }
+
+  async function finalizarSemFeedback(task: DailyTask) {
+    const updateFields: Record<string, unknown> = {
+      concluido: true,
+      concluido_em: new Date().toISOString(),
+      progresso: "Leitura registrada (pulou feedback)",
+      resposta_usuario: respostaTexto.trim() || null,
+    };
+    await supabase.from("daily_tasks").update(updateFields).eq("id", task.id);
+    if (task.meta_paginas != null) {
+      const { data: rp } = await supabase
+        .from("reading_progress").select("id")
+        .eq("user_id", user!.id).eq("ativo", true)
+        .order("created_at", { ascending: false }).limit(1).maybeSingle();
+      if (rp?.id) {
+        await supabase.from("reading_progress")
+          .update({ pagina_atual: task.meta_paginas })
+          .eq("id", rp.id);
+      }
+    }
+    setTasks(prev => prev.map(t => t.id === task.id
+      ? { ...t, concluido: true, concluido_em: new Date().toISOString(), progresso: "Leitura registrada" }
+      : t));
+    setDoneModal(false);
   }
 
   async function concluirTarefa() {
