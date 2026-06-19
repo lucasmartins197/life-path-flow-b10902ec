@@ -25,6 +25,8 @@ interface DailyTask {
   concluido: boolean;
   concluido_em: string | null;
   progresso: string | null;
+  meta_paginas: number | null;
+  meta_km: number | null;
 }
 
 interface Prefs {
