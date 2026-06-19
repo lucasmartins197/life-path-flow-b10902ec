@@ -852,7 +852,7 @@ function SetupSheet({ open, onOpenChange, userId, existingPrefs, onSaved }: {
     const { error } = await supabase.from("routine_preferences").upsert({
       user_id: userId,
       leitura_ativo: leituraAtivo, leitura_tipo: leituraTipo,
-      esporte_ativo: esporteAtivo, esporte_tipo: esporteTipo,
+      esporte_ativo: esporteAtivo, esporte_tipos: esporteTipos,
       esporte_nivel: esporteNivel, esporte_dias: esporteDias,
       esporte_tempo: esporteTempo,
       lazer_ativo: lazerAtivo,
