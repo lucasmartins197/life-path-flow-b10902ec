@@ -37,6 +37,9 @@ const REACTION_EMOJI: Record<string, string> = {
 };
 
 function describeNotification(n: NotificationItem): string {
+  if (n.type === "weekly_class") {
+    return "Novo aulão semanal agendado! Toque para ver.";
+  }
   if (n.type === "reaction") {
     const emoji = REACTION_EMOJI[n.reaction_type || "heart"] || "❤️";
     return `reagiu com ${emoji} à sua história`;
@@ -117,10 +120,14 @@ export function NotificationBell() {
         (payload) => {
           fetchUnreadCount();
           const row = payload.new as NotificationRow;
-          const msg =
-            row.type === "reaction"
-              ? `Nova reação na sua história ${REACTION_EMOJI[row.reaction_type || "heart"] || "❤️"}`
-              : "Novo comentário na sua publicação 💬";
+          let msg = "";
+          if (row.type === "weekly_class") {
+            msg = "Novo aulão semanal agendado 📹";
+          } else if (row.type === "reaction") {
+            msg = `Nova reação na sua história ${REACTION_EMOJI[row.reaction_type || "heart"] || "❤️"}`;
+          } else {
+            msg = "Novo comentário na sua publicação 💬";
+          }
           toast(msg);
           if (open) fetchList();
         },
@@ -154,7 +161,9 @@ export function NotificationBell() {
       setUnread((u) => Math.max(0, u - 1));
     }
     setOpen(false);
-    if (n.post_id) {
+    if (n.type === "weekly_class") {
+      navigate("/app/aulao");
+    } else if (n.post_id) {
       navigate(`/app/comunidade?post=${n.post_id}`);
     } else {
       navigate("/app/comunidade");
@@ -207,7 +216,7 @@ export function NotificationBell() {
                 <Bell className="h-10 w-10 mx-auto text-muted-foreground/30 mb-3" />
                 <p className="text-sm text-muted-foreground">Nenhuma notificação ainda</p>
                 <p className="text-xs text-muted-foreground/70 mt-1">
-                  Quando alguém reagir ou comentar nas suas histórias, você verá aqui.
+                  Quando houver um novo aulão, alguém reagir ou comentar nas suas histórias, você verá aqui.
                 </p>
               </div>
             ) : (
@@ -221,7 +230,11 @@ export function NotificationBell() {
                       }`}
                     >
                       <div className="relative shrink-0">
-                        {n.actor_avatar ? (
+                        {n.type === "weekly_class" ? (
+                          <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                            <Video className="h-5 w-5 text-primary" />
+                          </div>
+                        ) : n.actor_avatar ? (
                           <img
                             src={n.actor_avatar}
                             alt=""
@@ -235,6 +248,8 @@ export function NotificationBell() {
                         <span className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-card border border-border flex items-center justify-center">
                           {n.type === "reaction" ? (
                             <Heart className="h-3 w-3 text-destructive" />
+                          ) : n.type === "weekly_class" ? (
+                            <Video className="h-3 w-3 text-primary" />
                           ) : (
                             <MessageCircle className="h-3 w-3 text-primary" />
                           )}
@@ -242,8 +257,14 @@ export function NotificationBell() {
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="text-sm text-foreground leading-snug">
-                          <span className="font-semibold">{n.actor_name}</span>{" "}
-                          <span className="text-foreground/80">{describeNotification(n)}</span>
+                          {n.type === "weekly_class" ? (
+                            <span className="text-foreground/80">{describeNotification(n)}</span>
+                          ) : (
+                            <>
+                              <span className="font-semibold">{n.actor_name}</span>{" "}
+                              <span className="text-foreground/80">{describeNotification(n)}</span>
+                            </>
+                          )}
                         </p>
                         <p className="text-[11px] text-muted-foreground mt-0.5">
                           {formatDistanceToNow(new Date(n.created_at), {
