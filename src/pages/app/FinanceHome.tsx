@@ -203,7 +203,13 @@ export default function FinanceHome() {
 
   return (
     <div className="min-h-screen bg-background safe-top pb-28">
-      {showOnboarding && <FinanceOnboarding onComplete={handleOnboardingComplete} />}
+      {showOnboarding && (
+        <FinanceOnboarding
+          onComplete={handleOnboardingComplete}
+          onClose={profile ? () => setShowOnboarding(false) : undefined}
+          initialData={profile}
+        />
+      )}
 
       <header className="bg-card border-b border-border/60 px-5 pt-8 pb-4">
         <div className="max-w-lg mx-auto">
