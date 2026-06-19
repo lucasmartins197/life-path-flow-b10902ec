@@ -152,6 +152,8 @@ export default function EvolutionHome() {
   }
 
   async function gerarProntuario() {
+    if (gerando) return;
+    setGerando(true);
     toast.info("Gerando prontuário com IA...");
     try {
       const { data, error } = await supabase.functions.invoke("gerar-prontuario", {
@@ -164,6 +166,8 @@ export default function EvolutionHome() {
     } catch (e: any) {
       console.error("Erro ao gerar prontuário:", e);
       toast.error(e?.message || "Erro ao gerar prontuário.");
+    } finally {
+      setGerando(false);
     }
   }
 
