@@ -557,16 +557,20 @@ export default function RoutineHome() {
             {activeTask?.categoria === "leitura" && (
               <div>
                 <label className="text-sm font-medium mb-1 block">
-                  Escreva um resumo do que você entendeu da leitura de hoje
+                  O que você aprendeu com a leitura de hoje? Escreva seu resumo.
                 </label>
                 <Textarea
-                  placeholder="O que mais te marcou? O que você aprendeu?"
+                  placeholder="Conte com suas palavras o que entendeu, o que te marcou, exemplos do livro..."
                   value={respostaTexto}
                   onChange={e => setRespostaTexto(e.target.value)}
-                  className="min-h-[120px]"
+                  className="min-h-[140px]"
                 />
+                <p className="text-xs text-muted-foreground mt-1">
+                  Mínimo 50 caracteres ({respostaTexto.trim().length}/50)
+                </p>
               </div>
             )}
+
 
             {activeTask?.categoria === "esporte" && (
               <div className="grid grid-cols-2 gap-3">
