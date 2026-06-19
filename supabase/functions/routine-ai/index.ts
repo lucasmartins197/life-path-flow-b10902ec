@@ -10,13 +10,65 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { type, category, preferences, userName, stepNumber, reflectionContent } = await req.json();
+    const payload = await req.json();
+    const { type, category, preferences, userName, stepNumber, reflectionContent } = payload;
+
+    // ===== FEEDBACK TYPES (Anthropic direct) =====
+    if (type === "feedback_leitura" || type === "feedback_esporte" || type === "feedback_lazer" || type === "feedback_espiritualidade") {
+      const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY");
+      if (!ANTHROPIC_API_KEY) throw new Error("Missing ANTHROPIC_API_KEY");
+
+      let prompt = "";
+      if (type === "feedback_leitura") {
+        const { resumo = "", livro = "Livro" } = payload;
+        prompt = `Você é Ana, terapeuta exigente de recuperação de ludopatia. O paciente leu "${livro}" e escreveu este resumo: "${resumo}". Se o resumo for vago, superficial ou genérico (palavras como "foi bom", "ok", "legal", "gostei"), seja DIRETA e exija mais profundidade — diga exatamente o que faltou e peça que ele releia e escreva de novo com calma. Se for bom, reconheça com especificidade, citando trechos do que ele escreveu. Máximo 3 frases. Nunca seja condescendente. Sem emojis.`;
+      } else if (type === "feedback_esporte") {
+        const { distancia_km = 0, tempo_min = 0, meta_km = null } = payload;
+        const calorias = Math.round(distancia_km * 65);
+        const ritmo = distancia_km > 0 ? (tempo_min / distancia_km).toFixed(1) : "0";
+        prompt = `Você é Ana, terapeuta de recuperação de ludopatia. O paciente fez ${distancia_km}km em ${tempo_min}min (ritmo ${ritmo} min/km, ~${calorias} kcal queimadas)${meta_km ? `. Meta era ${meta_km}km` : ""}. Dê feedback real em 2-3 frases: cite os números, compare com a meta se houver, e conecte com a recuperação (foco, dopamina natural, disciplina). Tom firme e direto, sem elogios vazios. Sem emojis.`;
+      } else if (type === "feedback_lazer") {
+        const { resposta = "" } = payload;
+        prompt = `Você é Ana, terapeuta acolhedora. O paciente registrou um momento de lazer e disse: "${resposta || "não relatou"}". Responda em 2 frases curtas, calorosas mas breves, valorizando o tempo dedicado a si mesmo. Sem emojis.`;
+      } else {
+        const { resposta = "" } = payload;
+        prompt = `Você é Ana, terapeuta acolhedora. O paciente fez uma prática espiritual e relatou: "${resposta || "não relatou"}". Responda em 2 frases curtas e calorosas, conectando a prática com paz interior e recuperação. Sem emojis.`;
+      }
+
+      const ar = await fetch("https://api.anthropic.com/v1/messages", {
+        method: "POST",
+        headers: {
+          "x-api-key": ANTHROPIC_API_KEY,
+          "anthropic-version": "2023-06-01",
+          "content-type": "application/json",
+        },
+        body: JSON.stringify({
+          model: "claude-sonnet-4-6",
+          max_tokens: 400,
+          messages: [{ role: "user", content: prompt }],
+        }),
+      });
+
+      if (!ar.ok) {
+        const t = await ar.text();
+        console.error("Anthropic error:", ar.status, t);
+        return new Response(JSON.stringify({ error: `Anthropic ${ar.status}` }), {
+          status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      const ad = await ar.json();
+      const feedback = ad?.content?.[0]?.text || "";
+      return new Response(JSON.stringify({ feedback, message: feedback }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("Missing LOVABLE_API_KEY");
 
     let systemPrompt = "";
     let userPrompt = "";
+
 
     if (type === "suggestion") {
       const hour = new Date().getHours();
