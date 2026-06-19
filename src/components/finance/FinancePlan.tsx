@@ -1,10 +1,12 @@
-import { useState } from "react";
-import { RefreshCw, AlertTriangle, CheckCircle, Target, ArrowRight } from "lucide-react";
+import { RefreshCw, AlertTriangle, CheckCircle, Target, ArrowRight, Sparkles, Lightbulb, Trophy } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface FinancePlanProps {
   plan: {
     diagnosis: string;
+    coach_message?: string;
+    practical_tips?: string[];
+    recovery_milestone?: string;
     urgent_actions: string[];
     budget_distribution: { essenciais_percent: number; dividas_percent: number; reserva_percent: number; pessoal_percent: number };
     debt_strategy: { method: string; explanation: string; priority_order: string[] };
@@ -46,6 +48,7 @@ export function FinancePlan({ plan, loading, onRefresh }: FinancePlanProps) {
   const badge = LEVEL_BADGE[plan.health_level] || LEVEL_BADGE.atencao;
   const dist = plan.budget_distribution || { essenciais_percent: 0, dividas_percent: 0, reserva_percent: 0, pessoal_percent: 0 };
   const urgentActions = Array.isArray(plan.urgent_actions) ? plan.urgent_actions : [];
+  const practicalTips = Array.isArray(plan.practical_tips) ? plan.practical_tips : [];
   const debtStrategy = plan.debt_strategy || { method: "", explanation: "", priority_order: [] };
   const priorityOrder = Array.isArray(debtStrategy.priority_order) ? debtStrategy.priority_order : [];
   const monthlyGoal = plan.monthly_goal || { description: "", amount: 0 };
