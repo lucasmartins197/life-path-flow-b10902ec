@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { Bell, Check, MessageCircle, Heart } from "lucide-react";
+import { Bell, Check, MessageCircle, Heart, Video } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { toast } from "sonner";
@@ -17,7 +17,7 @@ interface NotificationRow {
   id: string;
   user_id: string;
   actor_id: string;
-  type: "reaction" | "comment";
+  type: "reaction" | "comment" | "weekly_class";
   post_id: string | null;
   reaction_type: string | null;
   read: boolean;
