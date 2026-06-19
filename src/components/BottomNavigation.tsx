@@ -9,6 +9,7 @@ import {
 import {
   Sheet, SheetContent, SheetHeader, SheetTitle,
 } from "@/components/ui/sheet";
+import { NotificationBell } from "@/components/NotificationBell";
 
 const mainItems = [
   { id: "home",      label: "Início",    icon: House,    path: "/app" },
