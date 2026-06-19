@@ -120,10 +120,14 @@ export function NotificationBell() {
         (payload) => {
           fetchUnreadCount();
           const row = payload.new as NotificationRow;
-          const msg =
-            row.type === "reaction"
-              ? `Nova reação na sua história ${REACTION_EMOJI[row.reaction_type || "heart"] || "❤️"}`
-              : "Novo comentário na sua publicação 💬";
+          let msg = "";
+          if (row.type === "weekly_class") {
+            msg = "Novo aulão semanal agendado 📹";
+          } else if (row.type === "reaction") {
+            msg = `Nova reação na sua história ${REACTION_EMOJI[row.reaction_type || "heart"] || "❤️"}`;
+          } else {
+            msg = "Novo comentário na sua publicação 💬";
+          }
           toast(msg);
           if (open) fetchList();
         },
@@ -157,7 +161,9 @@ export function NotificationBell() {
       setUnread((u) => Math.max(0, u - 1));
     }
     setOpen(false);
-    if (n.post_id) {
+    if (n.type === "weekly_class") {
+      navigate("/app/aulao");
+    } else if (n.post_id) {
       navigate(`/app/comunidade?post=${n.post_id}`);
     } else {
       navigate("/app/comunidade");
