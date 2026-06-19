@@ -345,6 +345,7 @@ export function useCommunityFeed() {
     fetchComments,
     addComment,
     reportPost,
+    deletePost,
     uploadPostImage,
     uploadPostVideo,
     refreshPosts: fetchPosts,
