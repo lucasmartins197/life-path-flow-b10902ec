@@ -216,7 +216,7 @@ export function NotificationBell() {
                 <Bell className="h-10 w-10 mx-auto text-muted-foreground/30 mb-3" />
                 <p className="text-sm text-muted-foreground">Nenhuma notificação ainda</p>
                 <p className="text-xs text-muted-foreground/70 mt-1">
-                  Quando alguém reagir ou comentar nas suas histórias, você verá aqui.
+                  Quando houver um novo aulão, alguém reagir ou comentar nas suas histórias, você verá aqui.
                 </p>
               </div>
             ) : (
