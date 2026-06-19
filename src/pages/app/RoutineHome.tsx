@@ -244,29 +244,82 @@ export default function RoutineHome() {
     if (!activeTask) return;
     const cat = activeTask.categoria;
 
-    const body: Record<string, unknown> = { task_id: activeTask.id };
-    let progressoLabel = "";
+    // Build per-category payload + validate
+    let aiPayload: Record<string, unknown> | null = null;
+    const updateFields: Record<string, unknown> = {
+      concluido: true,
+      concluido_em: new Date().toISOString(),
+    };
+    let progressoLabel = "Concluído";
 
-    if (cat === "esporte") {
+    if (cat === "leitura") {
+      const resumo = respostaTexto.trim();
+      if (resumo.length < 50) {
+        toast.error("Seu resumo está muito curto. A Ana precisa de mais detalhes para te dar um feedback real.");
+        return;
+      }
+      // Extract book title from descricao: Continue: "TÍTULO" — página N
+      const m = activeTask.descricao?.match(/"([^"]+)"/);
+      const livro = m?.[1] || "o livro de hoje";
+      aiPayload = { type: "feedback_leitura", resumo, livro, user_id: user!.id };
+      updateFields.resposta_usuario = resumo;
+      progressoLabel = "Leitura registrada";
+    } else if (cat === "esporte") {
       const km = parseFloat(distanciaKm.replace(",", "."));
       const min = parseInt(tempoMin, 10);
       if (!km || !min) { toast.error("Informe distância e tempo."); return; }
-      body.metricas_usuario = { distancia_km: km, tempo_min: min };
+      aiPayload = {
+        type: "feedback_esporte",
+        distancia_km: km,
+        tempo_min: min,
+        meta_km: activeTask.meta_km,
+        user_id: user!.id,
+      };
+      updateFields.metricas_usuario = { distancia_km: km, tempo_min: min };
       progressoLabel = `${km} km · ${min} min`;
-    } else if (cat === "leitura") {
-      if (!respostaTexto.trim()) { toast.error("Escreva um resumo da leitura."); return; }
-      body.resposta_usuario = respostaTexto.trim();
-      progressoLabel = "Leitura registrada";
+    } else if (cat === "lazer" || cat === "espiritualidade") {
+      const resposta = respostaTexto.trim();
+      aiPayload = {
+        type: cat === "lazer" ? "feedback_lazer" : "feedback_espiritualidade",
+        resposta,
+        user_id: user!.id,
+      };
+      if (resposta) updateFields.resposta_usuario = resposta;
     } else {
-      if (respostaTexto.trim()) body.resposta_usuario = respostaTexto.trim();
-      progressoLabel = "Concluído";
+      if (respostaTexto.trim()) updateFields.resposta_usuario = respostaTexto.trim();
     }
+    updateFields.progresso = progressoLabel;
 
     setSavingDone(true);
     try {
-      const { data, error } = await supabase.functions.invoke("concluir-tarefa", { body });
-      if (error) throw error;
-      const feedback = (data as any)?.feedback || "";
+      // Call AI for feedback
+      let feedback = "";
+      if (aiPayload) {
+        const { data, error } = await supabase.functions.invoke("routine-ai", { body: aiPayload });
+        if (error) console.error("routine-ai error:", error);
+        feedback = (data as any)?.feedback || (data as any)?.message || "";
+      }
+      if (feedback) updateFields.feedback_ia = feedback;
+
+      // Update task
+      const { error: upErr } = await supabase
+        .from("daily_tasks")
+        .update(updateFields)
+        .eq("id", activeTask.id);
+      if (upErr) throw upErr;
+
+      // For leitura: bump reading_progress to the target page
+      if (cat === "leitura" && activeTask.meta_paginas != null) {
+        const { data: rp } = await supabase
+          .from("reading_progress").select("id, pagina_atual")
+          .eq("user_id", user!.id).eq("ativo", true)
+          .order("created_at", { ascending: false }).limit(1).maybeSingle();
+        if (rp?.id) {
+          await supabase.from("reading_progress")
+            .update({ pagina_atual: activeTask.meta_paginas })
+            .eq("id", rp.id);
+        }
+      }
 
       setTasks(prev => prev.map(t => t.id === activeTask.id
         ? { ...t, concluido: true, concluido_em: new Date().toISOString(), progresso: progressoLabel }
@@ -281,12 +334,13 @@ export default function RoutineHome() {
         toast.success("Tarefa concluída!");
       }
     } catch (e: any) {
-      console.error("concluir-tarefa error:", e);
+      console.error("concluirTarefa error:", e);
       toast.error("Erro ao concluir: " + (e?.message || "tente novamente"));
     } finally {
       setSavingDone(false);
     }
   }
+
 
 
   const doneTasks = tasks.filter(t => t.concluido === true).length;
@@ -503,16 +557,20 @@ export default function RoutineHome() {
             {activeTask?.categoria === "leitura" && (
               <div>
                 <label className="text-sm font-medium mb-1 block">
-                  Escreva um resumo do que você entendeu da leitura de hoje
+                  O que você aprendeu com a leitura de hoje? Escreva seu resumo.
                 </label>
                 <Textarea
-                  placeholder="O que mais te marcou? O que você aprendeu?"
+                  placeholder="Conte com suas palavras o que entendeu, o que te marcou, exemplos do livro..."
                   value={respostaTexto}
                   onChange={e => setRespostaTexto(e.target.value)}
-                  className="min-h-[120px]"
+                  className="min-h-[140px]"
                 />
+                <p className="text-xs text-muted-foreground mt-1">
+                  Mínimo 50 caracteres ({respostaTexto.trim().length}/50)
+                </p>
               </div>
             )}
+
 
             {activeTask?.categoria === "esporte" && (
               <div className="grid grid-cols-2 gap-3">
@@ -568,7 +626,10 @@ export default function RoutineHome() {
                 <Sparkles className="h-5 w-5 text-white" />
               </div>
               <div>
-                <SheetTitle className="text-base font-bold">Feedback da Ana</SheetTitle>
+                <SheetTitle className="text-base font-bold">
+                  {feedbackCategoria === "leitura" ? "Feedback da Ana 📚" : "Feedback da Ana"}
+                </SheetTitle>
+
                 <p className="text-xs text-muted-foreground">
                   {CAT[feedbackCategoria]?.label || "Tarefa concluída"}
                 </p>
