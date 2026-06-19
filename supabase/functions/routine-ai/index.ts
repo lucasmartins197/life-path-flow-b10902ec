@@ -61,7 +61,9 @@ serve(async (req) => {
       }
       const ad = await ar.json();
       const feedback = ad?.content?.[0]?.text || "";
-      return new Response(JSON.stringify({ feedback, message: feedback }), {
+      const rejeicaoKeywords = ["reescreva", "tente novamente", "muito vago", "insuficiente", "não é um resumo", "nao e um resumo"];
+      const precisaReescrever = rejeicaoKeywords.some(k => feedback.toLowerCase().includes(k));
+      return new Response(JSON.stringify({ feedback, message: feedback, precisaReescrever }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
