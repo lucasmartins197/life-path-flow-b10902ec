@@ -426,6 +426,11 @@ function PostCard({
             </button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
+            {isOwn && (
+              <DropdownMenuItem onClick={() => setShowDeleteDialog(true)} className="text-destructive gap-2">
+                <Trash2 className="h-4 w-4" /> Excluir publicação
+              </DropdownMenuItem>
+            )}
             <DropdownMenuItem onClick={onReport} className="text-destructive gap-2">
               <Flag className="h-4 w-4" /> Reportar
             </DropdownMenuItem>
@@ -500,7 +505,26 @@ function PostCard({
         </button>
       </div>
     </Card>
-  );
+
+    <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+      <DialogContent className="max-w-sm">
+        <DialogHeader>
+          <DialogTitle className="text-lg">Excluir publicação</DialogTitle>
+          <DialogDescription className="text-sm text-muted-foreground mt-1">
+            Tem certeza que deseja excluir esta publicação? Esta ação não pode ser desfeita.
+          </DialogDescription>
+        </DialogHeader>
+        <div className="flex gap-2 justify-end mt-2">
+          <Button variant="outline" size="sm" onClick={() => setShowDeleteDialog(false)} disabled={deleting}>
+            Cancelar
+          </Button>
+          <Button variant="destructive" size="sm" onClick={handleDelete} disabled={deleting}>
+            {deleting ? "Excluindo..." : "Excluir"}
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
+  </>);
 }
 
 export default function CommunityHome() {
@@ -508,7 +532,7 @@ export default function CommunityHome() {
   const { user } = useAuth();
   const {
     posts, loading, createPost, toggleReaction, toggleFollow,
-    addComment, reportPost, uploadPostImage, uploadPostVideo, fetchComments,
+    addComment, reportPost, deletePost, uploadPostImage, uploadPostVideo, fetchComments,
   } = useCommunityFeed();
   const [showCreate, setShowCreate] = useState(false);
   const [commentsPostId, setCommentsPostId] = useState<string | null>(null);
@@ -654,6 +678,7 @@ export default function CommunityHome() {
               onComment={() => setCommentsPostId(post.id)}
               onReport={() => reportPost(post.id, "Conteúdo inadequado")}
               onToggleFollow={() => toggleFollow(post.user_id)}
+              onDelete={() => deletePost(post.id)}
             />
           ))
         )}
