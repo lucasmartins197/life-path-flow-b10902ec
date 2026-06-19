@@ -344,6 +344,21 @@ export default function RoutineHome() {
         if (error) console.error("routine-ai error:", error);
         feedback = (data as any)?.feedback || (data as any)?.message || "";
       }
+
+      // LEITURA: check rejection keywords — if rejected, don't save, ask retry
+      if (cat === "leitura" && feedback) {
+        const lower = feedback.toLowerCase();
+        const rejeitada = ["reescreva", "tente novamente", "muito vago", "insuficiente", "não é um resumo", "nao e um resumo"]
+          .some(k => lower.includes(k));
+        if (rejeitada) {
+          setLeituraRejeicao(feedback);
+          setRespostaTexto("");
+          setLeituraTentativa(t => t + 1);
+          setSavingDone(false);
+          return;
+        }
+      }
+
       if (feedback) updateFields.feedback_ia = feedback;
 
       // Update task
@@ -370,11 +385,16 @@ export default function RoutineHome() {
         ? { ...t, concluido: true, concluido_em: new Date().toISOString(), progresso: progressoLabel }
         : t));
       setDoneModal(false);
+      setLeituraRejeicao("");
+      setLeituraTentativa(1);
 
       if (feedback) {
         setFeedbackText(feedback);
         setFeedbackCategoria(cat);
         setFeedbackModal(true);
+        if (cat === "leitura") {
+          setTimeout(() => setFeedbackModal(false), 3000);
+        }
       } else {
         toast.success("Tarefa concluída!");
       }
