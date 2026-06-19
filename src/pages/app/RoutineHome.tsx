@@ -562,11 +562,13 @@ export default function RoutineHome() {
                             <>
                               <p className="text-xs mt-2 leading-relaxed whitespace-pre-line" style={{color:"#374151"}}>{textOnly}</p>
                               {ytUrl && (
-                                <a href={ytUrl} target="_blank" rel="noreferrer"
-                                  className="mt-2 inline-flex items-center gap-1 text-xs font-semibold px-3 py-1.5 rounded-xl"
+                                <Button
+                                  onClick={() => window.open(ytUrl, "_blank", "noopener,noreferrer")}
+                                  variant="ghost"
+                                  className="mt-2 inline-flex items-center gap-1 text-xs font-semibold px-3 py-1.5 rounded-xl h-auto"
                                   style={{background:`${cfg.color}15`,color:cfg.color}}>
                                   <ExternalLink className="h-3 w-3"/>Assistir vídeo de hoje →
-                                </a>
+                                </Button>
                               )}
                             </>
                           );
