@@ -238,11 +238,12 @@ export default function AnchorHome() {
   const handleSendUpdate = async () => {
     if (!anchor) return;
     const userName = user?.user_metadata?.full_name || "Seu apoiado";
-    const phone = anchor.phone.replace(/\D/g, "");
+    let phone = anchor.phone.replace(/\D/g, "");
+    if (!phone.startsWith("55")) phone = "55" + phone;
 
     // Sempre abre WhatsApp com mensagem simbólica
     const message = encodeURIComponent(
-      `Olá ${anchor.name}! 💚 Estou aqui, firme na minha jornada de recuperação pelo Stake Real. Só queria que soubesse que estou bem e continuando. Obrigado pelo seu apoio! — ${userName}`,
+      `Olá ${anchor.name}! 💚 Estou aqui, firme na minha jornada de recuperação pelo Saindo do Jogo. Só queria que soubesse que estou bem e continuando. Obrigado pelo seu apoio! — ${userName}`,
     );
     window.open(`https://wa.me/${phone}?text=${message}`, "_blank");
 
