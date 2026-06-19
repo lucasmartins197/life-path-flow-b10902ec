@@ -487,6 +487,18 @@ export default function RoutineHome() {
             {activeTask?.conteudo_ia && (
               <p className="text-sm text-muted-foreground">{activeTask.conteudo_ia}</p>
             )}
+            {activeTask?.categoria === "leitura" && activeTask?.meta_paginas != null && (
+              <div className="rounded-xl px-3 py-2 text-sm font-semibold"
+                style={{ background: "#7C3AED15", color: "#7C3AED" }}>
+                Meta de hoje: chegar à página {activeTask.meta_paginas}
+              </div>
+            )}
+            {activeTask?.categoria === "esporte" && activeTask?.meta_km != null && (
+              <div className="rounded-xl px-3 py-2 text-sm font-semibold"
+                style={{ background: "#05966915", color: "#059669" }}>
+                Meta de hoje: {activeTask.meta_km} km
+              </div>
+            )}
 
             {activeTask?.categoria === "leitura" && (
               <div>
