@@ -5,7 +5,7 @@ import { useCommunityFeed, CommunityPost, PostComment, ReactionType } from "@/ho
 import { useAuth } from "@/contexts/AuthContext";
 import {
   Heart, MessageCircle, Send, Plus, Users, ChevronLeft,
-  Camera, MoreHorizontal, Flag, X, Image as ImageIcon, Video, UserPlus, UserCheck
+  Camera, MoreHorizontal, Flag, X, Image as ImageIcon, Video, UserPlus, UserCheck, Trash2
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -26,6 +26,7 @@ import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { supabase } from "@/integrations/supabase/client";
 import { Shield } from "lucide-react";
+import { toast } from "sonner";
 
 const MOOD_CONFIG: Record<string, { label: string; color: string }> = {
   motivado: { label: "Motivado", color: "bg-emerald-100 text-emerald-800" },
