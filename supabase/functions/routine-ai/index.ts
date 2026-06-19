@@ -20,8 +20,11 @@ serve(async (req) => {
 
       let prompt = "";
       if (type === "feedback_leitura") {
-        const { resumo = "", livro = "Livro" } = payload;
-        prompt = `Você é Ana, terapeuta exigente de recuperação de ludopatia. O paciente leu "${livro}" e escreveu este resumo: "${resumo}". Se o resumo for vago, superficial ou genérico (palavras como "foi bom", "ok", "legal", "gostei"), seja DIRETA e exija mais profundidade — diga exatamente o que faltou e peça que ele releia e escreva de novo com calma. Se for bom, reconheça com especificidade, citando trechos do que ele escreveu. Máximo 3 frases. Nunca seja condescendente. Sem emojis.`;
+        const { resumo = "", livro = "Livro", tentativa = 1 } = payload;
+        const tentativaMsg = tentativa > 1
+          ? ` Esta é a TENTATIVA ${tentativa} do paciente após você ter pedido mais profundidade. Se ainda estiver vago, seja mais firme ainda. Se ele se esforçou de verdade, reconheça o esforço e aprove.`
+          : "";
+        prompt = `Você é Ana, terapeuta exigente de recuperação de ludopatia. O paciente leu "${livro}" e escreveu este resumo: "${resumo}".${tentativaMsg} Se o resumo for vago, superficial ou genérico (palavras como "foi bom", "ok", "legal", "gostei"), seja DIRETA e use OBRIGATORIAMENTE uma destas expressões na resposta: "reescreva", "tente novamente", "muito vago", "insuficiente" ou "não é um resumo" — e diga exatamente o que faltou. Se for bom, reconheça com especificidade, citando trechos do que ele escreveu, SEM usar nenhuma daquelas expressões de rejeição. Máximo 3 frases. Nunca seja condescendente. Sem emojis.`;
       } else if (type === "feedback_esporte") {
         const { distancia_km = 0, tempo_min = 0, meta_km = null } = payload;
         const calorias = Math.round(distancia_km * 65);

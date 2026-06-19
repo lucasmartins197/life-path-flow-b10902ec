@@ -85,6 +85,9 @@ export default function RoutineHome() {
   const [feedbackModal, setFeedbackModal] = useState(false);
   const [feedbackText, setFeedbackText] = useState("");
   const [feedbackCategoria, setFeedbackCategoria] = useState<string>("");
+  // Leitura: retry loop
+  const [leituraTentativa, setLeituraTentativa] = useState(1);
+  const [leituraRejeicao, setLeituraRejeicao] = useState<string>("");
 
   useEffect(() => { if (user) loadAll(); }, [user]);
 
@@ -237,7 +240,43 @@ export default function RoutineHome() {
     setRespostaTexto("");
     setDistanciaKm("");
     setTempoMin("");
+    setLeituraTentativa(1);
+    setLeituraRejeicao("");
     setDoneModal(true);
+  }
+
+  function pularLeitura() {
+    setLeituraRejeicao("");
+    setLeituraTentativa(1);
+    if (activeTask) {
+      // marca como concluída sem feedback aprovado
+      finalizarSemFeedback(activeTask);
+    }
+  }
+
+  async function finalizarSemFeedback(task: DailyTask) {
+    const updateFields: Record<string, unknown> = {
+      concluido: true,
+      concluido_em: new Date().toISOString(),
+      progresso: "Leitura registrada (pulou feedback)",
+      resposta_usuario: respostaTexto.trim() || null,
+    };
+    await supabase.from("daily_tasks").update(updateFields).eq("id", task.id);
+    if (task.meta_paginas != null) {
+      const { data: rp } = await supabase
+        .from("reading_progress").select("id")
+        .eq("user_id", user!.id).eq("ativo", true)
+        .order("created_at", { ascending: false }).limit(1).maybeSingle();
+      if (rp?.id) {
+        await supabase.from("reading_progress")
+          .update({ pagina_atual: task.meta_paginas })
+          .eq("id", rp.id);
+      }
+    }
+    setTasks(prev => prev.map(t => t.id === task.id
+      ? { ...t, concluido: true, concluido_em: new Date().toISOString(), progresso: "Leitura registrada" }
+      : t));
+    setDoneModal(false);
   }
 
   async function concluirTarefa() {
@@ -261,7 +300,13 @@ export default function RoutineHome() {
       // Extract book title from descricao: Continue: "TÍTULO" — página N
       const m = activeTask.descricao?.match(/"([^"]+)"/);
       const livro = m?.[1] || "o livro de hoje";
-      aiPayload = { type: "feedback_leitura", resumo, livro, user_id: user!.id };
+      aiPayload = {
+        type: "feedback_leitura",
+        resumo,
+        livro,
+        tentativa: leituraTentativa,
+        user_id: user!.id,
+      };
       updateFields.resposta_usuario = resumo;
       progressoLabel = "Leitura registrada";
     } else if (cat === "esporte") {
@@ -299,6 +344,21 @@ export default function RoutineHome() {
         if (error) console.error("routine-ai error:", error);
         feedback = (data as any)?.feedback || (data as any)?.message || "";
       }
+
+      // LEITURA: check rejection keywords — if rejected, don't save, ask retry
+      if (cat === "leitura" && feedback) {
+        const lower = feedback.toLowerCase();
+        const rejeitada = ["reescreva", "tente novamente", "muito vago", "insuficiente", "não é um resumo", "nao e um resumo"]
+          .some(k => lower.includes(k));
+        if (rejeitada) {
+          setLeituraRejeicao(feedback);
+          setRespostaTexto("");
+          setLeituraTentativa(t => t + 1);
+          setSavingDone(false);
+          return;
+        }
+      }
+
       if (feedback) updateFields.feedback_ia = feedback;
 
       // Update task
@@ -325,11 +385,16 @@ export default function RoutineHome() {
         ? { ...t, concluido: true, concluido_em: new Date().toISOString(), progresso: progressoLabel }
         : t));
       setDoneModal(false);
+      setLeituraRejeicao("");
+      setLeituraTentativa(1);
 
       if (feedback) {
         setFeedbackText(feedback);
         setFeedbackCategoria(cat);
         setFeedbackModal(true);
+        if (cat === "leitura") {
+          setTimeout(() => setFeedbackModal(false), 3000);
+        }
       } else {
         toast.success("Tarefa concluída!");
       }
@@ -555,19 +620,34 @@ export default function RoutineHome() {
             )}
 
             {activeTask?.categoria === "leitura" && (
-              <div>
-                <label className="text-sm font-medium mb-1 block">
-                  O que você aprendeu com a leitura de hoje? Escreva seu resumo.
-                </label>
-                <Textarea
-                  placeholder="Conte com suas palavras o que entendeu, o que te marcou, exemplos do livro..."
-                  value={respostaTexto}
-                  onChange={e => setRespostaTexto(e.target.value)}
-                  className="min-h-[140px]"
-                />
-                <p className="text-xs text-muted-foreground mt-1">
-                  Mínimo 50 caracteres ({respostaTexto.trim().length}/50)
-                </p>
+              <div className="space-y-3">
+                {leituraRejeicao && (
+                  <div className="rounded-2xl p-4 border-2"
+                    style={{ background: "#FEF2F2", borderColor: "#F97316" }}>
+                    <p className="text-xs font-bold mb-1" style={{ color: "#C2410C" }}>
+                      A Ana pediu mais profundidade (tentativa {leituraTentativa - 1})
+                    </p>
+                    <p className="text-sm leading-relaxed" style={{ color: "#9A3412" }}>
+                      {leituraRejeicao}
+                    </p>
+                  </div>
+                )}
+                <div>
+                  <label className="text-sm font-medium mb-1 block">
+                    {leituraRejeicao
+                      ? "Reescreva com mais detalhes — o que de fato te marcou?"
+                      : "O que você aprendeu com a leitura de hoje? Escreva seu resumo."}
+                  </label>
+                  <Textarea
+                    placeholder="Conte com suas palavras o que entendeu, o que te marcou, exemplos do livro..."
+                    value={respostaTexto}
+                    onChange={e => setRespostaTexto(e.target.value)}
+                    className="min-h-[140px]"
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Mínimo 50 caracteres ({respostaTexto.trim().length}/50)
+                  </p>
+                </div>
               </div>
             )}
 
@@ -607,11 +687,24 @@ export default function RoutineHome() {
               </div>
             )}
 
-            <Button onClick={concluirTarefa} disabled={savingDone}
-              className="w-full h-12 text-base font-bold rounded-2xl text-white"
-              style={{ background: "linear-gradient(135deg,#1B4332,#2D6A4F)" }}>
-              {savingDone ? <Loader2 className="h-4 w-4 animate-spin" /> : "Concluir tarefa"}
-            </Button>
+            <div className="flex gap-2">
+              {activeTask?.categoria === "leitura" && leituraRejeicao && (
+                <Button onClick={pularLeitura} disabled={savingDone}
+                  variant="outline"
+                  className="h-12 px-4 rounded-2xl font-semibold">
+                  Pular
+                </Button>
+              )}
+              <Button onClick={concluirTarefa} disabled={savingDone}
+                className="flex-1 h-12 text-base font-bold rounded-2xl text-white"
+                style={{ background: "linear-gradient(135deg,#1B4332,#2D6A4F)" }}>
+                {savingDone ? <Loader2 className="h-4 w-4 animate-spin" /> : (
+                  activeTask?.categoria === "leitura" && leituraRejeicao
+                    ? "Tentar novamente"
+                    : "Concluir tarefa"
+                )}
+              </Button>
+            </div>
           </div>
         </SheetContent>
       </Sheet>
@@ -635,16 +728,20 @@ export default function RoutineHome() {
                 </p>
               </div>
             </div>
-            <div className="rounded-2xl p-4 border"
-              style={{ background: "#F8FAF7", borderColor: "#1B433220" }}>
-              <p className="text-sm leading-relaxed whitespace-pre-line" style={{ color: "#1B4332" }}>
+            <div className="rounded-2xl p-4 border-2"
+              style={{
+                background: feedbackCategoria === "leitura" ? "#F0FDF4" : "#F8FAF7",
+                borderColor: feedbackCategoria === "leitura" ? "#22C55E" : "#1B433220",
+              }}>
+              <p className="text-sm leading-relaxed whitespace-pre-line"
+                style={{ color: feedbackCategoria === "leitura" ? "#166534" : "#1B4332" }}>
                 {feedbackText}
               </p>
             </div>
             <Button onClick={() => setFeedbackModal(false)}
               className="w-full h-12 text-base font-bold rounded-2xl text-white"
               style={{ background: "linear-gradient(135deg,#1B4332,#2D6A4F)" }}>
-              Continuar
+              {feedbackCategoria === "leitura" ? "Entendi" : "Continuar"}
             </Button>
           </div>
         </SheetContent>
