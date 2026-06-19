@@ -632,11 +632,11 @@ export default function RoutineHome() {
               <div className="space-y-3">
                 {leituraRejeicao && (
                   <div className="rounded-2xl p-4 border-2"
-                    style={{ background: "#FEF2F2", borderColor: "#F97316" }}>
-                    <p className="text-xs font-bold mb-1" style={{ color: "#C2410C" }}>
+                    style={{ background: "#FFFBEB", borderColor: "#F59E0B" }}>
+                    <p className="text-xs font-bold mb-1" style={{ color: "#B45309" }}>
                       A Ana pediu mais profundidade (tentativa {leituraTentativa - 1})
                     </p>
-                    <p className="text-sm leading-relaxed" style={{ color: "#9A3412" }}>
+                    <p className="text-sm leading-relaxed" style={{ color: "#92400E" }}>
                       {leituraRejeicao}
                     </p>
                   </div>
