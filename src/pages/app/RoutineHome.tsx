@@ -815,6 +815,7 @@ function SetupSheet({ open, onOpenChange, userId, existingPrefs, onSaved }: {
   const [esporteTipos, setEsporteTipos] = useState<string[]>([]);
   const [esporteNivel, setEsporteNivel] = useState("");
   const [esporteDias, setEsporteDias] = useState<string[]>([]);
+  const [esporteDiasPorTipo, setEsporteDiasPorTipo] = useState<Record<string, string[]>>({});
   const [esporteTempo, setEsporteTempo] = useState(30);
   const [lazerAtivo, setLazerAtivo] = useState(false);
   const [espAtivo, setEspAtivo] = useState(false);
@@ -827,14 +828,19 @@ function SetupSheet({ open, onOpenChange, userId, existingPrefs, onSaved }: {
       setEsporteTipos(Array.isArray(existingPrefs.esporte_tipos) ? existingPrefs.esporte_tipos : []);
       setEsporteNivel(existingPrefs.esporte_nivel || "");
       setEsporteDias(Array.isArray(existingPrefs.esporte_dias) ? existingPrefs.esporte_dias : []);
+      setEsporteDiasPorTipo(existingPrefs.esporte_dias_por_tipo && typeof existingPrefs.esporte_dias_por_tipo === "object" ? existingPrefs.esporte_dias_por_tipo : {});
       setEsporteTempo(existingPrefs.esporte_tempo || 30);
       setLazerAtivo(existingPrefs.lazer_ativo || false);
       setEspAtivo(existingPrefs.espiritualidade_ativo || false);
     }
   }, [open, existingPrefs]);
 
-  const toggleDia = (d: string) =>
-    setEsporteDias(prev => prev.includes(d) ? prev.filter(x => x !== d) : [...prev, d]);
+  const toggleDiaTipo = (tipo: string, d: string) =>
+    setEsporteDiasPorTipo(prev => {
+      const atual = Array.isArray(prev[tipo]) ? prev[tipo] : [];
+      const novo = atual.includes(d) ? atual.filter(x => x !== d) : [...atual, d];
+      return { ...prev, [tipo]: novo };
+    });
 
   const Chip = ({ label, sel, onSel, color }: { label: string; sel: boolean; onSel: () => void; color: string }) => (
     <button onClick={onSel} className="px-3 py-1.5 rounded-xl text-xs font-medium border transition-all active:scale-95"
