@@ -221,23 +221,24 @@ export default function RoutineHome() {
       });
     }
 
-    if (prefs.esporte_ativo && Array.isArray(prefs.esporte_dias) && prefs.esporte_dias.includes(hoje)) {
+    if (prefs.esporte_ativo) {
       const tipos = Array.isArray(prefs.esporte_tipos) ? prefs.esporte_tipos : [];
-      // Alterna entre modalidades por dia da semana ativo (1º dia ativo = tipo[0], 2º = tipo[1], ...)
-      const diasOrdenados = DIAS.filter(d => prefs.esporte_dias.includes(d));
-      const idxDia = Math.max(0, diasOrdenados.indexOf(hoje));
-      const tipoHoje = tipos.length > 0 ? tipos[idxDia % tipos.length] : "";
-      const ia = await getIA("esporte", `Modalidade de hoje: ${tipoHoje}`);
-      const metaKm = tipoHoje === "corrida"
-        ? (prefs.esporte_nivel === "Avançado" ? 8 : prefs.esporte_nivel === "Intermediário" ? 5 : 3)
-        : null;
-      newTasks.push({
-        user_id: user!.id, categoria: "esporte",
-        titulo: tipoHoje === "academia" ? "Treino na academia" : "Treino de corrida",
-        descricao: `${tipoHoje} — ${prefs.esporte_nivel} — ${prefs.esporte_tempo}min`,
-        conteudo_ia: ia, data: d, concluido: false,
-        meta_km: metaKm,
-      });
+      const diasPorTipo = prefs.esporte_dias_por_tipo || {};
+      for (const tipo of tipos) {
+        const diasTipo = Array.isArray(diasPorTipo[tipo]) ? diasPorTipo[tipo] : [];
+        if (!diasTipo.includes(hoje)) continue;
+        const ia = await getIA("esporte", `Modalidade de hoje: ${tipo}`);
+        const metaKm = tipo === "corrida"
+          ? (prefs.esporte_nivel === "Avançado" ? 8 : prefs.esporte_nivel === "Intermediário" ? 5 : 3)
+          : null;
+        newTasks.push({
+          user_id: user!.id, categoria: "esporte",
+          titulo: tipo === "academia" ? "Treino na academia" : "Treino de corrida",
+          descricao: `${tipo} — ${prefs.esporte_nivel} — ${prefs.esporte_tempo}min`,
+          conteudo_ia: ia, data: d, concluido: false,
+          meta_km: metaKm,
+        });
+      }
     }
 
     if (prefs.lazer_ativo) {
