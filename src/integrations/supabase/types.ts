@@ -1252,36 +1252,44 @@ export type Database = {
       }
       notifications: {
         Row: {
-          action_url: string | null
-          created_at: string
+          actor_id: string
+          created_at: string | null
           id: string
-          is_read: boolean | null
-          message: string
-          title: string
-          type: Database["public"]["Enums"]["notification_type"] | null
+          post_id: string | null
+          reaction_type: string | null
+          read: boolean | null
+          type: string
           user_id: string
         }
         Insert: {
-          action_url?: string | null
-          created_at?: string
+          actor_id: string
+          created_at?: string | null
           id?: string
-          is_read?: boolean | null
-          message: string
-          title: string
-          type?: Database["public"]["Enums"]["notification_type"] | null
+          post_id?: string | null
+          reaction_type?: string | null
+          read?: boolean | null
+          type: string
           user_id: string
         }
         Update: {
-          action_url?: string | null
-          created_at?: string
+          actor_id?: string
+          created_at?: string | null
           id?: string
-          is_read?: boolean | null
-          message?: string
-          title?: string
-          type?: Database["public"]["Enums"]["notification_type"] | null
+          post_id?: string | null
+          reaction_type?: string | null
+          read?: boolean | null
+          type?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "notifications_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "community_posts"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       nutrition_foods: {
         Row: {
