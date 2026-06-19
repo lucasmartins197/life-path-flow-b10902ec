@@ -371,9 +371,10 @@ export default function EvolutionHome() {
           <div className="flex items-center justify-between">
             <p className="text-sm font-semibold" style={{ color: "#1B4332" }}>Prontuários da IA</p>
             <button onClick={gerarProntuario}
-              className="text-xs font-semibold px-3 py-1.5 rounded-xl text-white"
+              disabled={gerando}
+              className="text-xs font-semibold px-3 py-1.5 rounded-xl text-white flex items-center gap-1.5 disabled:opacity-60 disabled:cursor-not-allowed"
               style={{ background: "#1B4332" }}>
-              + Gerar novo
+              {gerando ? (<><Loader2 className="h-3.5 w-3.5 animate-spin" /> Gerando...</>) : "+ Gerar novo"}
             </button>
           </div>
 
@@ -385,12 +386,15 @@ export default function EvolutionHome() {
               <p className="font-medium text-gray-700 mb-1">Nenhum prontuário ainda</p>
               <p className="text-sm text-gray-400 mb-4">A IA gera um relatório clínico completo baseado no seu progresso</p>
               <button onClick={gerarProntuario}
-                className="px-6 py-2.5 rounded-xl text-white text-sm font-semibold"
+                disabled={gerando}
+                className="px-6 py-2.5 rounded-xl text-white text-sm font-semibold inline-flex items-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
                 style={{ background: "#1B4332" }}>
-                Gerar primeiro prontuário
+                {gerando ? (<><Loader2 className="h-4 w-4 animate-spin" /> Gerando...</>) : "Gerar primeiro prontuário"}
               </button>
             </div>
-          ) : prontuarios.map(p => (
+          ) : (<>
+            {/* Prontuário atual (mais recente) */}
+            {(() => { const p = prontuarios[0]; return (
             <div key={p.id} className="bg-white border border-gray-100 rounded-2xl p-4" style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.06)" }}>
               <div className="flex items-start justify-between gap-3 mb-3">
                 <div className="flex items-center gap-2">
@@ -453,7 +457,81 @@ export default function EvolutionHome() {
                 </button>
               </div>
             </div>
-          ))}
+            ); })()}
+
+            {/* Histórico (até 5 prontuários anteriores) */}
+            {prontuarios.length > 1 && (
+              <div className="pt-2">
+                <p className="text-sm font-semibold mb-2" style={{ color: "#1B4332" }}>Histórico</p>
+                <div className="space-y-2">
+                  {prontuarios.slice(1, 6).map((p) => {
+                    const expanded = !!expandedHistorico[p.id];
+                    return (
+                      <div key={p.id} className="bg-white border border-gray-100 rounded-2xl p-3" style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.06)" }}>
+                        <div className="flex items-center justify-between gap-2">
+                          <div className="flex items-center gap-2 min-w-0">
+                            <div className="w-8 h-8 rounded-lg bg-gray-50 flex items-center justify-center shrink-0">
+                              <FileText className="h-3.5 w-3.5 text-gray-500" />
+                            </div>
+                            <p className="text-xs text-gray-600 truncate">
+                              {new Date(p.gerado_em).toLocaleDateString("pt-BR", { day: "2-digit", month: "long", year: "numeric" })}
+                            </p>
+                          </div>
+                          <div className="flex items-center gap-2 shrink-0">
+                            {p.nivel_risco && (
+                              <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full"
+                                style={{
+                                  background: `${RISK_COLOR[p.nivel_risco]}15`,
+                                  color: RISK_COLOR[p.nivel_risco]
+                                }}>
+                                {RISK_LABEL[p.nivel_risco] || p.nivel_risco}
+                              </span>
+                            )}
+                            <button
+                              onClick={() => setExpandedHistorico((s) => ({ ...s, [p.id]: !s[p.id] }))}
+                              className="text-xs font-semibold px-2.5 py-1 rounded-lg"
+                              style={{ background: "#1B433215", color: "#1B4332" }}>
+                              {expanded ? "Ocultar" : "Ver"}
+                            </button>
+                          </div>
+                        </div>
+
+                        {expanded && (
+                          <div className="mt-3 pt-3 border-t border-gray-100 space-y-3">
+                            {p.resumo_clinico && (
+                              <div>
+                                <p className="text-[11px] font-semibold uppercase tracking-wide text-gray-400 mb-1">Resumo clínico</p>
+                                <p className="text-sm text-gray-600 leading-relaxed whitespace-pre-line">{p.resumo_clinico}</p>
+                              </div>
+                            )}
+                            {p.recomendacoes && p.recomendacoes.length > 0 && (
+                              <div>
+                                <p className="text-[11px] font-semibold uppercase tracking-wide text-gray-400 mb-1">Recomendações</p>
+                                <div className="space-y-1.5">
+                                  {p.recomendacoes.map((rec, i) => (
+                                    <div key={i} className="flex items-start gap-2">
+                                      <CheckCircle2 className="h-3.5 w-3.5 text-green-600 mt-0.5 shrink-0" />
+                                      <p className="text-xs text-gray-600 leading-relaxed">{rec}</p>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+                            <button
+                              onClick={() => baixarPDF(p)}
+                              className="flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-xl"
+                              style={{ background: "#1B433215", color: "#1B4332" }}>
+                              <Download className="h-3.5 w-3.5" /> Baixar PDF
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+          </>)}
         </>)}
 
         {/* ABA: HISTÓRICO */}
