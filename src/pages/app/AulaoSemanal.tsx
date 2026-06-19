@@ -24,6 +24,18 @@ interface WeeklyClass {
   is_live: boolean;
 }
 
+function openGoogleCalendar(aula: { title: string; description: string | null; scheduled_at: string }) {
+  const start = new Date(aula.scheduled_at);
+  const end = new Date(start.getTime() + 60 * 60 * 1000);
+  const fmt = (d: Date) => d.toISOString().replace(/-|:|\.\d{3}/g, "");
+  const url = new URL("https://calendar.google.com/calendar/render");
+  url.searchParams.set("action", "TEMPLATE");
+  url.searchParams.set("text", aula.title);
+  url.searchParams.set("details", aula.description || "Aulão Semanal — Saindo do Jogo");
+  url.searchParams.set("dates", `${fmt(start)}/${fmt(end)}`);
+  window.open(url.toString(), "_blank");
+}
+
 export default function AulaoSemanal() {
   const navigate = useNavigate();
   const { user, roles } = useAuth();
@@ -204,7 +216,8 @@ export default function AulaoSemanal() {
                   <Button
                     variant="outline"
                     className="w-full"
-                    onClick={() => toast({ title: "Em breve", description: "Integração com calendário em desenvolvimento." })}
+                    onClick={() => nextClass && openGoogleCalendar(nextClass)}
+                    disabled={!nextClass}
                   >
                     <CalendarDays className="h-4 w-4 mr-2" />
                     Adicionar ao calendário
