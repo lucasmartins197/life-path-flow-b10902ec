@@ -2229,6 +2229,7 @@ export type Database = {
           esporte_nivel: string
           esporte_tempo: number
           esporte_tipo: string
+          esporte_tipos: Json
           id: string
           lazer_ativo: boolean
           leitura_ativo: boolean
@@ -2245,6 +2246,7 @@ export type Database = {
           esporte_nivel?: string
           esporte_tempo?: number
           esporte_tipo?: string
+          esporte_tipos?: Json
           id?: string
           lazer_ativo?: boolean
           leitura_ativo?: boolean
@@ -2261,6 +2263,7 @@ export type Database = {
           esporte_nivel?: string
           esporte_tempo?: number
           esporte_tipo?: string
+          esporte_tipos?: Json
           id?: string
           lazer_ativo?: boolean
           leitura_ativo?: boolean
