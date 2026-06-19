@@ -928,18 +928,46 @@ function SetupSheet({ open, onOpenChange, userId, existingPrefs, onSaved }: {
                   ))}
                 </div>
               </div>
-              <div>
-                <p className="text-xs font-medium text-muted-foreground mb-2">Dias por semana</p>
-                <div className="flex gap-1.5 flex-wrap">
-                  {DIAS.map(d => (
-                    <button key={d} onClick={() => toggleDia(d)}
-                      className="w-9 h-9 rounded-xl text-xs font-bold transition-all active:scale-95"
-                      style={esporteDias.includes(d) ? {background:"#059669",color:"#fff"} : {background:"#F3F4F6",color:"#374151"}}>
-                      {DIAS_LABEL[d]}
-                    </button>
-                  ))}
+              {esporteTipos.length === 0 ? null : esporteTipos.length === 1 ? (
+                <div>
+                  <p className="text-xs font-medium text-muted-foreground mb-2">Dias de treino</p>
+                  <div className="flex gap-1.5 flex-wrap">
+                    {DIAS.map(d => {
+                      const tipo = esporteTipos[0];
+                      const dias = esporteDiasPorTipo[tipo] || [];
+                      const sel = dias.includes(d);
+                      return (
+                        <button key={d} onClick={() => toggleDiaTipo(tipo, d)}
+                          className="w-9 h-9 rounded-xl text-xs font-bold transition-all active:scale-95"
+                          style={sel ? {background:"#059669",color:"#fff"} : {background:"#F3F4F6",color:"#374151"}}>
+                          {DIAS_LABEL[d]}
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
-              </div>
+              ) : (
+                esporteTipos.map(tipo => (
+                  <div key={tipo}>
+                    <p className="text-xs font-medium text-muted-foreground mb-2">
+                      {tipo === "academia" ? "Academia" : tipo === "corrida" ? "Corrida" : tipo} — Quais dias?
+                    </p>
+                    <div className="flex gap-1.5 flex-wrap">
+                      {DIAS.map(d => {
+                        const dias = esporteDiasPorTipo[tipo] || [];
+                        const sel = dias.includes(d);
+                        return (
+                          <button key={d} onClick={() => toggleDiaTipo(tipo, d)}
+                            className="w-9 h-9 rounded-xl text-xs font-bold transition-all active:scale-95"
+                            style={sel ? {background:"#059669",color:"#fff"} : {background:"#F3F4F6",color:"#374151"}}>
+                            {DIAS_LABEL[d]}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                ))
+              )}
               <div>
                 <p className="text-xs font-medium text-muted-foreground mb-2">Tempo por treino</p>
                 <div className="flex gap-2">
