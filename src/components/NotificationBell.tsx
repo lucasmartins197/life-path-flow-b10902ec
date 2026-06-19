@@ -37,6 +37,9 @@ const REACTION_EMOJI: Record<string, string> = {
 };
 
 function describeNotification(n: NotificationItem): string {
+  if (n.type === "weekly_class") {
+    return "Novo aulão semanal agendado! Toque para ver.";
+  }
   if (n.type === "reaction") {
     const emoji = REACTION_EMOJI[n.reaction_type || "heart"] || "❤️";
     return `reagiu com ${emoji} à sua história`;
