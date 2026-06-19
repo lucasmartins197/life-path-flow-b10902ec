@@ -620,19 +620,34 @@ export default function RoutineHome() {
             )}
 
             {activeTask?.categoria === "leitura" && (
-              <div>
-                <label className="text-sm font-medium mb-1 block">
-                  O que você aprendeu com a leitura de hoje? Escreva seu resumo.
-                </label>
-                <Textarea
-                  placeholder="Conte com suas palavras o que entendeu, o que te marcou, exemplos do livro..."
-                  value={respostaTexto}
-                  onChange={e => setRespostaTexto(e.target.value)}
-                  className="min-h-[140px]"
-                />
-                <p className="text-xs text-muted-foreground mt-1">
-                  Mínimo 50 caracteres ({respostaTexto.trim().length}/50)
-                </p>
+              <div className="space-y-3">
+                {leituraRejeicao && (
+                  <div className="rounded-2xl p-4 border-2"
+                    style={{ background: "#FEF2F2", borderColor: "#F97316" }}>
+                    <p className="text-xs font-bold mb-1" style={{ color: "#C2410C" }}>
+                      A Ana pediu mais profundidade (tentativa {leituraTentativa - 1})
+                    </p>
+                    <p className="text-sm leading-relaxed" style={{ color: "#9A3412" }}>
+                      {leituraRejeicao}
+                    </p>
+                  </div>
+                )}
+                <div>
+                  <label className="text-sm font-medium mb-1 block">
+                    {leituraRejeicao
+                      ? "Reescreva com mais detalhes — o que de fato te marcou?"
+                      : "O que você aprendeu com a leitura de hoje? Escreva seu resumo."}
+                  </label>
+                  <Textarea
+                    placeholder="Conte com suas palavras o que entendeu, o que te marcou, exemplos do livro..."
+                    value={respostaTexto}
+                    onChange={e => setRespostaTexto(e.target.value)}
+                    className="min-h-[140px]"
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Mínimo 50 caracteres ({respostaTexto.trim().length}/50)
+                  </p>
+                </div>
               </div>
             )}
 
