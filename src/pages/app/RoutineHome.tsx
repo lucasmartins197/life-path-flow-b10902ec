@@ -568,7 +568,7 @@ export default function RoutineHome() {
                 <Sparkles className="h-5 w-5 text-white" />
               </div>
               <div>
-                <SheetTitle className="text-base font-bold">Mensagem da Lia</SheetTitle>
+                <SheetTitle className="text-base font-bold">Feedback da Ana</SheetTitle>
                 <p className="text-xs text-muted-foreground">
                   {CAT[feedbackCategoria]?.label || "Tarefa concluída"}
                 </p>
