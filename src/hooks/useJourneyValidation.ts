@@ -182,8 +182,6 @@ export function useJourneyValidation() {
   const query = useQuery({
     queryKey: ["journey-validation", user?.id],
     enabled: !!user?.id,
-    staleTime: 0,
-    gcTime: 0,
     queryFn: async (): Promise<Record<number, StepValidation>> => {
       if (isAdmin) {
         const result: Record<number, StepValidation> = {};
@@ -200,8 +198,6 @@ export function useJourneyValidation() {
   const progressQuery = useQuery({
     queryKey: ["journey-progress-map", user?.id],
     enabled: !!user?.id,
-    staleTime: 0,
-    gcTime: 0,
     queryFn: async (): Promise<Record<number, { is_completed: boolean }>> => {
       const { data } = await supabase
         .from("journey_progress")
