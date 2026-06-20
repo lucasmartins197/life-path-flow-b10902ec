@@ -11,13 +11,15 @@ import {
   AlertCircle,
   Shield,
   Heart,
-  Users,
+  Headphones,
   Loader2,
   X,
   Sparkles,
+  ArrowRight,
 } from "lucide-react";
 import { BottomNavigation } from "@/components/BottomNavigation";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { DebtSimulator } from "@/components/legal/DebtSimulator";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
