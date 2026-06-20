@@ -96,7 +96,7 @@ async function validateStep(stepNumber: number, userId: string): Promise<StepVal
     }
     case 6: {
       const { count } = await supabase
-        .from("routine_activities")
+        .from("routine_preferences")
         .select("id", { count: "exact", head: true })
         .eq("user_id", userId);
       return { done: (count ?? 0) >= 1 };
