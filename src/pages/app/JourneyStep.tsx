@@ -202,7 +202,7 @@ export default function JourneyStep() {
   const { user } = useAuth();
   const { toast } = useToast();
   const { awardMedal } = useMedals();
-  const { isUnlocked, isDone: taskValidated, isAdmin, refetch: revalidate, validations } = useJourneyValidation();
+  const { isUnlocked, isTaskDone: taskValidated, isAdmin, refetch: revalidate, validations } = useJourneyValidation();
   const step = STEPS[stepNumber] || STEPS[1];
 
   const [loading, setLoading] = useState(true);
