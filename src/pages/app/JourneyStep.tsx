@@ -7,6 +7,7 @@ import { useMedals } from "@/hooks/useMedals";
 import { useJourneyValidation, STEP_VALIDATION_MEDAL, STEP_TASK_LABEL } from "@/hooks/useJourneyValidation";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import {
   Loader2,
