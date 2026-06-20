@@ -89,7 +89,7 @@ function maskPhone(phone: string) {
 
 export default function AnchorHome() {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const { contacts, primaryContact, addContact, updateContact } = useAnchorContacts();
 
   const [settings, setSettings] = useState<AnchorSettings>({
@@ -103,6 +103,7 @@ export default function AnchorHome() {
   const [confirmEmergency, setConfirmEmergency] = useState(false);
   const [editing, setEditing] = useState<AnchorContact | null>(null);
   const [sendingEmergency, setSendingEmergency] = useState(false);
+  const [sendingUpdate, setSendingUpdate] = useState(false);
 
   const [form, setForm] = useState({
     name: "",
@@ -237,38 +238,25 @@ export default function AnchorHome() {
 
   const handleSendUpdate = async () => {
     if (!anchor) return;
-    const userName = user?.user_metadata?.full_name || "Seu apoiado";
-    let phone = anchor.phone.replace(/\D/g, "");
-    if (!phone.startsWith("55")) phone = "55" + phone;
-
-    // Sempre abre WhatsApp com mensagem simbólica
-    const message = encodeURIComponent(
-      `Olá ${anchor.name}! 💚 Estou aqui, firme na minha jornada de recuperação pelo Saindo do Jogo. Só queria que soubesse que estou bem e continuando. Obrigado pelo seu apoio! — ${userName}`,
-    );
-    window.open(`https://wa.me/${phone}?text=${message}`, "_blank");
-
-    // Se tiver email, envia relatório completo também
-    if (anchor.email) {
-      try {
-        await supabase.functions.invoke("notify-guardian", {
-          body: {
-            type: "update",
-            guardian_name: anchor.name,
-            guardian_email: anchor.email,
-            user_name: userName,
-            user_id: user?.id,
-            include_report: true,
-          },
-        });
-        await logAlert("update", "WhatsApp + relatório por email enviados");
-        toast.success("WhatsApp aberto + relatório enviado por email!");
-      } catch (e) {
-        await logAlert("update", "Mensagem enviada via WhatsApp");
-        toast.success("WhatsApp aberto!");
-      }
-    } else {
-      await logAlert("update", "Mensagem enviada via WhatsApp");
-      toast.success("WhatsApp aberto!");
+    setSendingUpdate(true);
+    try {
+      await supabase.functions.invoke("notify-guardian", {
+        body: {
+          type: "update",
+          guardian_name: anchor.name,
+          guardian_phone: anchor.phone,
+          guardian_email: anchor.email || undefined,
+          user_name: profile?.full_name || user?.email || "Usuário",
+          user_id: user?.id,
+          include_report: true,
+        },
+      });
+      await logAlert("update", "Relatório enviado automaticamente ao âncora");
+      toast.success("✅ Relatório enviado ao seu âncora!");
+    } catch (e) {
+      toast.error("Erro ao enviar relatório");
+    } finally {
+      setSendingUpdate(false);
     }
   };
 
@@ -283,7 +271,7 @@ export default function AnchorHome() {
           guardian_name: anchor.name,
           guardian_phone: anchor.phone,
           guardian_email: anchor.email || undefined,
-          user_name: user?.user_metadata?.full_name || "Seu apoiado",
+          user_name: profile?.full_name || user?.email || "Usuário",
           user_id: user?.id,
         },
       });
@@ -356,10 +344,11 @@ export default function AnchorHome() {
               </button>
               <button
                 onClick={handleSendUpdate}
-                className="flex items-center justify-center gap-2 py-2.5 rounded-xl bg-primary text-primary-foreground text-sm font-medium hover:opacity-90 transition-opacity"
+                disabled={sendingUpdate}
+                className="flex items-center justify-center gap-2 py-2.5 rounded-xl bg-primary text-primary-foreground text-sm font-medium hover:opacity-90 transition-opacity disabled:opacity-60"
               >
                 <Send className="h-4 w-4" />
-                Atualização
+                {sendingUpdate ? "Enviando..." : "Atualização"}
               </button>
             </div>
           </section>
