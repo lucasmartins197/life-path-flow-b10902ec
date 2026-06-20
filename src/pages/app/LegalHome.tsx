@@ -224,8 +224,8 @@ export default function LegalHome() {
               <h2 className="text-2xl font-bold text-gray-900 mb-2">Pagamento confirmado! ✅</h2>
               <p className="text-gray-600 mb-2">Sua consulta jurídica foi solicitada com sucesso.</p>
               <p className="text-sm text-gray-500 mb-6">
-                Em breve você receberá uma mensagem no WhatsApp para agendar sua avaliação com um especialista em
-                ludopatia.
+                Nossa equipe entrará em contato em até 24 horas para agendar sua avaliação com especialista via WhatsApp e
+                email.
               </p>
               <button
                 onClick={() => navigate("/app/juridico")}
