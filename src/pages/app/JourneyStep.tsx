@@ -211,6 +211,8 @@ export default function JourneyStep() {
   const [resposta, setResposta] = useState("");
   const [isCompleted, setIsCompleted] = useState(false);
   const [showCelebration, setShowCelebration] = useState(false);
+  const [anaFeedback, setAnaFeedback] = useState<string | null>(null);
+  const [showAnaFeedback, setShowAnaFeedback] = useState(false);
 
   // Quiz states
   const [audioPlayed, setAudioPlayed] = useState(false);
