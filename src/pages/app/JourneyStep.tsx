@@ -263,9 +263,24 @@ export default function JourneyStep() {
       );
   }
 
+  async function handleRevalidate() {
+    toast({ title: "Verificando..." });
+    const result = await revalidate();
+    setTimeout(() => {
+      const done = isAdmin || !!result.data?.[stepNumber]?.done;
+      if (done) {
+        toast({ title: "✅ Atividade concluída!" });
+      } else {
+        toast({ title: "⏳ Atividade ainda pendente" });
+      }
+    }, 1000);
+  }
+
   // Refetch validation when route changes (e.g., returning from /app/perfil to /app/jornada/N)
   useEffect(() => {
-    if (user) revalidate();
+    if (!user) return;
+    const timer = setTimeout(() => revalidate(), 500);
+    return () => clearTimeout(timer);
   }, [location.pathname, user]);
 
   // Refetch validation when tab/window regains focus or becomes visible again
@@ -495,7 +510,7 @@ export default function JourneyStep() {
             <Button
               className="flex-1 text-white"
               style={{ background: "linear-gradient(135deg, #1B4332, #2D6A4F)" }}
-              onClick={() => revalidate()}
+              onClick={() => handleRevalidate()}
             >
               <RefreshCw className="h-4 w-4 mr-1" /> Verificar
             </Button>
@@ -765,7 +780,7 @@ export default function JourneyStep() {
               {step.activityButton}
               <ArrowRight className="h-4 w-4 ml-2" />
             </Button>
-            <Button variant="outline" size="icon" onClick={() => revalidate()} title="Verificar tarefa">
+            <Button variant="outline" size="icon" onClick={() => handleRevalidate()} title="Verificar tarefa">
               <RefreshCw className="h-4 w-4" />
             </Button>
           </div>
