@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Loader2 } from "lucide-react";
+import { Loader2, Heart } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -143,7 +143,7 @@ export default function AppHome() {
   }
 
   return (
-    <div className="min-h-screen bg-background safe-top pb-28">
+    <div className="min-h-screen bg-background safe-top pb-36">
 
       {/* ── Header ── */}
       <header className="px-5 pt-7 pb-1">
@@ -208,6 +208,18 @@ export default function AppHome() {
         {/* ── Premium Navigation Cards ── */}
         <PremiumNavCards />
       </main>
+
+      {/* ── Crisis Banner ── */}
+      <a
+        href="tel:188"
+        className="fixed bottom-[72px] left-4 right-4 z-30 flex items-center justify-center gap-2 rounded-xl bg-red-700 px-4 py-3 text-white shadow-lg active:scale-[0.98] transition-transform"
+        aria-label="Ligar para o CVV 188"
+      >
+        <Heart className="h-5 w-5 fill-white" />
+        <span className="text-sm font-semibold">
+          Em crise? Liga 188 — CVV (gratuito, 24h)
+        </span>
+      </a>
 
       <BottomNavigation />
       <EveningCheckIn />
