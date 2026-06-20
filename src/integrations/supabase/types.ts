@@ -1040,25 +1040,31 @@ export type Database = {
       }
       jornada_respostas: {
         Row: {
+          audio_played: boolean
           created_at: string
           id: string
           passo_numero: number
+          quiz_passed: boolean
           resposta: string
           updated_at: string
           user_id: string
         }
         Insert: {
+          audio_played?: boolean
           created_at?: string
           id?: string
           passo_numero: number
+          quiz_passed?: boolean
           resposta: string
           updated_at?: string
           user_id: string
         }
         Update: {
+          audio_played?: boolean
           created_at?: string
           id?: string
           passo_numero?: number
+          quiz_passed?: boolean
           resposta?: string
           updated_at?: string
           user_id?: string
