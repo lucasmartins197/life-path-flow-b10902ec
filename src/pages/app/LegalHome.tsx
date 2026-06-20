@@ -11,13 +11,15 @@ import {
   AlertCircle,
   Shield,
   Heart,
-  Users,
+  Headphones,
   Loader2,
   X,
   Sparkles,
+  ArrowRight,
 } from "lucide-react";
 import { BottomNavigation } from "@/components/BottomNavigation";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { DebtSimulator } from "@/components/legal/DebtSimulator";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -120,6 +122,7 @@ export default function LegalHome() {
   const [content, setContent] = useState<string>("");
   const [loading, setLoading] = useState(false);
   const [checkoutLoading, setCheckoutLoading] = useState<string | null>(null);
+  const [specialistOpen, setSpecialistOpen] = useState(false);
 
   const handleCheckout = async (priceAlias: "legal_consult" | "legal_full") => {
     setCheckoutLoading(priceAlias);
@@ -221,7 +224,7 @@ export default function LegalHome() {
               <h2 className="text-2xl font-bold text-gray-900 mb-2">Pagamento confirmado! ✅</h2>
               <p className="text-gray-600 mb-2">Sua consulta jurídica foi solicitada com sucesso.</p>
               <p className="text-sm text-gray-500 mb-6">
-                Em breve você receberá uma mensagem no WhatsApp para agendar sua reunião com o advogado especialista em
+                Em breve você receberá uma mensagem no WhatsApp para agendar sua avaliação com um especialista em
                 ludopatia.
               </p>
               <button
@@ -234,6 +237,58 @@ export default function LegalHome() {
             </div>
           </div>
         )}
+        {/* Card destaque: Fala com Especialista */}
+        <section>
+          <button
+            onClick={() => setSpecialistOpen(true)}
+            title="Uma orientação especializada pode mudar o rumo do seu caso."
+            className="group w-full text-left rounded-2xl p-5 shadow-lg transition-transform hover:scale-[1.01] active:scale-[0.99] border-2"
+            style={{
+              backgroundColor: "#1B4332",
+              borderColor: "#C9A84C",
+              color: "#F5F0E8",
+            }}
+          >
+            <div className="flex items-start gap-4">
+              <div
+                className="w-12 h-12 rounded-xl flex items-center justify-center shrink-0"
+                style={{ backgroundColor: "#C9A84C", color: "#1B4332" }}
+              >
+                <Headphones className="h-6 w-6" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p
+                  className="text-[11px] font-bold tracking-[0.18em] mb-1"
+                  style={{ color: "#C9A84C" }}
+                >
+                  FALA COM ESPECIALISTA
+                </p>
+                <p className="text-base font-bold leading-snug" style={{ color: "#F5F0E8" }}>
+                  Entenda seus direitos e o que pode ser feito no seu caso
+                </p>
+                <p className="text-xs mt-1.5 leading-relaxed" style={{ color: "#F5F0E8CC" }}>
+                  Reúna documentação e descubra possibilidades — inclusive sobre
+                  valores perdidos em apostas.
+                </p>
+                <span
+                  className="inline-flex items-center gap-1 text-xs font-semibold mt-3"
+                  style={{ color: "#C9A84C" }}
+                >
+                  Ver opções <ArrowRight className="h-3.5 w-3.5" />
+                </span>
+              </div>
+            </div>
+          </button>
+          <p className="text-[11px] text-muted-foreground mt-2 px-1 italic">
+            Uma orientação especializada pode mudar o rumo do seu caso.
+          </p>
+        </section>
+
+        {/* Simulador de dívidas */}
+        <section>
+          <DebtSimulator />
+        </section>
+
         {/* Vídeo introdutório */}
         <section>
           <h2 className="text-base font-bold mb-3" style={{ color: "#1B4332" }}>
@@ -255,8 +310,8 @@ export default function LegalHome() {
         <div className="rounded-xl bg-card border border-border border-l-4 border-l-warning p-4 flex gap-3">
           <AlertTriangle className="h-5 w-5 text-warning shrink-0 mt-0.5" />
           <p className="text-xs text-foreground/80 leading-relaxed">
-            As informações aqui são <strong className="font-semibold">educativas</strong> e não substituem consultoria
-            jurídica profissional. Para seu caso específico, consulte um advogado.
+            As informações aqui são <strong className="font-semibold">educativas</strong> e não substituem orientação
+            especializada. Para seu caso específico, fale com um especialista.
           </p>
         </div>
 
@@ -288,25 +343,7 @@ export default function LegalHome() {
           </div>
         </section>
 
-        {/* Marketplace de advogados */}
-        <section>
-          <button
-            onClick={() => navigate("/app/juridico/advogados")}
-            className="w-full card-premium p-4 flex items-center gap-4 text-left hover:scale-[1.01] active:scale-[0.99] transition-transform border-l-4 border-l-primary"
-          >
-            <div className="w-11 h-11 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
-              <Users className="h-5 w-5 text-primary" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="font-semibold text-sm text-foreground">Encontre um advogado</p>
-              <p className="text-xs text-muted-foreground mt-0.5">
-                Profissionais especializados em dívidas e ludopatia
-              </p>
-            </div>
-          </button>
-        </section>
-
-        {/* Pacote de atendimento jurídico */}
+        {/* Pacote de atendimento */}
         <section>
           <p className="section-title flex items-center gap-2">
             <Sparkles className="h-3.5 w-3.5" />
@@ -318,8 +355,8 @@ export default function LegalHome() {
                 <Scale className="h-5 w-5 text-primary" />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="font-semibold text-sm text-foreground">Primeira Consulta Jurídica</p>
-                <p className="text-xs text-muted-foreground mt-0.5">Avaliação inicial com advogado especializado</p>
+                <p className="font-semibold text-sm text-foreground">Avaliação inicial com especialista</p>
+                <p className="text-xs text-muted-foreground mt-0.5">Orientação personalizada para o seu caso</p>
                 <p className="text-base font-bold text-foreground mt-2">R$ 199,90</p>
               </div>
             </div>
@@ -334,7 +371,7 @@ export default function LegalHome() {
                   Processando...
                 </>
               ) : (
-                "Contratar — R$ 199,90"
+                "Agendar minha avaliação — R$ 199,90"
               )}
             </button>
           </div>
@@ -344,7 +381,7 @@ export default function LegalHome() {
         <div className="rounded-xl border border-border p-4 flex gap-3">
           <Shield className="h-4 w-4 text-muted-foreground shrink-0 mt-0.5" />
           <p className="text-xs text-muted-foreground leading-relaxed">
-            Conteúdo educativo gerado com apoio de IA. Sempre verifique informações atualizadas e consulte profissionais
+            Conteúdo educativo gerado com apoio de IA. Sempre verifique informações atualizadas e fale com profissionais
             qualificados.
           </p>
         </div>
@@ -388,6 +425,67 @@ export default function LegalHome() {
               </div>
             </>
           )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Specialist Dialog: simulador + checkout */}
+      <Dialog open={specialistOpen} onOpenChange={setSpecialistOpen}>
+        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto p-0 gap-0">
+          <div
+            className="sticky top-0 z-10 px-5 py-4 flex items-center gap-3 border-b"
+            style={{ backgroundColor: "#1B4332", borderColor: "#C9A84C" }}
+          >
+            <div
+              className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
+              style={{ backgroundColor: "#C9A84C", color: "#1B4332" }}
+            >
+              <Headphones className="h-5 w-5" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-[10px] font-bold tracking-[0.18em]" style={{ color: "#C9A84C" }}>
+                FALA COM ESPECIALISTA
+              </p>
+              <p className="text-sm font-semibold" style={{ color: "#F5F0E8" }}>
+                Avalie seu caso e agende sua consulta
+              </p>
+            </div>
+            <button
+              onClick={() => setSpecialistOpen(false)}
+              className="w-8 h-8 rounded-lg flex items-center justify-center"
+              style={{ color: "#F5F0E8" }}
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+          <div className="px-5 py-5 space-y-5">
+            <DebtSimulator />
+            <div className="card-premium p-4">
+              <div className="flex items-start gap-3">
+                <div className="w-11 h-11 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+                  <Scale className="h-5 w-5 text-primary" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="font-semibold text-sm text-foreground">Avaliação inicial com especialista</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">Orientação personalizada para o seu caso</p>
+                  <p className="text-base font-bold text-foreground mt-2">R$ 199,90</p>
+                </div>
+              </div>
+              <button
+                onClick={() => handleCheckout("legal_consult")}
+                disabled={checkoutLoading === "legal_consult"}
+                className="btn-cta w-full mt-3 py-2.5 text-sm disabled:opacity-60"
+              >
+                {checkoutLoading === "legal_consult" ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Processando...
+                  </>
+                ) : (
+                  "Agendar minha avaliação — R$ 199,90"
+                )}
+              </button>
+            </div>
+          </div>
         </DialogContent>
       </Dialog>
 
