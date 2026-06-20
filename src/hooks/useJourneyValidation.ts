@@ -56,7 +56,7 @@ async function validateStep(stepNumber: number, userId: string): Promise<StepVal
     }
     case 2: {
       const { count } = await supabase
-        .from("community_stories")
+        .from("community_posts")
         .select("id", { count: "exact", head: true })
         .eq("user_id", userId);
       return { done: (count ?? 0) >= 1, detail: `${count ?? 0} publicação(ões)` };
@@ -77,7 +77,7 @@ async function validateStep(stepNumber: number, userId: string): Promise<StepVal
     }
     case 5: {
       const { count } = await supabase
-        .from("community_stories")
+        .from("community_posts")
         .select("id", { count: "exact", head: true })
         .eq("user_id", userId);
       return { done: (count ?? 0) >= 2, detail: `${count ?? 0} de 2` };
@@ -151,7 +151,7 @@ async function validateStep(stepNumber: number, userId: string): Promise<StepVal
     }
     case 12: {
       const { count } = await supabase
-        .from("community_stories")
+        .from("community_posts")
         .select("id", { count: "exact", head: true })
         .eq("user_id", userId);
       return { done: (count ?? 0) >= 3, detail: `${count ?? 0} de 3` };
