@@ -181,7 +181,8 @@ export function useJourneyValidation() {
   const query = useQuery({
     queryKey: ["journey-validation", user?.id],
     enabled: !!user?.id,
-    staleTime: 15_000,
+    staleTime: 0,
+    gcTime: 0,
     queryFn: async (): Promise<Record<number, StepValidation>> => {
       if (isAdmin) {
         const result: Record<number, StepValidation> = {};
