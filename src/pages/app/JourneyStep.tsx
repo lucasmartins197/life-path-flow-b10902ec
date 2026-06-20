@@ -75,7 +75,7 @@ const STEPS: Record<number, StepContent> = {
       "Publique sua primeira história no app. Não precisa se identificar — seu relato pode ser a esperança que outra pessoa precisa hoje.",
     activityButton: "Ir para Histórias que Conectam",
     activityRoute: "/app/comunidade",
-    youtubeId: "xyaUZHTUHkU",
+    youtubeId: "A2xARmqTVfI",
   },
   3: {
     name: "Entrega",
@@ -190,7 +190,7 @@ const STEPS: Record<number, StepContent> = {
       "Publique sua história de conquista em Histórias que Conectam e compartilhe o app Saindo do Jogo com alguém que precisa. Você completa sua jornada ajudando outros a começar a deles.",
     activityButton: "Publicar minha conquista",
     activityRoute: "/app/comunidade",
-    youtubeId: "xyaUZHTUHkU",
+    youtubeId: "A2xARmqTVfI",
   },
 };
 
@@ -865,7 +865,7 @@ export default function JourneyStep() {
         {/* 5. VÍDEO YOUTUBE */}
         <div className="rounded-2xl overflow-hidden shadow-md bg-black">
           <iframe
-            src={`https://www.youtube.com/embed/${step.youtubeId}?rel=0&modestbranding=1`}
+            src={`https://www.youtube.com/embed/${step.youtubeId}?rel=0&modestbranding=1&playsinline=1`}
             style={{ width: "100%", aspectRatio: "16/9", border: "none" }}
             allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
             allowFullScreen
