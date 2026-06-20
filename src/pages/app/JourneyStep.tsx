@@ -75,7 +75,7 @@ const STEPS: Record<number, StepContent> = {
       "Publique sua primeira história no app. Não precisa se identificar — seu relato pode ser a esperança que outra pessoa precisa hoje.",
     activityButton: "Ir para Histórias que Conectam",
     activityRoute: "/app/comunidade",
-    youtubeId: "xyaUZHTUHkU",
+    youtubeId: "A2xARmqTVfI",
   },
   3: {
     name: "Entrega",
