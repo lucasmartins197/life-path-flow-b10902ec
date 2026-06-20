@@ -22,7 +22,7 @@ export default function TermosUso() {
         <section>
           <h2 className="text-base font-semibold text-foreground mb-2">1. Identificação</h2>
           <p>
-            O aplicativo <strong className="text-foreground">Stake Real</strong> é operado pela{" "}
+            O aplicativo <strong className="text-foreground">Saindo do Jogo</strong> é operado pela{" "}
             <strong className="text-foreground">Clínica Terapêutica Sobriety Ltda</strong>, CNPJ{" "}
             <strong className="text-foreground">46.115.913/0001-54</strong>.
           </p>
@@ -31,7 +31,7 @@ export default function TermosUso() {
         <section>
           <h2 className="text-base font-semibold text-foreground mb-2">2. Aceitação</h2>
           <p>
-            Ao acessar e utilizar o Stake Real, você concorda integralmente com estes Termos de Uso.
+            Ao acessar e utilizar o Saindo do Jogo, você concorda integralmente com estes Termos de Uso.
             Caso não concorde, recomendamos que não utilize os serviços oferecidos.
           </p>
         </section>
@@ -66,7 +66,7 @@ export default function TermosUso() {
         <section>
           <h2 className="text-base font-semibold text-foreground mb-2">6. Limitação de Responsabilidade</h2>
           <p>
-            O Stake Real é uma ferramenta de apoio. Não nos responsabilizamos por crises clínicas
+            O Saindo do Jogo é uma ferramenta de apoio. Não nos responsabilizamos por crises clínicas
             não comunicadas ou por decisões tomadas pelo usuário fora do ambiente do app.
             Em emergências, utilize o botão Porto Seguro ou ligue diretamente para serviços de emergência.
           </p>
