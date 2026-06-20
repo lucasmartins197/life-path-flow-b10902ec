@@ -197,6 +197,24 @@ export function useJourneyValidation() {
     },
   });
 
+  const progressQuery = useQuery({
+    queryKey: ["journey-progress-map", user?.id],
+    enabled: !!user?.id,
+    staleTime: 0,
+    gcTime: 0,
+    queryFn: async (): Promise<Record<number, { is_completed: boolean }>> => {
+      const { data } = await supabase
+        .from("journey_progress")
+        .select("step_number, is_completed")
+        .eq("user_id", user!.id);
+      const map: Record<number, { is_completed: boolean }> = {};
+      (data ?? []).forEach((row: any) => {
+        map[row.step_number] = { is_completed: !!row.is_completed };
+      });
+      return map;
+    },
+  });
+
   /** True if step N is unlocked: step 1 always, step N>1 iff step N-1 task is validated. */
   function isUnlocked(stepNumber: number): boolean {
     if (isAdmin) return true;
@@ -205,17 +223,33 @@ export function useJourneyValidation() {
     return !!prev?.done;
   }
 
-  function isDone(stepNumber: number): boolean {
+  /** True if the user finished the practical task of the step. */
+  function isTaskDone(stepNumber: number): boolean {
     if (isAdmin) return true;
     return !!query.data?.[stepNumber]?.done;
   }
 
+  /** True only if the user went through the full flow and clicked "Concluir Passo". */
+  function isStepCompleted(stepNumber: number): boolean {
+    if (isAdmin) return false;
+    const prog = progressQuery.data?.[stepNumber];
+    return !!prog?.is_completed;
+  }
+
+  const refetch = async () => {
+    const [a] = await Promise.all([query.refetch(), progressQuery.refetch()]);
+    return a;
+  };
+
   return {
     validations: query.data ?? ({} as Record<number, StepValidation>),
-    isLoading: query.isLoading,
+    isLoading: query.isLoading || progressQuery.isLoading,
     isAdmin,
     isUnlocked,
-    isDone,
-    refetch: query.refetch,
+    isTaskDone,
+    isStepCompleted,
+    /** @deprecated use isTaskDone */
+    isDone: isTaskDone,
+    refetch,
   };
 }
