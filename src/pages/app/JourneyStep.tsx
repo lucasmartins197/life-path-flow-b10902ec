@@ -7,6 +7,7 @@ import { useMedals } from "@/hooks/useMedals";
 import { useJourneyValidation, STEP_VALIDATION_MEDAL, STEP_TASK_LABEL } from "@/hooks/useJourneyValidation";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import {
   Loader2,
@@ -210,6 +211,8 @@ export default function JourneyStep() {
   const [resposta, setResposta] = useState("");
   const [isCompleted, setIsCompleted] = useState(false);
   const [showCelebration, setShowCelebration] = useState(false);
+  const [anaFeedback, setAnaFeedback] = useState<string | null>(null);
+  const [showAnaFeedback, setShowAnaFeedback] = useState(false);
 
   // Quiz states
   const [audioPlayed, setAudioPlayed] = useState(false);
@@ -391,10 +394,83 @@ export default function JourneyStep() {
     await awardMedal(`journey-${stepNumber}`);
 
     setIsCompleted(true);
+
+    // Try to get a personalized message from Ana before celebration
+    let feedbackText: string | null = null;
+    try {
+      const { data: prof } = await supabase
+        .from("profiles")
+        .select("full_name")
+        .eq("id", user.id)
+        .maybeSingle();
+      const { data: fbData } = await supabase.functions.invoke("journey-feedback", {
+        body: {
+          step_number: stepNumber,
+          depoimento: resposta,
+          user_name: prof?.full_name || "você",
+        },
+      });
+      feedbackText = (fbData as any)?.feedback || null;
+    } catch (e) {
+      console.warn("journey-feedback failed:", e);
+    }
+
+    setCompleting(false);
+
+    if (feedbackText) {
+      setAnaFeedback(feedbackText);
+      setShowAnaFeedback(true);
+    } else {
+      triggerCelebration();
+    }
+  }
+
+  function triggerCelebration() {
     setShowCelebration(true);
     if (stepNumber === 12) fireConfetti();
-    setCompleting(false);
     setTimeout(() => navigate("/app/jornada"), stepNumber === 12 ? 4200 : 2800);
+  }
+
+  if (showAnaFeedback && anaFeedback) {
+    return (
+      <Dialog
+        open={showAnaFeedback}
+        onOpenChange={(open) => {
+          if (!open) {
+            setShowAnaFeedback(false);
+            triggerCelebration();
+          }
+        }}
+      >
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-lg" style={{ color: "#1B4332" }}>
+              💚 Ana tem uma mensagem para você
+            </DialogTitle>
+          </DialogHeader>
+          <div
+            className="rounded-2xl p-4 text-left mt-2"
+            style={{ backgroundColor: "#F5F0E8" }}
+          >
+            <p className="text-sm leading-relaxed whitespace-pre-line" style={{ color: "#1B4332" }}>
+              {anaFeedback}
+            </p>
+          </div>
+          <DialogFooter>
+            <Button
+              onClick={() => {
+                setShowAnaFeedback(false);
+                triggerCelebration();
+              }}
+              style={{ background: "#1B4332", color: "#fff" }}
+              className="w-full"
+            >
+              Obrigado, Ana!
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    );
   }
 
   if (showCelebration) {

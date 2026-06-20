@@ -573,20 +573,27 @@ export default function RoutineHome() {
                             </>
                           );
                         })()}
-                        {task.categoria === "leitura" && !done && (
-                          <div className="mt-2 flex gap-2 flex-wrap">
-                            <a href="https://www.gutenberg.org" target="_blank" rel="noreferrer"
-                              className="flex items-center gap-1 text-xs font-medium px-2 py-1 rounded-lg"
-                              style={{background:"#7C3AED15",color:"#7C3AED"}}>
-                              <ExternalLink className="h-3 w-3"/>Project Gutenberg
-                            </a>
-                            <a href="https://openlibrary.org" target="_blank" rel="noreferrer"
-                              className="flex items-center gap-1 text-xs font-medium px-2 py-1 rounded-lg"
-                              style={{background:"#7C3AED15",color:"#7C3AED"}}>
-                              <ExternalLink className="h-3 w-3"/>Open Library
-                            </a>
-                          </div>
-                        )}
+                        {task.categoria === "leitura" && !done && (() => {
+                          const haystack = `${task.descricao || ""} ${task.conteudo_ia || ""}`;
+                          const quoted = haystack.match(/"([^"]{2,120})"/);
+                          const query = encodeURIComponent(
+                            (quoted?.[1] || task.descricao || "livro").trim()
+                          );
+                          return (
+                            <div className="mt-2 flex gap-2 flex-wrap">
+                              <a href={`https://books.google.com/books?q=${query}`} target="_blank" rel="noreferrer"
+                                className="flex items-center gap-1 text-xs font-medium px-2 py-1 rounded-lg"
+                                style={{background:"#7C3AED15",color:"#7C3AED"}}>
+                                📖 Ler grátis
+                              </a>
+                              <a href={`https://www.amazon.com.br/s?k=${query}`} target="_blank" rel="noreferrer"
+                                className="flex items-center gap-1 text-xs font-medium px-2 py-1 rounded-lg"
+                                style={{background:"#7C3AED15",color:"#7C3AED"}}>
+                                🛒 Comprar
+                              </a>
+                            </div>
+                          );
+                        })()}
                         {task.progresso && done && (
                           <p className="text-xs mt-1 font-medium" style={{color:"#059669"}}>✓ {task.progresso}</p>
                         )}
