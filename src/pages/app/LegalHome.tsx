@@ -122,6 +122,7 @@ export default function LegalHome() {
   const [content, setContent] = useState<string>("");
   const [loading, setLoading] = useState(false);
   const [checkoutLoading, setCheckoutLoading] = useState<string | null>(null);
+  const [specialistOpen, setSpecialistOpen] = useState(false);
 
   const handleCheckout = async (priceAlias: "legal_consult" | "legal_full") => {
     setCheckoutLoading(priceAlias);
