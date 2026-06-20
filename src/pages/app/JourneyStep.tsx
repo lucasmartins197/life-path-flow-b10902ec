@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
 import confetti from "canvas-confetti";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -197,6 +197,7 @@ export default function JourneyStep() {
   const { stepNumber: stepParam } = useParams();
   const stepNumber = parseInt(stepParam || "1");
   const navigate = useNavigate();
+  const location = useLocation();
   const { user } = useAuth();
   const { toast } = useToast();
   const { awardMedal } = useMedals();
@@ -245,6 +246,25 @@ export default function JourneyStep() {
       setLoading(false);
     })();
   }, [user, stepNumber]);
+
+  // Refetch validation when route changes (e.g., returning from /app/perfil to /app/jornada/N)
+  useEffect(() => {
+    if (user) revalidate();
+  }, [location.pathname, user]);
+
+  // Refetch validation when tab/window regains focus or becomes visible again
+  useEffect(() => {
+    if (!user) return;
+    const handler = () => {
+      if (document.visibilityState === "visible") revalidate();
+    };
+    window.addEventListener("focus", handler);
+    document.addEventListener("visibilitychange", handler);
+    return () => {
+      window.removeEventListener("focus", handler);
+      document.removeEventListener("visibilitychange", handler);
+    };
+  }, [user]);
 
   async function saveResposta() {
     if (!user || !resposta.trim()) return;
