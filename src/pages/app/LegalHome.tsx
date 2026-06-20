@@ -428,6 +428,67 @@ export default function LegalHome() {
         </DialogContent>
       </Dialog>
 
+      {/* Specialist Dialog: simulador + checkout */}
+      <Dialog open={specialistOpen} onOpenChange={setSpecialistOpen}>
+        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto p-0 gap-0">
+          <div
+            className="sticky top-0 z-10 px-5 py-4 flex items-center gap-3 border-b"
+            style={{ backgroundColor: "#1B4332", borderColor: "#C9A84C" }}
+          >
+            <div
+              className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
+              style={{ backgroundColor: "#C9A84C", color: "#1B4332" }}
+            >
+              <Headphones className="h-5 w-5" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-[10px] font-bold tracking-[0.18em]" style={{ color: "#C9A84C" }}>
+                FALA COM ESPECIALISTA
+              </p>
+              <p className="text-sm font-semibold" style={{ color: "#F5F0E8" }}>
+                Avalie seu caso e agende sua consulta
+              </p>
+            </div>
+            <button
+              onClick={() => setSpecialistOpen(false)}
+              className="w-8 h-8 rounded-lg flex items-center justify-center"
+              style={{ color: "#F5F0E8" }}
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+          <div className="px-5 py-5 space-y-5">
+            <DebtSimulator />
+            <div className="card-premium p-4">
+              <div className="flex items-start gap-3">
+                <div className="w-11 h-11 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+                  <Scale className="h-5 w-5 text-primary" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="font-semibold text-sm text-foreground">Avaliação inicial com especialista</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">Orientação personalizada para o seu caso</p>
+                  <p className="text-base font-bold text-foreground mt-2">R$ 199,90</p>
+                </div>
+              </div>
+              <button
+                onClick={() => handleCheckout("legal_consult")}
+                disabled={checkoutLoading === "legal_consult"}
+                className="btn-cta w-full mt-3 py-2.5 text-sm disabled:opacity-60"
+              >
+                {checkoutLoading === "legal_consult" ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Processando...
+                  </>
+                ) : (
+                  "Agendar minha avaliação — R$ 199,90"
+                )}
+              </button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       <BottomNavigation />
     </div>
   );
