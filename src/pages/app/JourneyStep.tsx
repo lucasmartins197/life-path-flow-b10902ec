@@ -394,9 +394,40 @@ export default function JourneyStep() {
     await awardMedal(`journey-${stepNumber}`);
 
     setIsCompleted(true);
+
+    // Try to get a personalized message from Ana before celebration
+    let feedbackText: string | null = null;
+    try {
+      const { data: prof } = await supabase
+        .from("profiles")
+        .select("full_name")
+        .eq("id", user.id)
+        .maybeSingle();
+      const { data: fbData } = await supabase.functions.invoke("journey-feedback", {
+        body: {
+          step_number: stepNumber,
+          depoimento: resposta,
+          user_name: prof?.full_name || "você",
+        },
+      });
+      feedbackText = (fbData as any)?.feedback || null;
+    } catch (e) {
+      console.warn("journey-feedback failed:", e);
+    }
+
+    setCompleting(false);
+
+    if (feedbackText) {
+      setAnaFeedback(feedbackText);
+      setShowAnaFeedback(true);
+    } else {
+      triggerCelebration();
+    }
+  }
+
+  function triggerCelebration() {
     setShowCelebration(true);
     if (stepNumber === 12) fireConfetti();
-    setCompleting(false);
     setTimeout(() => navigate("/app/jornada"), stepNumber === 12 ? 4200 : 2800);
   }
 
