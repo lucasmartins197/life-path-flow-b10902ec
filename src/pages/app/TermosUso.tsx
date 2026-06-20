@@ -71,7 +71,7 @@ export default function TermosUso() {
         </section>
 
         <section>
-          <h2 className="text-base font-semibold text-foreground mb-2">4. Responsabilidades do Usuário</h2>
+          <h2 className="text-base font-semibold text-foreground mb-2">5. Responsabilidades do Usuário</h2>
           <ul className="list-disc pl-5 space-y-1">
             <li>Fornecer informações verdadeiras e atualizadas.</li>
             <li>Manter a confidencialidade de suas credenciais de acesso.</li>
@@ -81,7 +81,7 @@ export default function TermosUso() {
         </section>
 
         <section>
-          <h2 className="text-base font-semibold text-foreground mb-2">5. Conteúdo e Conduta</h2>
+          <h2 className="text-base font-semibold text-foreground mb-2">6. Conteúdo e Conduta</h2>
           <p>
             É proibido publicar conteúdo ofensivo, discriminatório, ilegal ou que promova jogos e apostas.
             Reservamo-nos o direito de moderar, remover conteúdo e suspender contas que violem estas regras.
@@ -89,7 +89,7 @@ export default function TermosUso() {
         </section>
 
         <section>
-          <h2 className="text-base font-semibold text-foreground mb-2">6. Limitação de Responsabilidade</h2>
+          <h2 className="text-base font-semibold text-foreground mb-2">7. Limitação de Responsabilidade</h2>
           <p>
             O Saindo do Jogo é uma ferramenta de apoio. Não nos responsabilizamos por crises clínicas
             não comunicadas ou por decisões tomadas pelo usuário fora do ambiente do app.
@@ -98,7 +98,7 @@ export default function TermosUso() {
         </section>
 
         <section>
-          <h2 className="text-base font-semibold text-foreground mb-2">7. Alterações</h2>
+          <h2 className="text-base font-semibold text-foreground mb-2">8. Alterações</h2>
           <p>
             Podemos atualizar estes termos periodicamente. Notificaremos os usuários sobre mudanças
             significativas. O uso continuado do app após alterações implica aceitação dos novos termos.
@@ -106,7 +106,7 @@ export default function TermosUso() {
         </section>
 
         <section>
-          <h2 className="text-base font-semibold text-foreground mb-2">8. Contato</h2>
+          <h2 className="text-base font-semibold text-foreground mb-2">9. Contato</h2>
           <p>
             Dúvidas sobre estes termos podem ser enviadas para{" "}
             <a href="mailto:contato@apostandonavida.com.br" className="text-primary underline">
@@ -116,7 +116,7 @@ export default function TermosUso() {
         </section>
 
         <p className="text-xs text-muted-foreground pt-4 pb-2">
-          Última atualização: 04 de junho de 2026.
+          Última atualização: 20 de junho de 2026.
         </p>
       </main>
 
