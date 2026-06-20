@@ -230,7 +230,7 @@ export default function JourneyStep() {
       const [{ data: r }, { data: p }] = await Promise.all([
         supabase
           .from("jornada_respostas" as any)
-          .select("resposta")
+          .select("resposta, audio_played, quiz_passed")
           .eq("user_id", user.id)
           .eq("step_number", stepNumber)
           .maybeSingle(),
@@ -241,11 +241,27 @@ export default function JourneyStep() {
           .eq("step_number", stepNumber)
           .maybeSingle(),
       ]);
-      if (r && (r as any).resposta) setResposta((r as any).resposta);
+      const row = r as any;
+      if (row?.resposta) setResposta(row.resposta);
+      if (row?.audio_played) setAudioPlayed(true);
+      if (row?.quiz_passed) {
+        setQuizSubmitted(true);
+        setQuizPassed(true);
+      }
       if (p?.is_completed) setIsCompleted(true);
       setLoading(false);
     })();
   }, [user, stepNumber]);
+
+  async function persistFlag(flag: "audio_played" | "quiz_passed", value: boolean) {
+    if (!user) return;
+    await supabase
+      .from("jornada_respostas" as any)
+      .upsert(
+        { user_id: user.id, step_number: stepNumber, [flag]: value, updated_at: new Date().toISOString() },
+        { onConflict: "user_id,step_number" },
+      );
+  }
 
   // Refetch validation when route changes (e.g., returning from /app/perfil to /app/jornada/N)
   useEffect(() => {
@@ -272,7 +288,14 @@ export default function JourneyStep() {
     const { error } = await supabase
       .from("jornada_respostas" as any)
       .upsert(
-        { user_id: user.id, step_number: stepNumber, resposta: resposta.trim(), updated_at: new Date().toISOString() },
+        {
+          user_id: user.id,
+          step_number: stepNumber,
+          resposta: resposta.trim(),
+          audio_played: audioPlayed,
+          quiz_passed: quizPassed,
+          updated_at: new Date().toISOString(),
+        },
         { onConflict: "user_id,step_number" },
       );
     setSaving(false);
@@ -536,8 +559,18 @@ export default function JourneyStep() {
               controls
               preload="none"
               className="w-full"
-              onPlay={() => setAudioPlayed(true)}
-              onEnded={() => setAudioPlayed(true)}
+              onPlay={() => {
+                if (!audioPlayed) {
+                  setAudioPlayed(true);
+                  persistFlag("audio_played", true);
+                }
+              }}
+              onEnded={() => {
+                if (!audioPlayed) {
+                  setAudioPlayed(true);
+                  persistFlag("audio_played", true);
+                }
+              }}
             >
               <source src={STEP_AUDIO[stepNumber]} type="audio/mpeg" />
               Seu navegador não suporta áudio HTML5.
@@ -612,6 +645,7 @@ export default function JourneyStep() {
                   setQuizSubmitted(true);
                   if (correct >= 2) {
                     setQuizPassed(true);
+                    persistFlag("quiz_passed", true);
                     toast({ title: `✅ ${correct}/3 corretas! Muito bem!` });
                   } else {
                     toast({
