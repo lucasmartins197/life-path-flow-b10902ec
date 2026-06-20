@@ -186,7 +186,7 @@ const STEPS: Record<number, StepContent> = {
     question:
       "Se você pudesse mandar uma mensagem para alguém no início do vício, o que diria? Escreva essa mensagem agora.",
     activity:
-      "Publique sua história de conquista em Histórias que Conectam e compartilhe o app Stake Real com alguém que precisa. Você completa sua jornada ajudando outros a começar a deles.",
+      "Publique sua história de conquista em Histórias que Conectam e compartilhe o app Saindo do Jogo com alguém que precisa. Você completa sua jornada ajudando outros a começar a deles.",
     activityButton: "Publicar minha conquista",
     activityRoute: "/app/comunidade",
     youtubeId: "xyaUZHTUHkU",
