@@ -247,6 +247,25 @@ export default function JourneyStep() {
     })();
   }, [user, stepNumber]);
 
+  // Refetch validation when route changes (e.g., returning from /app/perfil to /app/jornada/N)
+  useEffect(() => {
+    if (user) revalidate();
+  }, [location.pathname, user]);
+
+  // Refetch validation when tab/window regains focus or becomes visible again
+  useEffect(() => {
+    if (!user) return;
+    const handler = () => {
+      if (document.visibilityState === "visible") revalidate();
+    };
+    window.addEventListener("focus", handler);
+    document.addEventListener("visibilitychange", handler);
+    return () => {
+      window.removeEventListener("focus", handler);
+      document.removeEventListener("visibilitychange", handler);
+    };
+  }, [user]);
+
   async function saveResposta() {
     if (!user || !resposta.trim()) return;
     setSaving(true);
