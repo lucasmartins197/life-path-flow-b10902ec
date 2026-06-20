@@ -70,12 +70,12 @@ export default function JourneysHome() {
   });
 
   const getStatus = (stepNum: number): "completed" | "available" | "locked" => {
-    if (isDone(stepNum)) return "completed";
+    if (isStepCompleted(stepNum)) return "completed";
     if (isUnlocked(stepNum)) return "available";
     return "locked";
   };
 
-  const completedCount = allSteps.filter((s) => isDone(s.step_number)).length;
+  const completedCount = allSteps.filter((s) => isStepCompleted(s.step_number)).length;
   const pct = Math.round((completedCount / 12) * 100);
   const loading = isLoading || validating;
 
