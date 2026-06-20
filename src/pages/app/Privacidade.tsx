@@ -22,7 +22,7 @@ export default function Privacidade() {
         <section>
           <h2 className="text-base font-semibold text-foreground mb-2">1. Quem somos</h2>
           <p>
-            O <strong className="text-foreground">Stake Real</strong> é operado pela{" "}
+            O <strong className="text-foreground">Saindo do Jogo</strong> é operado pela{" "}
             <strong className="text-foreground">Clínica Terapêutica Sobriety Ltda</strong> (CNPJ 46.115.913/0001-54).
             Levamos a sério a proteção dos seus dados pessoais e agimos em conformidade com a{" "}
             <strong className="text-foreground">Lei Geral de Proteção de Dados (LGPD)</strong>.
