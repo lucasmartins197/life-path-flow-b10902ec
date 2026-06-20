@@ -37,7 +37,7 @@ interface JourneyProgressRow {
 export default function JourneysHome() {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { isUnlocked, isDone, isLoading: validating, isAdmin, refetch } = useJourneyValidation();
+  const { isUnlocked, isStepCompleted, isLoading: validating, isAdmin, refetch } = useJourneyValidation();
   const [isLoading, setIsLoading] = useState(true);
   const [showIntro, setShowIntro] = useState(false);
 
