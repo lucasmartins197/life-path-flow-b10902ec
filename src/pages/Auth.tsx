@@ -353,11 +353,11 @@ export default function Auth() {
 
                   <p className="text-xs text-muted-foreground text-center">
                     Ao criar uma conta, você concorda com nossos{" "}
-                    <a href="#" className="text-primary hover:underline">
+                    <a href="/app/termos" target="_blank" className="text-primary hover:underline">
                       Termos de Uso
                     </a>{" "}
                     e{" "}
-                    <a href="#" className="text-primary hover:underline">
+                    <a href="/app/privacidade" target="_blank" className="text-primary hover:underline">
                       Política de Privacidade
                     </a>
                     .
