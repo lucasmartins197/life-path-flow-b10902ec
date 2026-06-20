@@ -39,9 +39,34 @@ export default function TermosUso() {
         <section>
           <h2 className="text-base font-semibold text-foreground mb-2">3. Serviços</h2>
           <p>
-            O app oferece ferramentas de autocuidado, acompanhamento terapêutico, conteúdo educativo
-            e suporte comunitário voltados à recuperação da dependência de jogos e apostas.
-            Não substituímos tratamento médico ou psiquiátrico presencial quando indicado.
+            O app Saindo do Jogo oferece ferramentas de autocuidado, acompanhamento terapêutico,
+            conteúdo educativo e suporte comunitário voltados à recuperação da dependência de jogos
+            e apostas. Não substituímos tratamento médico ou psiquiátrico presencial quando indicado.
+          </p>
+        </section>
+
+        <section>
+          <h2 className="text-base font-semibold text-foreground mb-2">
+            4. Uso de Inteligência Artificial
+          </h2>
+          <p>
+            O Saindo do Jogo utiliza recursos de <strong className="text-foreground">Inteligência
+            Artificial (IA)</strong> para gerar conteúdo personalizado, incluindo mensagens da
+            assistente Ana, sugestões de rotina, relatórios de evolução, planos financeiros,
+            recomendações de leitura e exercícios, e análises de risco baseadas nas suas interações.
+          </p>
+          <p className="mt-2">
+            Esses conteúdos são gerados automaticamente por modelos de linguagem e têm caráter
+            informativo e de apoio — <strong className="text-foreground">não substituem
+            orientação profissional</strong> de psicólogos, médicos, advogados ou contadores.
+            Em conformidade com a <strong className="text-foreground">LGPD (Lei nº 13.709/2018)</strong>,
+            você tem direito a solicitar revisão humana de decisões automatizadas que lhe afetem,
+            bem como informações sobre os critérios utilizados.
+          </p>
+          <p className="mt-2">
+            Dados sensíveis fornecidos durante o uso da IA são tratados com confidencialidade,
+            armazenados de forma segura e utilizados exclusivamente para melhorar sua experiência
+            terapêutica dentro do app.
           </p>
         </section>
 
