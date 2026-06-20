@@ -143,7 +143,7 @@ export default function AppHome() {
   }
 
   return (
-    <div className="min-h-screen bg-background safe-top pb-28">
+    <div className="min-h-screen bg-background safe-top pb-36">
 
       {/* ── Header ── */}
       <header className="px-5 pt-7 pb-1">
