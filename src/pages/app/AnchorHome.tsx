@@ -89,7 +89,7 @@ function maskPhone(phone: string) {
 
 export default function AnchorHome() {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const { contacts, primaryContact, addContact, updateContact } = useAnchorContacts();
 
   const [settings, setSettings] = useState<AnchorSettings>({
