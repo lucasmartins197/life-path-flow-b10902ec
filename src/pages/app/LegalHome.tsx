@@ -458,7 +458,9 @@ export default function LegalHome() {
             </button>
           </div>
           <div className="px-5 py-5 space-y-5">
-            <DebtSimulator />
+            <p className="text-sm text-foreground/80 leading-relaxed">
+              Fale com um especialista em ludopatia para entender seus direitos, avaliar valores perdidos em apostas e definir o melhor caminho para seu caso.
+            </p>
             <div className="card-premium p-4">
               <div className="flex items-start gap-3">
                 <div className="w-11 h-11 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
