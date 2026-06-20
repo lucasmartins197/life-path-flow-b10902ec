@@ -69,11 +69,23 @@ async function validateStep(stepNumber: number, userId: string): Promise<StepVal
       return { done: (count ?? 0) >= 1 };
     }
     case 4: {
-      const { count } = await supabase
-        .from("risk_signals")
-        .select("id", { count: "exact", head: true })
-        .eq("user_id", userId);
-      return { done: (count ?? 0) >= 1 };
+      const [{ count: sitesCount }, { data: guardian }] = await Promise.all([
+        supabase
+          .from("blocked_sites")
+          .select("id", { count: "exact", head: true })
+          .eq("user_id", userId),
+        supabase
+          .from("digital_guardian")
+          .select("id")
+          .eq("user_id", userId)
+          .maybeSingle(),
+      ]);
+      const hasSite = (sitesCount ?? 0) >= 1;
+      const hasGuardian = !!guardian;
+      return {
+        done: hasSite && hasGuardian,
+        detail: `${sitesCount ?? 0} plataforma(s)${hasGuardian ? " · guardião ativo" : " · sem guardião"}`,
+      };
     }
     case 5: {
       const { count } = await supabase

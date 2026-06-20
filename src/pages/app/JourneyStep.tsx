@@ -94,7 +94,7 @@ const STEPS: Record<number, StepContent> = {
     message: "Conhecer seus gatilhos é a arma mais poderosa contra a recaída.",
     question:
       "O que geralmente te levava a apostar? Tédio, ansiedade, dívidas, solidão? Identifique seus 3 principais gatilhos.",
-    activity: "Registre seus gatilhos no Meu Escudo. O app vai te alertar quando você estiver em situação de risco.",
+    activity: "Cadastre as plataformas de apostas que você usava no Meu Escudo e ative o contato guardião.",
     activityButton: "Configurar Meu Escudo",
     activityRoute: "/app/escudo",
     youtubeId: "Y3hINuMsmrA",
