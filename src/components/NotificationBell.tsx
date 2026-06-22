@@ -64,13 +64,14 @@ export function NotificationBell() {
 
   const fetchUnreadCount = useCallback(async () => {
     if (!user) return;
-    const { count, error } = await supabase
+    const { data, error } = await supabase
       .from("notifications")
-      .select("id", { count: "exact", head: true })
+      .select("type, actor_id")
       .eq("user_id", user.id)
       .eq("read", false);
-    console.log(`[NotificationBell] unread count for ${user.id}:`, count, "error:", error);
-    setUnread(count || 0);
+    const filtered = (data || []).filter((r: any) => !isSelfAction(r as NotificationRow));
+    console.log(`[NotificationBell] unread count for ${user.id}:`, filtered.length, "error:", error);
+    setUnread(filtered.length);
   }, [user]);
 
   const fetchList = useCallback(async () => {
