@@ -111,6 +111,20 @@ export function useMedals() {
           duration: 4000,
         });
         queryClient.invalidateQueries({ queryKey: ["user-badges", user.id] });
+
+        // If user reached 10 medals, trigger coupon reward
+        const { count } = await supabase
+          .from("user_badges")
+          .select("id", { count: "exact", head: true })
+          .eq("user_id", user.id);
+        if ((count ?? 0) >= 10) {
+          try {
+            await supabase.functions.invoke("check-medal-reward");
+          } catch (e) {
+            console.warn("check-medal-reward failed:", e);
+          }
+        }
+
         return true;
       }
       return false;

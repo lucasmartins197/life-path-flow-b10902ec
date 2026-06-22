@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { Bell, Check, MessageCircle, Heart, Video } from "lucide-react";
+import { Bell, Check, MessageCircle, Heart, Video, Trophy, Gift } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { toast } from "sonner";
@@ -17,7 +17,7 @@ interface NotificationRow {
   id: string;
   user_id: string;
   actor_id: string;
-  type: "reaction" | "comment" | "weekly_class";
+  type: "reaction" | "comment" | "weekly_class" | "coupon";
   post_id: string | null;
   reaction_type: string | null;
   read: boolean;
@@ -37,6 +37,9 @@ const REACTION_EMOJI: Record<string, string> = {
 };
 
 function describeNotification(n: NotificationItem): string {
+  if (n.type === "coupon") {
+    return "🏆 Você ganhou 50% de desconto na terapia! Verifique seu email.";
+  }
   if (n.type === "weekly_class") {
     return "Novo aulão semanal agendado! Toque para ver.";
   }
@@ -122,7 +125,9 @@ export function NotificationBell() {
           fetchUnreadCount();
           const row = payload.new as NotificationRow;
           let msg = "";
-          if (row.type === "weekly_class") {
+          if (row.type === "coupon") {
+            msg = "🏆 Você ganhou 50% de desconto na terapia!";
+          } else if (row.type === "weekly_class") {
             msg = "Novo aulão semanal agendado 📹";
           } else if (row.type === "reaction") {
             msg = `Nova reação na sua história ${REACTION_EMOJI[row.reaction_type || "heart"] || "❤️"}`;
@@ -162,7 +167,9 @@ export function NotificationBell() {
       setUnread((u) => Math.max(0, u - 1));
     }
     setOpen(false);
-    if (n.type === "weekly_class") {
+    if (n.type === "coupon") {
+      navigate("/app/terapia");
+    } else if (n.type === "weekly_class") {
       navigate("/app/aulao");
     } else if (n.post_id) {
       navigate(`/app/comunidade?post=${n.post_id}`);
@@ -231,7 +238,11 @@ export function NotificationBell() {
                       }`}
                     >
                       <div className="relative shrink-0">
-                        {n.type === "weekly_class" ? (
+                        {n.type === "coupon" ? (
+                          <div className="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center">
+                            <Gift className="h-5 w-5 text-amber-600" />
+                          </div>
+                        ) : n.type === "weekly_class" ? (
                           <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
                             <Video className="h-5 w-5 text-primary" />
                           </div>
@@ -251,6 +262,8 @@ export function NotificationBell() {
                             <Heart className="h-3 w-3 text-destructive" />
                           ) : n.type === "weekly_class" ? (
                             <Video className="h-3 w-3 text-primary" />
+                          ) : n.type === "coupon" ? (
+                            <Trophy className="h-3 w-3 text-amber-600" />
                           ) : (
                             <MessageCircle className="h-3 w-3 text-primary" />
                           )}
@@ -258,7 +271,7 @@ export function NotificationBell() {
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="text-sm text-foreground leading-snug">
-                          {n.type === "weekly_class" ? (
+                          {n.type === "weekly_class" || n.type === "coupon" ? (
                             <span className="text-foreground/80">{describeNotification(n)}</span>
                           ) : (
                             <>
