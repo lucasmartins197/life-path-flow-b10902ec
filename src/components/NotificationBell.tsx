@@ -84,8 +84,14 @@ export function NotificationBell() {
       .order("created_at", { ascending: false })
       .limit(30);
 
-    const rows = (data as NotificationRow[]) || [];
-    const actorIds = [...new Set(rows.map((r) => r.actor_id))];
+    const rows = ((data as NotificationRow[]) || []).filter((r) => !isSelfAction(r));
+    const actorIds = [
+      ...new Set(
+        rows
+          .filter((r) => r.type !== "coupon")
+          .map((r) => r.actor_id)
+      ),
+    ];
     let profilesMap = new Map<string, { full_name: string | null; avatar_url: string | null }>();
     if (actorIds.length > 0) {
       const { data: profs } = await supabase
@@ -97,7 +103,7 @@ export function NotificationBell() {
       );
     }
     const enriched: NotificationItem[] = rows.map((r) => {
-      const p = profilesMap.get(r.actor_id);
+      const p = r.type === "coupon" ? undefined : profilesMap.get(r.actor_id);
       return {
         ...r,
         actor_name: p?.full_name || "Alguém",
