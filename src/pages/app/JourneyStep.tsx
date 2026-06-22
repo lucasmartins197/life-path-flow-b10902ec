@@ -389,9 +389,8 @@ export default function JourneyStep() {
       .update({ current_step: stepNumber + 1 })
       .eq("user_id", user.id);
 
-    // Award both the validation medal and the legacy journey medal
+    // Award the step validation medal
     await awardMedal(STEP_VALIDATION_MEDAL[stepNumber].id);
-    await awardMedal(`journey-${stepNumber}`);
 
     setIsCompleted(true);
 
