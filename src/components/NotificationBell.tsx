@@ -38,7 +38,7 @@ const REACTION_EMOJI: Record<string, string> = {
 
 function describeNotification(n: NotificationItem): string {
   if (n.type === "coupon") {
-    return "🏆 Você ganhou 50% de desconto na terapia! Verifique seu email.";
+    return "🏆 Você ganhou 50% de desconto na terapia! Verifique seu email para o cupom.";
   }
   if (n.type === "weekly_class") {
     return "Novo aulão semanal agendado! Toque para ver.";
@@ -48,6 +48,10 @@ function describeNotification(n: NotificationItem): string {
     return `reagiu com ${emoji} à sua história`;
   }
   return "comentou na sua publicação";
+}
+
+function isSelfAction(n: NotificationRow): boolean {
+  return n.actor_id === n.user_id && (n.type === "reaction" || n.type === "comment");
 }
 
 export function NotificationBell() {
