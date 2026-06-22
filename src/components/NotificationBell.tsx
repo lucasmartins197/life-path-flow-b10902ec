@@ -231,7 +231,7 @@ export function NotificationBell() {
           <div className="flex-1 overflow-y-auto">
             {loading ? (
               <div className="p-8 text-center text-sm text-muted-foreground">Carregando...</div>
-            ) : filteredItems.length === 0 ? (
+            ) : items.length === 0 ? (
               <div className="p-8 text-center">
                 <Bell className="h-10 w-10 mx-auto text-muted-foreground/30 mb-3" />
                 <p className="text-sm text-muted-foreground">Nenhuma notificação</p>
