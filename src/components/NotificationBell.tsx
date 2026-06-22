@@ -38,7 +38,7 @@ const REACTION_EMOJI: Record<string, string> = {
 
 function describeNotification(n: NotificationItem): string {
   if (n.type === "coupon") {
-    return "🏆 Você ganhou 50% de desconto na terapia! Verifique seu email.";
+    return "🏆 Você ganhou 50% de desconto na terapia! Verifique seu email para o cupom.";
   }
   if (n.type === "weekly_class") {
     return "Novo aulão semanal agendado! Toque para ver.";
@@ -48,6 +48,10 @@ function describeNotification(n: NotificationItem): string {
     return `reagiu com ${emoji} à sua história`;
   }
   return "comentou na sua publicação";
+}
+
+function isSelfAction(n: NotificationRow): boolean {
+  return n.actor_id === n.user_id && (n.type === "reaction" || n.type === "comment");
 }
 
 export function NotificationBell() {
@@ -60,13 +64,14 @@ export function NotificationBell() {
 
   const fetchUnreadCount = useCallback(async () => {
     if (!user) return;
-    const { count, error } = await supabase
+    const { data, error } = await supabase
       .from("notifications")
-      .select("id", { count: "exact", head: true })
+      .select("type, actor_id")
       .eq("user_id", user.id)
       .eq("read", false);
-    console.log(`[NotificationBell] unread count for ${user.id}:`, count, "error:", error);
-    setUnread(count || 0);
+    const filtered = (data || []).filter((r: any) => !isSelfAction(r as NotificationRow));
+    console.log(`[NotificationBell] unread count for ${user.id}:`, filtered.length, "error:", error);
+    setUnread(filtered.length);
   }, [user]);
 
   const fetchList = useCallback(async () => {
@@ -79,8 +84,14 @@ export function NotificationBell() {
       .order("created_at", { ascending: false })
       .limit(30);
 
-    const rows = (data as NotificationRow[]) || [];
-    const actorIds = [...new Set(rows.map((r) => r.actor_id))];
+    const rows = ((data as NotificationRow[]) || []).filter((r) => !isSelfAction(r));
+    const actorIds = [
+      ...new Set(
+        rows
+          .filter((r) => r.type !== "coupon")
+          .map((r) => r.actor_id)
+      ),
+    ];
     let profilesMap = new Map<string, { full_name: string | null; avatar_url: string | null }>();
     if (actorIds.length > 0) {
       const { data: profs } = await supabase
@@ -92,7 +103,7 @@ export function NotificationBell() {
       );
     }
     const enriched: NotificationItem[] = rows.map((r) => {
-      const p = profilesMap.get(r.actor_id);
+      const p = r.type === "coupon" ? undefined : profilesMap.get(r.actor_id);
       return {
         ...r,
         actor_name: p?.full_name || "Alguém",
@@ -124,9 +135,10 @@ export function NotificationBell() {
         (payload) => {
           fetchUnreadCount();
           const row = payload.new as NotificationRow;
+          if (isSelfAction(row)) return;
           let msg = "";
           if (row.type === "coupon") {
-            msg = "🏆 Você ganhou 50% de desconto na terapia!";
+            msg = "🏆 Você ganhou 50% de desconto na terapia! Verifique seu email para o cupom.";
           } else if (row.type === "weekly_class") {
             msg = "Novo aulão semanal agendado 📹";
           } else if (row.type === "reaction") {
@@ -222,10 +234,7 @@ export function NotificationBell() {
             ) : items.length === 0 ? (
               <div className="p-8 text-center">
                 <Bell className="h-10 w-10 mx-auto text-muted-foreground/30 mb-3" />
-                <p className="text-sm text-muted-foreground">Nenhuma notificação ainda</p>
-                <p className="text-xs text-muted-foreground/70 mt-1">
-                  Quando houver um novo aulão, alguém reagir ou comentar nas suas histórias, você verá aqui.
-                </p>
+                <p className="text-sm text-muted-foreground">Nenhuma notificação</p>
               </div>
             ) : (
               <ul className="divide-y divide-border/40">
