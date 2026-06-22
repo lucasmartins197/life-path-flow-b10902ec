@@ -135,9 +135,10 @@ export function NotificationBell() {
         (payload) => {
           fetchUnreadCount();
           const row = payload.new as NotificationRow;
+          if (isSelfAction(row)) return;
           let msg = "";
           if (row.type === "coupon") {
-            msg = "🏆 Você ganhou 50% de desconto na terapia!";
+            msg = "🏆 Você ganhou 50% de desconto na terapia! Verifique seu email para o cupom.";
           } else if (row.type === "weekly_class") {
             msg = "Novo aulão semanal agendado 📹";
           } else if (row.type === "reaction") {
