@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import {
   House, Users, Calendar, Grid2x2,
-  Shield, BookOpen, Video, Award, Wallet, Scale,
+  Shield, BookOpen, Video, Award, Wallet, Scale, Lock,
   Anchor, User as UserIcon, CreditCard, TrendingUp, Footprints, HeartHandshake,
   LucideIcon,
 } from "lucide-react";
@@ -33,6 +33,7 @@ const moreItems: MoreItem[] = [
   { label: "Medalhas",        icon: Award,         path: "/app/medalhas",        gradient: "linear-gradient(135deg, #8B6F1F, #C9A84C)" },
   { label: "Minhas Finanças", icon: Wallet,        path: "/app/financas",        gradient: "linear-gradient(135deg, #14532D, #166534)" },
   { label: "Apoio Jurídico",  icon: Scale,         path: "/app/juridico",        gradient: "linear-gradient(135deg, #2C2A4A, #4F518C)" },
+  { label: "Bloqueio de Apostas", icon: Lock,      path: "/app/bloqueio",        gradient: "linear-gradient(135deg, #7C2D12, #C2410C)" },
   { label: "Contato Âncora",  icon: Anchor,        path: "/app/ancora",          gradient: "linear-gradient(135deg, #0C2340, #1A4A6E)" },
   { label: "Evolução",        icon: TrendingUp,    path: "/app/evolucao",        gradient: "linear-gradient(135deg, #1B4332, #40916C)" },
   { label: "Assinatura",      icon: CreditCard,    path: "/app/assinatura",      gradient: "linear-gradient(135deg, #5C2018, #9B4423)" },

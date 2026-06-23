@@ -218,17 +218,6 @@ const cards: NavCard[] = [
     path: "/app/juridico",
     Illustration: LegalSVG,
   },
-  {
-    title: "Bloqueio de Apostas",
-    subtitle: "Proteja seu acesso",
-    gradient: "linear-gradient(135deg, #7C2D12, #C2410C)",
-    path: "/app/bloqueio",
-    Illustration: () => (
-      <div className="absolute inset-0 flex items-center justify-center opacity-40">
-        <Shield className="w-20 h-20 text-white" strokeWidth={1.5} />
-      </div>
-    ),
-  },
 
 ];
 
