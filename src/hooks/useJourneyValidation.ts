@@ -89,11 +89,17 @@ async function validateStep(stepNumber: number, userId: string): Promise<StepVal
       return { done: (count ?? 0) >= 1 };
     }
     case 5: {
-      const { count } = await supabase
+      const { count: postsCount } = await supabase
         .from("community_posts")
         .select("id", { count: "exact", head: true })
         .eq("user_id", userId);
-      return { done: (count ?? 0) >= 2, detail: `${count ?? 0} de 2` };
+      const { count: streakCount } = await supabase
+        .from("gambling_streak")
+        .select("id", { count: "exact", head: true })
+        .eq("user_id", userId)
+        .eq("stayed_clean", true);
+      const done = (postsCount ?? 0) >= 2 && (streakCount ?? 0) >= 2;
+      return { done, detail: `${postsCount ?? 0} de 2 histórias · ${streakCount ?? 0} dias sem apostar` };
     }
     case 6: {
       const { count } = await supabase
