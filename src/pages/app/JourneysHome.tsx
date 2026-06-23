@@ -264,12 +264,14 @@ export default function JourneysHome() {
                   </div>
 
                   {/* Action */}
-                  {isAvailable && (
+                  {(isAvailable || isInProgress) && (
                     <div
                       className="shrink-0 px-3 py-1.5 rounded-xl flex items-center gap-1.5"
-                      style={{ background: "#1B4332" }}
+                      style={{ background: isInProgress ? "#F59E0B" : "#1B4332" }}
                     >
-                      <span className="text-white text-xs font-semibold">Iniciar</span>
+                      <span className="text-white text-xs font-semibold">
+                        {isInProgress ? "Continuar" : "Iniciar"}
+                      </span>
                       <Play className="h-3.5 w-3.5 text-white" />
                     </div>
                   )}
