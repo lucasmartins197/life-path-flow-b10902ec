@@ -1,5 +1,4 @@
 import { useNavigate } from "react-router-dom";
-import { Shield } from "lucide-react";
 
 /* ── SVG Illustrations ── */
 
