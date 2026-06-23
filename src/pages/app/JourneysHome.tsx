@@ -53,6 +53,15 @@ export default function JourneysHome() {
       setShowIntro(true);
       localStorage.setItem(key, today);
     }
+
+    // Steps started but not completed
+    supabase
+      .from("jornada_respostas")
+      .select("step_number")
+      .eq("user_id", user.id)
+      .then(({ data }) => {
+        setStartedSteps(new Set((data || []).map((r) => r.step_number)));
+      });
   }, [user, refetch]);
 
   const closeIntro = () => {
