@@ -48,13 +48,13 @@ async function validateStep(stepNumber: number, userId: string): Promise<StepVal
     case 1: {
       const { data } = await supabase
         .from("profiles")
-        .select("avatar_url, bio, full_name, city, birth_date, gambling_duration")
+        .select("avatar_url, bio, full_name, city, date_of_birth, gambling_duration")
         .eq("id", userId)
         .maybeSingle();
       const done =
         !!(data?.full_name?.trim()) &&
         !!(data?.city?.trim()) &&
-        !!(data?.birth_date) &&
+        !!(data?.date_of_birth) &&
         !!(data?.gambling_duration?.trim());
       return { done };
     }
