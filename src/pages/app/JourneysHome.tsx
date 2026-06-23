@@ -57,10 +57,10 @@ export default function JourneysHome() {
     // Steps started but not completed
     supabase
       .from("jornada_respostas")
-      .select("step_number")
+      .select("passo_numero")
       .eq("user_id", user.id)
       .then(({ data }) => {
-        setStartedSteps(new Set((data || []).map((r) => r.step_number)));
+        setStartedSteps(new Set((data || []).map((r) => r.passo_numero)));
       });
   }, [user, refetch]);
 
