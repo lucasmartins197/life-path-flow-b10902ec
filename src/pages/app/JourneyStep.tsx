@@ -887,6 +887,16 @@ export default function JourneyStep() {
               <RefreshCw className="h-4 w-4" />
             </Button>
           </div>
+          {!isCompleted && !stepTaskDone && (
+            <p className="mt-3 text-xs font-medium" style={{ color: "#92400E" }}>
+              {getProgressMessage(stepNumber, stepTaskDone, validations[stepNumber]?.detail)}
+            </p>
+          )}
+          {!isCompleted && stepTaskDone && (
+            <p className="mt-3 text-xs font-medium text-green-600">
+              {getProgressMessage(stepNumber, stepTaskDone, validations[stepNumber]?.detail)}
+            </p>
+          )}
         </div>
 
         {/* 5. VÍDEO YOUTUBE */}
