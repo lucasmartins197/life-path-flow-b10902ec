@@ -69,8 +69,11 @@ export default function JourneysHome() {
     return { step_number: num, name: meta.name, subtitle: meta.subtitle, medal: meta.medal };
   });
 
-  const getStatus = (stepNum: number): "completed" | "available" | "locked" => {
+  const [startedSteps, setStartedSteps] = useState<Set<number>>(new Set());
+
+  const getStatus = (stepNum: number): "completed" | "in_progress" | "available" | "locked" => {
     if (isStepCompleted(stepNum)) return "completed";
+    if (startedSteps.has(stepNum)) return "in_progress";
     if (isUnlocked(stepNum)) return "available";
     return "locked";
   };
