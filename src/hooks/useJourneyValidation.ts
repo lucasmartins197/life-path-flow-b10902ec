@@ -127,17 +127,14 @@ async function validateStep(stepNumber: number, userId: string): Promise<StepVal
       return { done: (count ?? 0) >= 1 };
     }
     case 8: {
-      // Two valid sources: finance_events with event_type='debt' OR debts array in financial_profile
-      const [{ count: dbtCount }, { data: profile }] = await Promise.all([
-        supabase
-          .from("finance_events")
-          .select("id", { count: "exact", head: true })
-          .eq("user_id", userId)
-          .eq("event_type", "debt"),
-        supabase.from("financial_profile").select("debts").eq("user_id", userId).maybeSingle(),
-      ]);
-      const debtsArr = Array.isArray(profile?.debts) ? profile!.debts : [];
-      return { done: (dbtCount ?? 0) >= 1 || debtsArr.length >= 1 };
+      const { data: profile } = await supabase
+        .from("financial_profile")
+        .select("debts, goal")
+        .eq("user_id", userId)
+        .maybeSingle();
+      const debts = Array.isArray(profile?.debts) ? profile!.debts : [];
+      const done = debts.length >= 2 && !!(profile?.goal?.trim());
+      return { done, detail: `${debts.length} dívida(s) · meta ${profile?.goal ? "definida" : "pendente"}` };
     }
     case 9: {
       // 3 consecutive days including today with stayed_clean=true
