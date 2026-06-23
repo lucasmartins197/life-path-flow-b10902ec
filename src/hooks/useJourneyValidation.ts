@@ -23,16 +23,16 @@ export const STEP_VALIDATION_MEDAL: Record<number, { id: string; name: string }>
 
 /** Human label for the task each step requires. */
 export const STEP_TASK_LABEL: Record<number, string> = {
-  1: "Preencher nome completo e cidade no perfil",
-  2: "Publicar 1 história em Histórias que Conectam",
+  1: "Preencher perfil completo (nome, cidade, data de nascimento e tempo com o vício)",
+  2: "Publicar 1 história E curtir pelo menos 2 histórias de outros membros",
   3: "Cadastrar pelo menos 1 Contato Âncora",
-  4: "Registrar pelo menos 1 gatilho no Meu Escudo",
-  5: "Publicar a 2ª história em Histórias que Conectam",
-  6: "Criar pelo menos 1 rotina no app",
+  4: "Registrar pelo menos 1 gatilho ativo no Meu Escudo",
+  5: "Publicar 2ª história E registrar 2 dias sem apostar",
+  6: "Configurar rotina E completar atividades por 2 dias",
   7: "Agendar 1 sessão de terapia",
-  8: "Registrar pelo menos 1 dívida em Finanças",
+  8: "Registrar pelo menos 2 dívidas E definir uma meta financeira",
   9: "Fazer check-in diário por 3 dias consecutivos",
-  10: "Ativar alertas no Meu Escudo (Contato Âncora)",
+  10: "Ativar alertas no âncora E completar 5 dias de rotina",
   11: "Enviar 1 solicitação em Apoio Jurídico",
   12: "Publicar a 3ª história — compartilhar sua conquista",
 };
@@ -48,18 +48,30 @@ async function validateStep(stepNumber: number, userId: string): Promise<StepVal
     case 1: {
       const { data } = await supabase
         .from("profiles")
-        .select("avatar_url, bio, full_name, city")
+        .select("avatar_url, bio, full_name, city, date_of_birth, gambling_duration")
         .eq("id", userId)
         .maybeSingle();
-      const done = !!(data?.full_name && data.full_name.trim() !== "") && !!(data?.city && data.city.trim() !== "");
+      const done =
+        !!(data?.full_name?.trim()) &&
+        !!(data?.city?.trim()) &&
+        !!(data?.date_of_birth) &&
+        !!(data?.gambling_duration?.trim());
       return { done };
     }
     case 2: {
-      const { count } = await supabase
+      const { count: postsCount } = await supabase
         .from("community_posts")
         .select("id", { count: "exact", head: true })
         .eq("user_id", userId);
-      return { done: (count ?? 0) >= 1, detail: `${count ?? 0} publicação(ões)` };
+
+      const { data: likes } = await supabase
+        .from("post_likes")
+        .select("post_id, community_posts!inner(user_id)")
+        .eq("user_id", userId)
+        .neq("community_posts.user_id", userId);
+
+      const done = (postsCount ?? 0) >= 1 && (likes?.length ?? 0) >= 2;
+      return { done, detail: `${postsCount ?? 0} publicação(ões) · ${likes?.length ?? 0} curtidas em outros` };
     }
     case 3: {
       const { count } = await supabase
@@ -77,19 +89,32 @@ async function validateStep(stepNumber: number, userId: string): Promise<StepVal
       return { done: (count ?? 0) >= 1 };
     }
     case 5: {
-      const { count } = await supabase
+      const { count: postsCount } = await supabase
         .from("community_posts")
         .select("id", { count: "exact", head: true })
         .eq("user_id", userId);
-      return { done: (count ?? 0) >= 2, detail: `${count ?? 0} de 2` };
+      const { count: streakCount } = await supabase
+        .from("gambling_streak")
+        .select("id", { count: "exact", head: true })
+        .eq("user_id", userId)
+        .eq("stayed_clean", true);
+      const done = (postsCount ?? 0) >= 2 && (streakCount ?? 0) >= 2;
+      return { done, detail: `${postsCount ?? 0} de 2 histórias · ${streakCount ?? 0} dias sem apostar` };
     }
     case 6: {
-      const { count } = await supabase
+      const { count: prefCount } = await supabase
         .from("routine_preferences")
         .select("id", { count: "exact", head: true })
         .eq("user_id", userId)
         .eq("configurado", true);
-      return { done: (count ?? 0) >= 1 };
+      const { data: taskDays } = await supabase
+        .from("daily_tasks")
+        .select("data")
+        .eq("user_id", userId)
+        .eq("concluido", true);
+      const uniqueDays = new Set(taskDays?.map((t: any) => t.data) || []);
+      const done = (prefCount ?? 0) >= 1 && uniqueDays.size >= 2;
+      return { done, detail: `${prefCount ?? 0} rotina(s) · ${uniqueDays.size} dias de atividades` };
     }
     case 7: {
       // Only counts if there's a confirmed payment for therapy
@@ -102,17 +127,14 @@ async function validateStep(stepNumber: number, userId: string): Promise<StepVal
       return { done: (count ?? 0) >= 1 };
     }
     case 8: {
-      // Two valid sources: finance_events with event_type='debt' OR debts array in financial_profile
-      const [{ count: dbtCount }, { data: profile }] = await Promise.all([
-        supabase
-          .from("finance_events")
-          .select("id", { count: "exact", head: true })
-          .eq("user_id", userId)
-          .eq("event_type", "debt"),
-        supabase.from("financial_profile").select("debts").eq("user_id", userId).maybeSingle(),
-      ]);
-      const debtsArr = Array.isArray(profile?.debts) ? profile!.debts : [];
-      return { done: (dbtCount ?? 0) >= 1 || debtsArr.length >= 1 };
+      const { data: profile } = await supabase
+        .from("financial_profile")
+        .select("debts, goal")
+        .eq("user_id", userId)
+        .maybeSingle();
+      const debts = Array.isArray(profile?.debts) ? profile!.debts : [];
+      const done = debts.length >= 2 && !!(profile?.goal?.trim());
+      return { done, detail: `${debts.length} dívida(s) · meta ${profile?.goal ? "definida" : "pendente"}` };
     }
     case 9: {
       // 3 consecutive days including today with stayed_clean=true
@@ -133,13 +155,19 @@ async function validateStep(stepNumber: number, userId: string): Promise<StepVal
       return { done, detail: `${dates.size} check-in(s) recentes` };
     }
     case 10: {
-      // "alerts active" = at least one anchor_contact with receive_alerts=true
-      const { count } = await supabase
+      const { count: alertCount } = await supabase
         .from("anchor_contacts")
         .select("id", { count: "exact", head: true })
         .eq("user_id", userId)
         .eq("receive_alerts", true);
-      return { done: (count ?? 0) >= 1 };
+      const { data: taskDays } = await supabase
+        .from("daily_tasks")
+        .select("data")
+        .eq("user_id", userId)
+        .eq("concluido", true);
+      const uniqueDays = new Set(taskDays?.map((t: any) => t.data) || []);
+      const done = (alertCount ?? 0) >= 1 && uniqueDays.size >= 5;
+      return { done, detail: `${alertCount ?? 0} âncora(s) · ${uniqueDays.size} dias de rotina` };
     }
     case 11: {
       // Only counts if there's a confirmed payment for legal
