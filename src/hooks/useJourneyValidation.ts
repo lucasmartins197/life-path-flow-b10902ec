@@ -102,12 +102,19 @@ async function validateStep(stepNumber: number, userId: string): Promise<StepVal
       return { done, detail: `${postsCount ?? 0} de 2 histórias · ${streakCount ?? 0} dias sem apostar` };
     }
     case 6: {
-      const { count } = await supabase
+      const { count: prefCount } = await supabase
         .from("routine_preferences")
         .select("id", { count: "exact", head: true })
         .eq("user_id", userId)
         .eq("configurado", true);
-      return { done: (count ?? 0) >= 1 };
+      const { data: taskDays } = await supabase
+        .from("daily_tasks")
+        .select("data")
+        .eq("user_id", userId)
+        .eq("concluido", true);
+      const uniqueDays = new Set(taskDays?.map((t: any) => t.data) || []);
+      const done = (prefCount ?? 0) >= 1 && uniqueDays.size >= 2;
+      return { done, detail: `${prefCount ?? 0} rotina(s) · ${uniqueDays.size} dias de atividades` };
     }
     case 7: {
       // Only counts if there's a confirmed payment for therapy
