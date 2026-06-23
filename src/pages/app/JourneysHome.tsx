@@ -161,6 +161,12 @@ export default function JourneysHome() {
                         background: "linear-gradient(135deg, #1B4332, #2D6A4F)",
                         boxShadow: "0 4px 16px rgba(27,67,50,0.3)",
                       }
+                    : isInProgress
+                    ? {
+                        background: "#FFFBEB",
+                        border: "2px solid #F59E0B",
+                        boxShadow: "0 4px 16px rgba(245,158,11,0.12)",
+                      }
                     : isAvailable
                     ? {
                         background: "#fff",
