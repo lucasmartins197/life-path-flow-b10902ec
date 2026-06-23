@@ -143,6 +143,7 @@ export default function JourneysHome() {
             const isDone = status === "completed";
             const isLocked = status === "locked";
             const isAvailable = status === "available";
+            const isInProgress = status === "in_progress";
 
             return (
               <button
