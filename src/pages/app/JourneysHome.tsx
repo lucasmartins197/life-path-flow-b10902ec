@@ -53,6 +53,15 @@ export default function JourneysHome() {
       setShowIntro(true);
       localStorage.setItem(key, today);
     }
+
+    // Steps started but not completed
+    supabase
+      .from("jornada_respostas")
+      .select("passo_numero")
+      .eq("user_id", user.id)
+      .then(({ data }) => {
+        setStartedSteps(new Set((data || []).map((r) => r.passo_numero)));
+      });
   }, [user, refetch]);
 
   const closeIntro = () => {
@@ -69,8 +78,11 @@ export default function JourneysHome() {
     return { step_number: num, name: meta.name, subtitle: meta.subtitle, medal: meta.medal };
   });
 
-  const getStatus = (stepNum: number): "completed" | "available" | "locked" => {
+  const [startedSteps, setStartedSteps] = useState<Set<number>>(new Set());
+
+  const getStatus = (stepNum: number): "completed" | "in_progress" | "available" | "locked" => {
     if (isStepCompleted(stepNum)) return "completed";
+    if (startedSteps.has(stepNum)) return "in_progress";
     if (isUnlocked(stepNum)) return "available";
     return "locked";
   };
@@ -131,6 +143,7 @@ export default function JourneysHome() {
             const isDone = status === "completed";
             const isLocked = status === "locked";
             const isAvailable = status === "available";
+            const isInProgress = status === "in_progress";
 
             return (
               <button
@@ -147,6 +160,12 @@ export default function JourneysHome() {
                     ? {
                         background: "linear-gradient(135deg, #1B4332, #2D6A4F)",
                         boxShadow: "0 4px 16px rgba(27,67,50,0.3)",
+                      }
+                    : isInProgress
+                    ? {
+                        background: "#FFFBEB",
+                        border: "2px solid #F59E0B",
+                        boxShadow: "0 4px 16px rgba(245,158,11,0.12)",
                       }
                     : isAvailable
                     ? {
@@ -167,6 +186,8 @@ export default function JourneysHome() {
                     style={{
                       background: isDone
                         ? "linear-gradient(135deg, #C9A84C, #E8D590)"
+                        : isInProgress
+                        ? "#FEF3C7"
                         : isAvailable
                         ? "#E8F5E9"
                         : "#E5E7EB",
@@ -177,7 +198,7 @@ export default function JourneysHome() {
                     ) : isLocked ? (
                       <Lock className="h-5 w-5 text-gray-400" />
                     ) : (
-                      <span className="text-sm font-bold" style={{ color: "#1B4332" }}>
+                      <span className="text-sm font-bold" style={{ color: isInProgress ? "#92400E" : "#1B4332" }}>
                         {step.step_number}
                       </span>
                     )}
@@ -195,6 +216,14 @@ export default function JourneysHome() {
                       {isDone && (
                         <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-white/20 text-white uppercase tracking-wide flex items-center gap-1">
                           <CheckCircle2 className="h-3 w-3" /> Concluído
+                        </span>
+                      )}
+                      {isInProgress && (
+                        <span
+                          className="text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wide flex items-center gap-1"
+                          style={{ background: "#FEF3C7", color: "#92400E" }}
+                        >
+                          <Play className="h-3 w-3" /> Em andamento
                         </span>
                       )}
                       {isAvailable && (
@@ -235,12 +264,14 @@ export default function JourneysHome() {
                   </div>
 
                   {/* Action */}
-                  {isAvailable && (
+                  {(isAvailable || isInProgress) && (
                     <div
                       className="shrink-0 px-3 py-1.5 rounded-xl flex items-center gap-1.5"
-                      style={{ background: "#1B4332" }}
+                      style={{ background: isInProgress ? "#F59E0B" : "#1B4332" }}
                     >
-                      <span className="text-white text-xs font-semibold">Iniciar</span>
+                      <span className="text-white text-xs font-semibold">
+                        {isInProgress ? "Continuar" : "Iniciar"}
+                      </span>
                       <Play className="h-3.5 w-3.5 text-white" />
                     </div>
                   )}

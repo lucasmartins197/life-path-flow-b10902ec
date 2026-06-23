@@ -194,6 +194,34 @@ const STEPS: Record<number, StepContent> = {
   },
 };
 
+/** Builds a friendly progress message below the verify button. */
+function getProgressMessage(stepNumber: number, done: boolean, detail?: string): string {
+  if (done) return "✅ Tarefa concluída — você pode concluir o passo.";
+
+  if (stepNumber === 2) {
+    const postsMatch = detail?.match(/^(\d+) publicação/);
+    const likesMatch = detail?.match(/(\d+) curtidas/);
+    const posts = postsMatch ? parseInt(postsMatch[1], 10) : 0;
+    const likes = likesMatch ? parseInt(likesMatch[1], 10) : 0;
+    if (posts === 0) return "⏳ Publique sua primeira história";
+    if (likes >= 2) return "✅ História publicada · ✅ 2 curtidas — pronto!";
+    return `✅ História publicada · ⏳ Curtiu ${likes} de 2 histórias`;
+  }
+
+  if (stepNumber === 6) {
+    const prefMatch = detail?.match(/^(\d+) rotina/);
+    const daysMatch = detail?.match(/(\d+) dias/);
+    const prefs = prefMatch ? parseInt(prefMatch[1], 10) : 0;
+    const days = daysMatch ? parseInt(daysMatch[1], 10) : 0;
+    if (prefs === 0) return "⏳ Configure sua rotina";
+    if (days >= 2) return "✅ Rotina configurada · ✅ 2 dias de atividades — pronto!";
+    return `✅ Rotina configurada · ⏳ ${days} de 2 dias de atividades`;
+  }
+
+  if (detail) return `⏳ ${detail}`;
+  return `⏳ ${STEP_TASK_LABEL[stepNumber]}`;
+}
+
 export default function JourneyStep() {
   const { stepNumber: stepParam } = useParams();
   const stepNumber = parseInt(stepParam || "1");
@@ -859,6 +887,16 @@ export default function JourneyStep() {
               <RefreshCw className="h-4 w-4" />
             </Button>
           </div>
+          {!isCompleted && !stepTaskDone && (
+            <p className="mt-3 text-xs font-medium" style={{ color: "#92400E" }}>
+              {getProgressMessage(stepNumber, stepTaskDone, validations[stepNumber]?.detail)}
+            </p>
+          )}
+          {!isCompleted && stepTaskDone && (
+            <p className="mt-3 text-xs font-medium text-green-600">
+              {getProgressMessage(stepNumber, stepTaskDone, validations[stepNumber]?.detail)}
+            </p>
+          )}
         </div>
 
         {/* 5. VÍDEO YOUTUBE */}

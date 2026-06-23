@@ -868,14 +868,15 @@ export default function ProfileHome() {
             icon={Star}
             label="Avalie o app"
             onClick={() => {
-              const isiOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-              window.open(
-                isiOS
-                  ? "https://apps.apple.com/app/apostando-na-vida"
-                  : "https://play.google.com/store/apps/details?id=br.com.apostandonavida",
-                "_blank",
-                "noopener",
-              );
+              const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+              if (isIOS) {
+                window.open("https://apps.apple.com/app/id6776461153", "_blank");
+              } else {
+                window.open(
+                  "https://play.google.com/store/apps/details?id=com.apostandonavida.stakereal",
+                  "_blank",
+                );
+              }
             }}
             last
           />
