@@ -186,6 +186,8 @@ export default function JourneysHome() {
                     style={{
                       background: isDone
                         ? "linear-gradient(135deg, #C9A84C, #E8D590)"
+                        : isInProgress
+                        ? "#FEF3C7"
                         : isAvailable
                         ? "#E8F5E9"
                         : "#E5E7EB",
@@ -196,7 +198,7 @@ export default function JourneysHome() {
                     ) : isLocked ? (
                       <Lock className="h-5 w-5 text-gray-400" />
                     ) : (
-                      <span className="text-sm font-bold" style={{ color: "#1B4332" }}>
+                      <span className="text-sm font-bold" style={{ color: isInProgress ? "#92400E" : "#1B4332" }}>
                         {step.step_number}
                       </span>
                     )}
