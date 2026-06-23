@@ -27,11 +27,11 @@ export const STEP_TASK_LABEL: Record<number, string> = {
   2: "Publicar 1 história E curtir pelo menos 2 histórias de outros membros",
   3: "Cadastrar pelo menos 1 Contato Âncora",
   4: "Registrar pelo menos 1 gatilho ativo no Meu Escudo",
-  5: "Publicar 2ª história E registrar 2 dias sem apostar",
+  5: "Publicar 2ª história E fazer reflexão noturna por 2 dias",
   6: "Configurar rotina E completar atividades por 2 dias",
   7: "Agendar 1 sessão de terapia",
   8: "Registrar pelo menos 2 dívidas E definir uma meta financeira",
-  9: "Fazer check-in diário por 3 dias consecutivos",
+  9: "Fazer reflexão noturna por 3 dias consecutivos",
   10: "Ativar alertas no âncora E completar 5 dias de rotina",
   11: "Enviar 1 solicitação em Apoio Jurídico",
   12: "Publicar a 3ª história — compartilhar sua conquista",
@@ -93,13 +93,20 @@ async function validateStep(stepNumber: number, userId: string): Promise<StepVal
         .from("community_posts")
         .select("id", { count: "exact", head: true })
         .eq("user_id", userId);
-      const { count: streakCount } = await supabase
-        .from("gambling_streak")
-        .select("id", { count: "exact", head: true })
+
+      const { data: reflections } = await supabase
+        .from("daily_reflections")
+        .select("created_at")
         .eq("user_id", userId)
-        .eq("stayed_clean", true);
-      const done = (postsCount ?? 0) >= 2 && (streakCount ?? 0) >= 2;
-      return { done, detail: `${postsCount ?? 0} de 2 histórias · ${streakCount ?? 0} dias sem apostar` };
+        .order("created_at", { ascending: false })
+        .limit(10);
+
+      const uniqueDays = new Set(
+        (reflections || []).map((r: any) => r.created_at.slice(0, 10))
+      );
+
+      const done = (postsCount ?? 0) >= 2 && uniqueDays.size >= 2;
+      return { done, detail: `${postsCount ?? 0} de 2 histórias · ${uniqueDays.size} dias de reflexão` };
     }
     case 6: {
       const { count: prefCount } = await supabase
@@ -137,22 +144,24 @@ async function validateStep(stepNumber: number, userId: string): Promise<StepVal
       return { done, detail: `${debts.length} dívida(s) · meta ${profile?.goal ? "definida" : "pendente"}` };
     }
     case 9: {
-      // 3 consecutive days including today with stayed_clean=true
-      const { data } = await supabase
-        .from("gambling_streak")
-        .select("confirmation_date, stayed_clean")
+      const { data: reflections } = await supabase
+        .from("daily_reflections")
+        .select("created_at")
         .eq("user_id", userId)
-        .eq("stayed_clean", true)
-        .order("confirmation_date", { ascending: false })
+        .order("created_at", { ascending: false })
         .limit(10);
-      const dates = new Set((data || []).map((r: any) => r.confirmation_date));
+
+      const dates = new Set(
+        (reflections || []).map((r: any) => r.created_at.slice(0, 10))
+      );
+
       const today = new Date();
       const iso = (d: Date) => d.toISOString().slice(0, 10);
       const d0 = iso(today);
       const d1 = iso(new Date(today.getTime() - 86400000));
       const d2 = iso(new Date(today.getTime() - 2 * 86400000));
       const done = dates.has(d0) && dates.has(d1) && dates.has(d2);
-      return { done, detail: `${dates.size} check-in(s) recentes` };
+      return { done, detail: `${dates.size} reflexões recentes` };
     }
     case 10: {
       const { count: alertCount } = await supabase

@@ -135,6 +135,9 @@ export function EveningCheckIn() {
           </>
         ) : (
           <div className="space-y-4">
+            <p className="text-sm text-primary font-medium text-center">
+              ✅ Reflexão registrada! Isso conta para seu progresso nos passos 5 e 9 da jornada.
+            </p>
             <div className="flex items-start gap-2.5 p-4 rounded-2xl bg-primary/5">
               <Heart className="h-4 w-4 text-primary mt-0.5 shrink-0" />
               <p className="text-sm text-foreground/90 leading-relaxed">
