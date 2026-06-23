@@ -155,13 +155,19 @@ async function validateStep(stepNumber: number, userId: string): Promise<StepVal
       return { done, detail: `${dates.size} check-in(s) recentes` };
     }
     case 10: {
-      // "alerts active" = at least one anchor_contact with receive_alerts=true
-      const { count } = await supabase
+      const { count: alertCount } = await supabase
         .from("anchor_contacts")
         .select("id", { count: "exact", head: true })
         .eq("user_id", userId)
         .eq("receive_alerts", true);
-      return { done: (count ?? 0) >= 1 };
+      const { data: taskDays } = await supabase
+        .from("daily_tasks")
+        .select("data")
+        .eq("user_id", userId)
+        .eq("concluido", true);
+      const uniqueDays = new Set(taskDays?.map((t: any) => t.data) || []);
+      const done = (alertCount ?? 0) >= 1 && uniqueDays.size >= 5;
+      return { done, detail: `${alertCount ?? 0} âncora(s) · ${uniqueDays.size} dias de rotina` };
     }
     case 11: {
       // Only counts if there's a confirmed payment for legal
