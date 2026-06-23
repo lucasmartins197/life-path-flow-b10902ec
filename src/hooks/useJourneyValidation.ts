@@ -23,16 +23,16 @@ export const STEP_VALIDATION_MEDAL: Record<number, { id: string; name: string }>
 
 /** Human label for the task each step requires. */
 export const STEP_TASK_LABEL: Record<number, string> = {
-  1: "Preencher nome completo e cidade no perfil",
-  2: "Publicar 1 história em Histórias que Conectam",
+  1: "Preencher perfil completo (nome, cidade, data de nascimento e tempo com o vício)",
+  2: "Publicar 1 história E curtir pelo menos 2 histórias de outros membros",
   3: "Cadastrar pelo menos 1 Contato Âncora",
-  4: "Registrar pelo menos 1 gatilho no Meu Escudo",
-  5: "Publicar a 2ª história em Histórias que Conectam",
-  6: "Criar pelo menos 1 rotina no app",
+  4: "Registrar pelo menos 1 gatilho ativo no Meu Escudo",
+  5: "Publicar 2ª história E registrar 2 dias sem apostar",
+  6: "Configurar rotina E completar atividades por 2 dias",
   7: "Agendar 1 sessão de terapia",
-  8: "Registrar pelo menos 1 dívida em Finanças",
+  8: "Registrar pelo menos 2 dívidas E definir uma meta financeira",
   9: "Fazer check-in diário por 3 dias consecutivos",
-  10: "Ativar alertas no Meu Escudo (Contato Âncora)",
+  10: "Ativar alertas no âncora E completar 5 dias de rotina",
   11: "Enviar 1 solicitação em Apoio Jurídico",
   12: "Publicar a 3ª história — compartilhar sua conquista",
 };
