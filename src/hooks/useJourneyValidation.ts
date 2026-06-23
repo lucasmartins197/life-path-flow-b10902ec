@@ -59,11 +59,19 @@ async function validateStep(stepNumber: number, userId: string): Promise<StepVal
       return { done };
     }
     case 2: {
-      const { count } = await supabase
+      const { count: postsCount } = await supabase
         .from("community_posts")
         .select("id", { count: "exact", head: true })
         .eq("user_id", userId);
-      return { done: (count ?? 0) >= 1, detail: `${count ?? 0} publicação(ões)` };
+
+      const { data: likes } = await supabase
+        .from("post_likes")
+        .select("post_id, community_posts!inner(user_id)")
+        .eq("user_id", userId)
+        .neq("community_posts.user_id", userId);
+
+      const done = (postsCount ?? 0) >= 1 && (likes?.length ?? 0) >= 2;
+      return { done, detail: `${postsCount ?? 0} publicação(ões) · ${likes?.length ?? 0} curtidas em outros` };
     }
     case 3: {
       const { count } = await supabase
