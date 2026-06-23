@@ -209,17 +209,18 @@ export default function AppHome() {
         <PremiumNavCards />
       </main>
 
-      {/* ── Crisis Banner ── */}
-      <a
-        href="tel:188"
-        className="fixed bottom-[72px] left-4 right-4 z-30 flex items-center justify-center gap-2 rounded-xl bg-red-700 px-4 py-3 text-white shadow-lg active:scale-[0.98] transition-transform"
+      {/* ── Crisis Button ── */}
+      <button
+        onClick={() => { window.location.href = "tel:188"; }}
+        className="fixed bottom-[72px] left-4 right-4 z-30 flex items-center justify-center gap-2 rounded-xl px-4 py-3 text-white shadow-lg active:scale-[0.98] transition-transform"
+        style={{ backgroundColor: "rgba(220, 38, 38, 0.9)" }}
         aria-label="Ligar para o CVV 188"
       >
         <Heart className="h-5 w-5 fill-white" />
         <span className="text-sm font-semibold">
-          Em crise? Liga 188 — CVV (gratuito, 24h)
+          Em crise? Ligue 188 — CVV (gratuito, 24h)
         </span>
-      </a>
+      </button>
 
       <BottomNavigation />
       <EveningCheckIn />
