@@ -218,6 +218,14 @@ export default function JourneysHome() {
                           <CheckCircle2 className="h-3 w-3" /> Concluído
                         </span>
                       )}
+                      {isInProgress && (
+                        <span
+                          className="text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wide flex items-center gap-1"
+                          style={{ background: "#FEF3C7", color: "#92400E" }}
+                        >
+                          <Play className="h-3 w-3" /> Em andamento
+                        </span>
+                      )}
                       {isAvailable && (
                         <span
                           className="text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wide"
