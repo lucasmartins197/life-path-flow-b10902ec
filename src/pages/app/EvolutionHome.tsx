@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { BottomNavigation } from "@/components/BottomNavigation";
 import { PortoSeguroButton } from "@/components/PortoSeguroButton";
-import { ChevronLeft, Download, FileText, Calendar, CheckCircle2, Loader2, ChevronRight, Star, Mail } from "lucide-react";
+import { ChevronLeft, Download, FileText, CalendarCheck, CheckCircle2, Loader2, ChevronRight, Star, Mail, Map, Brain, BookOpen, Flame, Sprout, Leaf, TreePine, Mountain, ClipboardCheck, Anchor, type LucideIcon } from "lucide-react";
 import { toast } from "sonner";
 import jsPDF from "jspdf";
 
@@ -133,20 +133,21 @@ export default function EvolutionHome() {
 
   interface JourneyLevel {
     nome: string;
-    emoji: string;
+    icon: LucideIcon;
     cor: string;
     proximo: number | null;
   }
 
   function getJourneyLevel(dias: number): JourneyLevel {
-    if (dias >= 180) return { nome: "Inspiração", emoji: "⭐", cor: "#7C3AED", proximo: null };
-    if (dias >= 90) return { nome: "Veterano", emoji: "🏔️", cor: "#059669", proximo: 180 };
-    if (dias >= 30) return { nome: "Firme", emoji: "🌳", cor: "#0891B2", proximo: 90 };
-    if (dias >= 7) return { nome: "Construindo", emoji: "🌿", cor: "#D97706", proximo: 30 };
-    return { nome: "Primeiros Passos", emoji: "🌱", cor: "#65A30D", proximo: 7 };
+    if (dias >= 180) return { nome: "Inspiração", icon: Star, cor: "#7C3AED", proximo: null };
+    if (dias >= 90) return { nome: "Veterano", icon: Mountain, cor: "#059669", proximo: 180 };
+    if (dias >= 30) return { nome: "Firme", icon: TreePine, cor: "#0891B2", proximo: 90 };
+    if (dias >= 7) return { nome: "Construindo", icon: Leaf, cor: "#D97706", proximo: 30 };
+    return { nome: "Primeiros Passos", icon: Sprout, cor: "#65A30D", proximo: 7 };
   }
 
   const level = getJourneyLevel(streakDays);
+  const LevelIcon = level.icon;
   const nextLevelName = level.proximo === 7 ? "Construindo" : level.proximo === 30 ? "Firme" : level.proximo === 90 ? "Veterano" : level.proximo === 180 ? "Inspiração" : null;
   const progressToNext = level.proximo ? Math.min((streakDays / level.proximo) * 100, 100) : 100;
 
@@ -246,18 +247,18 @@ export default function EvolutionHome() {
       <header style={{ background: "linear-gradient(135deg, #1B4332, #2D6A4F)" }}
         className="px-5 pt-[max(env(safe-area-inset-top),2rem)] pb-6">
         <button onClick={() => navigate("/app")}
-          className="flex items-center gap-1.5 text-white/70 mb-4 text-sm">
+          className="flex items-center gap-1.5 text-white/70 mb-4 text-sm active:scale-[0.98] transition-transform">
           <ChevronLeft className="h-4 w-4" /> Home
         </button>
         <h1 className="text-2xl font-bold text-white mb-1">Minha Evolução</h1>
         <p className="text-white/60 text-sm">Acompanhe sua jornada de recuperação</p>
 
         {/* Nível de Jornada */}
-        <div className="mt-5 bg-white/10 rounded-2xl p-4">
+        <div className="mt-5 bg-white/10 rounded-2xl p-4 animate-in fade-in slide-in-from-bottom-2 duration-500">
           <div className="flex items-center gap-4">
-            <div className="h-16 w-16 rounded-2xl flex items-center justify-center text-4xl shrink-0"
+            <div className="h-16 w-16 rounded-2xl flex items-center justify-center shrink-0"
               style={{ background: "rgba(255,255,255,0.15)" }}>
-              {level.emoji}
+              <LevelIcon className="h-10 w-10" style={{ color: level.cor }} />
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-white/70 text-xs font-medium uppercase tracking-wide">Nível da Jornada</p>
@@ -289,7 +290,7 @@ export default function EvolutionHome() {
         </div>
 
         {/* Presença esta semana */}
-        <div className="mt-3 bg-white/10 rounded-2xl p-4">
+        <div className="mt-3 bg-white/10 rounded-2xl p-4 animate-in fade-in slide-in-from-bottom-2 duration-500">
           <div className="flex items-center justify-between mb-3">
             <p className="text-white/70 text-xs font-medium uppercase tracking-wide">Presença esta semana</p>
             <p className="text-white text-sm font-semibold">{weekCheckins} dos 7 dias</p>
@@ -313,7 +314,7 @@ export default function EvolutionHome() {
         {(["semana", "prontuarios", "historico"] as const).map(tab => (
           <button key={tab}
             onClick={() => setActiveTab(tab)}
-            className="flex-1 py-2.5 rounded-xl text-xs font-semibold transition-all"
+            className="flex-1 py-2.5 rounded-xl text-xs font-semibold transition-all active:scale-[0.98] transition-transform"
             style={activeTab === tab
               ? { background: "#1B4332", color: "#fff" }
               : { background: "rgba(0,0,0,0.04)", color: "#9CA3AF" }}>
@@ -323,7 +324,7 @@ export default function EvolutionHome() {
       </div>
 
       {/* Atalho: Minhas Cartas */}
-      <div className="px-5 pt-4">
+      <div className="px-5 pt-4 animate-in fade-in slide-in-from-bottom-2 duration-500">
         <button
           onClick={() => navigate("/app/cartas")}
           className="w-full flex items-center gap-3 p-4 rounded-2xl text-left active:scale-[0.98] transition-transform"
@@ -356,30 +357,33 @@ export default function EvolutionHome() {
           {/* Cards da semana */}
           <div className="grid grid-cols-2 gap-3">
             {[
-              { label: "Dias de check-in", value: weekSummary?.checkins || 0, suffix: "/ 7", icon: "📅", color: "#1B4332" },
-              { label: "Tarefas concluídas", value: weekSummary?.rotina_concluidas || 0, suffix: `/ ${weekSummary?.rotina_tarefas || 0}`, icon: "✅", color: "#7C3AED" },
-              { label: "Passos da jornada", value: journeyProgress, suffix: "/ 12", icon: "🗺️", color: "#059669" },
-              { label: "Sessões de terapia", value: weekSummary?.terapia_sessoes || 0, suffix: "", icon: "🧠", color: "#2563EB" },
-              { label: "Histórias publicadas", value: weekSummary?.historias || 0, suffix: "", icon: "📖", color: "#D97706" },
-              { label: "Dias sem apostar", value: streakDays, suffix: "", icon: "🔥", color: "#DC2626" },
-            ].map(card => (
-              <div key={card.label}
-                className="bg-white border border-gray-100 rounded-2xl p-4"
-                style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.06)" }}>
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-2xl">{card.icon}</span>
+              { label: "Dias de check-in", value: weekSummary?.checkins || 0, suffix: "/ 7", icon: CalendarCheck, color: "#1B4332" },
+              { label: "Tarefas concluídas", value: weekSummary?.rotina_concluidas || 0, suffix: `/ ${weekSummary?.rotina_tarefas || 0}`, icon: CheckCircle2, color: "#7C3AED" },
+              { label: "Passos da jornada", value: journeyProgress, suffix: "/ 12", icon: Map, color: "#059669" },
+              { label: "Sessões de terapia", value: weekSummary?.terapia_sessoes || 0, suffix: "", icon: Brain, color: "#2563EB" },
+              { label: "Histórias publicadas", value: weekSummary?.historias || 0, suffix: "", icon: BookOpen, color: "#D97706" },
+              { label: "Dias sem apostar", value: streakDays, suffix: "", icon: Flame, color: "#DC2626" },
+            ].map(card => {
+              const Icon = card.icon;
+              return (
+                <div key={card.label}
+                  className="bg-white border border-gray-100 rounded-2xl p-4 animate-in fade-in slide-in-from-bottom-2 duration-500"
+                  style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.06)" }}>
+                  <div className="flex items-center justify-between mb-2">
+                    <Icon size={22} style={{ color: card.color }} />
+                  </div>
+                  <p className="text-2xl font-bold" style={{ color: card.color }}>
+                    {card.value}<span className="text-sm font-normal text-gray-400 ml-1">{card.suffix}</span>
+                  </p>
+                  <p className="text-xs text-gray-500 mt-0.5 leading-tight">{card.label}</p>
                 </div>
-                <p className="text-2xl font-bold" style={{ color: card.color }}>
-                  {card.value}<span className="text-sm font-normal text-gray-400 ml-1">{card.suffix}</span>
-                </p>
-                <p className="text-xs text-gray-500 mt-0.5 leading-tight">{card.label}</p>
-              </div>
-            ))}
+              );
+            })}
           </div>
 
           {/* Como eu estava vs como estou */}
           {onboarding && (
-            <div className="bg-white border border-gray-100 rounded-2xl p-4" style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.06)" }}>
+            <div className="bg-white border border-gray-100 rounded-2xl p-4 animate-in fade-in slide-in-from-bottom-2 duration-500" style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.06)" }}>
               <p className="font-semibold text-sm mb-3" style={{ color: "#1B4332" }}>Seu ponto de partida</p>
               <div className="space-y-3">
                 {onboarding.mental_health_risk && (
@@ -420,7 +424,7 @@ export default function EvolutionHome() {
             <p className="text-sm font-semibold" style={{ color: "#1B4332" }}>Prontuários da IA</p>
             <button onClick={gerarProntuario}
               disabled={gerando}
-              className="text-xs font-semibold px-3 py-1.5 rounded-xl text-white flex items-center gap-1.5 disabled:opacity-60 disabled:cursor-not-allowed"
+              className="text-xs font-semibold px-3 py-1.5 rounded-xl text-white flex items-center gap-1.5 disabled:opacity-60 disabled:cursor-not-allowed active:scale-[0.98] transition-transform"
               style={{ background: "#1B4332" }}>
               {gerando ? (<><Loader2 className="h-3.5 w-3.5 animate-spin" /> Gerando...</>) : "+ Gerar novo"}
             </button>
@@ -429,13 +433,13 @@ export default function EvolutionHome() {
           <p className="text-xs text-gray-400">{prontuarios.length} prontuários encontrados</p>
 
           {prontuarios.length === 0 ? (
-            <div className="bg-white border border-gray-100 rounded-2xl p-8 text-center" style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.06)" }}>
+            <div className="bg-white border border-gray-100 rounded-2xl p-8 text-center animate-in fade-in slide-in-from-bottom-2 duration-500" style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.06)" }}>
               <FileText className="h-10 w-10 text-gray-300 mx-auto mb-3" />
               <p className="font-medium text-gray-700 mb-1">Nenhum prontuário ainda</p>
               <p className="text-sm text-gray-400 mb-4">A IA gera um relatório clínico completo baseado no seu progresso</p>
               <button onClick={gerarProntuario}
                 disabled={gerando}
-                className="px-6 py-2.5 rounded-xl text-white text-sm font-semibold inline-flex items-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
+                className="px-6 py-2.5 rounded-xl text-white text-sm font-semibold inline-flex items-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed active:scale-[0.98] transition-transform"
                 style={{ background: "#1B4332" }}>
                 {gerando ? (<><Loader2 className="h-4 w-4 animate-spin" /> Gerando...</>) : "Gerar primeiro prontuário"}
               </button>
@@ -443,7 +447,7 @@ export default function EvolutionHome() {
           ) : (<>
             {/* Prontuário atual (mais recente) */}
             {(() => { const p = prontuarios[0]; return (
-            <div key={p.id} className="bg-white border border-gray-100 rounded-2xl p-4" style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.06)" }}>
+            <div key={p.id} className="bg-white border border-gray-100 rounded-2xl p-4 animate-in fade-in slide-in-from-bottom-2 duration-500" style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.06)" }}>
               <div className="flex items-start justify-between gap-3 mb-3">
                 <div className="flex items-center gap-2">
                   <div className="w-9 h-9 rounded-xl bg-green-50 flex items-center justify-center">
@@ -485,7 +489,7 @@ export default function EvolutionHome() {
               <div className="flex gap-2 pt-2 border-t border-gray-50">
                 <button
                   onClick={() => baixarPDF(p)}
-                  className="flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-xl"
+                  className="flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-xl active:scale-[0.98] transition-transform"
                   style={{ background: "#1B433215", color: "#1B4332" }}>
                   <Download className="h-3.5 w-3.5" /> Baixar PDF
                 </button>
@@ -499,7 +503,7 @@ export default function EvolutionHome() {
                       toast.success("Copiado para a área de transferência!");
                     }
                   }}
-                  className="flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-xl"
+                  className="flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-xl active:scale-[0.98] transition-transform"
                   style={{ background: "#7C3AED15", color: "#7C3AED" }}>
                   Compartilhar
                 </button>
@@ -515,7 +519,7 @@ export default function EvolutionHome() {
                   {prontuarios.slice(1, 6).map((p) => {
                     const expanded = !!expandedHistorico[p.id];
                     return (
-                      <div key={p.id} className="bg-white border border-gray-100 rounded-2xl p-3" style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.06)" }}>
+                      <div key={p.id} className="bg-white border border-gray-100 rounded-2xl p-3 animate-in fade-in slide-in-from-bottom-2 duration-500" style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.06)" }}>
                         <div className="flex items-center justify-between gap-2">
                           <div className="flex items-center gap-2 min-w-0">
                             <div className="w-8 h-8 rounded-lg bg-gray-50 flex items-center justify-center shrink-0">
@@ -537,7 +541,7 @@ export default function EvolutionHome() {
                             )}
                             <button
                               onClick={() => setExpandedHistorico((s) => ({ ...s, [p.id]: !s[p.id] }))}
-                              className="text-xs font-semibold px-2.5 py-1 rounded-lg"
+                              className="text-xs font-semibold px-2.5 py-1 rounded-lg active:scale-[0.98] transition-transform"
                               style={{ background: "#1B433215", color: "#1B4332" }}>
                               {expanded ? "Ocultar" : "Ver"}
                             </button>
@@ -567,7 +571,7 @@ export default function EvolutionHome() {
                             )}
                             <button
                               onClick={() => baixarPDF(p)}
-                              className="flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-xl"
+                              className="flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-xl active:scale-[0.98] transition-transform"
                               style={{ background: "#1B433215", color: "#1B4332" }}>
                               <Download className="h-3.5 w-3.5" /> Baixar PDF
                             </button>
@@ -587,16 +591,18 @@ export default function EvolutionHome() {
           <div className="space-y-3">
             <p className="text-sm font-semibold" style={{ color: "#1B4332" }}>Marcos da sua jornada</p>
             {[
-              { label: "Iniciou a jornada", desc: "Deu o primeiro passo corajoso", icon: "🌱", done: true },
-              { label: "Completou o onboarding", desc: "Compartilhou sua história inicial", icon: "📋", done: !!onboarding },
-              { label: `${journeyProgress} passos concluídos`, desc: "Na jornada dos 12 passos", icon: "🗺️", done: journeyProgress > 0 },
-              { label: "Cadastrou contato âncora", desc: "Tem alguém por perto", icon: "⚓", done: false },
-              { label: "Primeira sessão de terapia", desc: "Buscou ajuda profissional", icon: "🧠", done: (weekSummary?.terapia_sessoes || 0) > 0 },
-              { label: "Publicou uma história", desc: "Compartilhou com a comunidade", icon: "📖", done: (weekSummary?.historias || 0) > 0 },
-            ].map((marco, i) => (
-              <div key={i} className="flex items-center gap-3 p-4 rounded-2xl bg-white border border-gray-100"
+              { label: "Iniciou a jornada", desc: "Deu o primeiro passo corajoso", icon: Sprout, color: "#65A30D", done: true },
+              { label: "Completou o onboarding", desc: "Compartilhou sua história inicial", icon: ClipboardCheck, color: "#1B4332", done: !!onboarding },
+              { label: `${journeyProgress} passos concluídos`, desc: "Na jornada dos 12 passos", icon: Map, color: "#059669", done: journeyProgress > 0 },
+              { label: "Cadastrou contato âncora", desc: "Tem alguém por perto", icon: Anchor, color: "#2563EB", done: false },
+              { label: "Primeira sessão de terapia", desc: "Buscou ajuda profissional", icon: Brain, color: "#7C3AED", done: (weekSummary?.terapia_sessoes || 0) > 0 },
+              { label: "Publicou uma história", desc: "Compartilhou com a comunidade", icon: BookOpen, color: "#D97706", done: (weekSummary?.historias || 0) > 0 },
+            ].map((marco, i) => {
+              const MarcoIcon = marco.icon;
+              return (
+              <div key={i} className="flex items-center gap-3 p-4 rounded-2xl bg-white border border-gray-100 animate-in fade-in slide-in-from-bottom-2 duration-500"
                 style={{ opacity: marco.done ? 1 : 0.45, boxShadow: "0 1px 3px rgba(0,0,0,0.06)" }}>
-                <span className="text-2xl">{marco.icon}</span>
+                <MarcoIcon size={22} style={{ color: marco.color }} />
                 <div className="flex-1">
                   <p className="font-semibold text-sm">{marco.label}</p>
                   <p className="text-xs text-gray-400">{marco.desc}</p>
@@ -606,7 +612,7 @@ export default function EvolutionHome() {
                   : <div className="w-5 h-5 rounded-full border-2 border-gray-200 shrink-0" />
                 }
               </div>
-            ))}
+            );})}
           </div>
         )}
       </div>
