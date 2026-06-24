@@ -540,7 +540,7 @@ export default function CommunityHome() {
   const { user } = useAuth();
   const {
     posts, loading, createPost, toggleReaction, toggleFollow,
-    addComment, reportPost, deletePost, uploadPostImage, uploadPostVideo, fetchComments,
+    addComment, reportPost, deletePost, blockUser, uploadPostImage, uploadPostVideo, fetchComments,
   } = useCommunityFeed();
   const [showCreate, setShowCreate] = useState(false);
   const [commentsPostId, setCommentsPostId] = useState<string | null>(null);
