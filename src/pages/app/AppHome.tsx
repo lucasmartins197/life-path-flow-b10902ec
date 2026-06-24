@@ -230,7 +230,6 @@ export default function AppHome() {
       </button>
 
       <BottomNavigation />
-      <EveningCheckIn />
     </div>
   );
 }
