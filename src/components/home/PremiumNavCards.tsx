@@ -229,7 +229,7 @@ export function PremiumNavCards() {
         <button
           key={card.path}
           onClick={() => navigate(card.path)}
-          className={`relative overflow-hidden text-left transition-transform duration-200 active:scale-[0.97] hover:scale-[1.02] ${
+          className={`relative overflow-hidden text-left transition-transform duration-200 active:scale-[0.98] hover:scale-[1.02] ${
             card.wide ? "col-span-2" : "col-span-1"
           }`}
           style={{

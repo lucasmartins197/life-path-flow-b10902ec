@@ -166,7 +166,7 @@ export default function AppHome() {
           </div>
           <button
             onClick={() => navigate("/app/medalhas")}
-            className="relative w-10 h-10 flex items-center justify-center rounded-full bg-card touch-target"
+            className="relative w-10 h-10 flex items-center justify-center rounded-full bg-card touch-target active:scale-[0.98] transition-transform"
           >
             <Award className="h-5 w-5" style={{ color: "#C9A84C" }} />
             {totalEarned > 0 && (
@@ -179,7 +179,7 @@ export default function AppHome() {
             )}
           </button>
           <PortoSeguroButton />
-          <button className="w-10 h-10 flex items-center justify-center rounded-full bg-card touch-target">
+          <button className="w-10 h-10 flex items-center justify-center rounded-full bg-card touch-target active:scale-[0.98] transition-transform">
             <Bell className="h-5 w-5 text-muted-foreground" />
           </button>
         </div>
@@ -187,13 +187,17 @@ export default function AppHome() {
 
       <main className="max-w-lg mx-auto px-5 pt-3 space-y-3">
         {/* ── Daily check-in ── */}
-        <DailyCheckIn />
+        <div className="animate-in fade-in slide-in-from-bottom-2 duration-500">
+          <DailyCheckIn />
+        </div>
 
-        <BlockingBanner />
+        <div className="animate-in fade-in slide-in-from-bottom-2 duration-500">
+          <BlockingBanner />
+        </div>
 
         {/* ── Motivational Quote ── */}
         <section
-          className="relative overflow-hidden p-4"
+          className="animate-in fade-in slide-in-from-bottom-2 duration-500 relative overflow-hidden p-4"
           style={{
             background: "linear-gradient(135deg, #1B4332, #2D6A4F)",
             borderRadius: 16,
@@ -213,7 +217,9 @@ export default function AppHome() {
 
 
         {/* ── Premium Navigation Cards ── */}
-        <PremiumNavCards />
+        <div className="animate-in fade-in slide-in-from-bottom-2 duration-500">
+          <PremiumNavCards />
+        </div>
       </main>
 
       {/* ── Crisis Button ── */}
