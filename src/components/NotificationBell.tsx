@@ -36,18 +36,30 @@ const REACTION_EMOJI: Record<string, string> = {
   apoio: "🤝",
 };
 
-function describeNotification(n: NotificationItem): string {
+function describeNotification(n: NotificationItem): React.ReactNode {
   if (n.type === "coupon") {
-    return "🏆 Você ganhou 50% de desconto na terapia! Verifique seu email para o cupom.";
+    return (
+      <>
+        <Trophy className="h-4 w-4 inline text-amber-600" /> Você ganhou 50% de desconto na terapia! Verifique seu email para o cupom.
+      </>
+    );
   }
   if (n.type === "weekly_class") {
-    return "Novo aulão semanal agendado! Toque para ver.";
+    return (
+      <>
+        Novo aulão semanal agendado <Video className="h-4 w-4 inline" /> Toque para ver.
+      </>
+    );
   }
   if (n.type === "reaction") {
     const emoji = REACTION_EMOJI[n.reaction_type || "heart"] || "❤️";
     return `reagiu com ${emoji} à sua história`;
   }
-  return "comentou na sua publicação";
+  return (
+    <>
+      comentou na sua publicação <MessageCircle className="h-3 w-3 inline" />
+    </>
+  );
 }
 
 function isSelfAction(n: NotificationRow): boolean {

@@ -23,6 +23,7 @@ import {
   RefreshCw,
   PlayCircle,
   CheckSquare,
+  Heart,
 } from "lucide-react";
 import { STEP_QUIZ } from "./quiz_data";
 import { Mail, Send } from "lucide-react";
@@ -602,8 +603,9 @@ export default function JourneyStep() {
       >
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle className="text-lg" style={{ color: "#1B4332" }}>
-              💚 Ana tem uma mensagem para você
+            <DialogTitle className="text-lg flex items-center gap-2" style={{ color: "#1B4332" }}>
+              <Heart className="h-4.5 w-4.5 fill-current" style={{ color: "#1B4332" }} />
+              Ana tem uma mensagem para você
             </DialogTitle>
           </DialogHeader>
           <div
@@ -981,8 +983,9 @@ export default function JourneyStep() {
             )}
           </div>
           {!quizPassed && !isCompleted && (
-            <p className="text-xs text-muted-foreground mb-3 italic">
-              🔒 Complete o questionário para liberar o depoimento
+            <p className="text-xs text-muted-foreground mb-3 italic flex items-center gap-1">
+              <Lock className="h-3.5 w-3.5" />
+              Complete o questionário para liberar o depoimento
             </p>
           )}
           <p className="text-foreground text-sm mb-3 leading-relaxed">{quiz?.depositoPrompt || step.question}</p>

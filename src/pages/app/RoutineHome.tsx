@@ -10,7 +10,8 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import {
   Settings, Loader2, BookOpen, Dumbbell, Smile, Leaf,
-  CheckCircle2, Circle, ExternalLink, ChevronRight, Sparkles
+  CheckCircle2, Circle, ExternalLink, ChevronRight, Sparkles,
+  ShoppingCart, PartyPopper
 } from "lucide-react";
 
 /* ─── Types ─── */
@@ -584,12 +585,12 @@ export default function RoutineHome() {
                               <a href={`https://books.google.com/books?q=${query}`} target="_blank" rel="noreferrer"
                                 className="flex items-center gap-1 text-xs font-medium px-2 py-1 rounded-lg"
                                 style={{background:"#7C3AED15",color:"#7C3AED"}}>
-                                📖 Ler grátis
+                                <BookOpen className="h-3.5 w-3.5" /> Ler grátis
                               </a>
                               <a href={`https://www.amazon.com.br/s?k=${query}`} target="_blank" rel="noreferrer"
                                 className="flex items-center gap-1 text-xs font-medium px-2 py-1 rounded-lg"
                                 style={{background:"#7C3AED15",color:"#7C3AED"}}>
-                                🛒 Comprar
+                                <ShoppingCart className="h-3.5 w-3.5" /> Comprar
                               </a>
                             </div>
                           );
@@ -612,7 +613,7 @@ export default function RoutineHome() {
               {doneTasks === tasks.length && tasks.length > 0 && (
                 <div className="flex flex-col items-center py-6 text-center">
                   <CheckCircle2 className="h-12 w-12 mb-2" style={{color:"#059669"}} />
-                  <p className="font-bold">Rotina completa! 🎉</p>
+                  <p className="font-bold flex items-center justify-center gap-1.5"><PartyPopper className="h-4 w-4" /> Rotina completa!</p>
                   <p className="text-sm text-muted-foreground">Parabéns, você concluiu tudo hoje!</p>
                 </div>
               )}
@@ -777,7 +778,9 @@ export default function RoutineHome() {
               </div>
               <div>
                 <SheetTitle className="text-base font-bold">
-                  {feedbackCategoria === "leitura" ? "Feedback da Ana 📚" : "Feedback da Ana"}
+                  {feedbackCategoria === "leitura" ? (
+                    <span className="flex items-center gap-1.5">Feedback da Ana <BookOpen className="h-4 w-4" /></span>
+                  ) : "Feedback da Ana"}
                 </SheetTitle>
 
                 <p className="text-xs text-muted-foreground">
