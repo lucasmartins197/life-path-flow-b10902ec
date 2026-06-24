@@ -104,6 +104,53 @@ export default function MedalsHome() {
           </div>
         </section>
 
+        {/* Journey task medals */}
+        <section>
+          <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-3">
+            Conquistas da Jornada
+          </p>
+          <div className="grid grid-cols-4 gap-3">
+            {MEDAL_DEFINITIONS.filter((m) => m.badge_type === "journey-task").map((medal) => {
+              const earnedData = isEarned(medal.id);
+              return (
+                <div
+                  key={medal.id}
+                  className="flex flex-col items-center gap-1.5 p-3 text-center"
+                  style={{
+                    borderRadius: 16,
+                    background: earnedData
+                      ? "linear-gradient(135deg, #1B4332, #2D6A4F)"
+                      : "#F3F4F6",
+                    boxShadow: earnedData ? "0 4px 12px rgba(27,67,50,0.2)" : "none",
+                  }}
+                >
+                  <div className="flex items-center justify-center h-7">
+                    {earnedData ? (
+                      <medal.icon className="h-6 w-6" style={{ color: "#E8D590" }} />
+                    ) : (
+                      <Lock className="h-5 w-5" style={{ color: "#9CA3AF" }} />
+                    )}
+                  </div>
+                  <span
+                    className="text-[10px] font-semibold leading-tight"
+                    style={{ color: earnedData ? "#fff" : "#9CA3AF" }}
+                  >
+                    {medal.name}
+                  </span>
+                  {earnedData && (
+                    <span className="text-[9px]" style={{ color: "rgba(255,255,255,0.5)" }}>
+                      {new Date(earnedData.earned_at).toLocaleDateString("pt-BR", {
+                        day: "2-digit",
+                        month: "short",
+                      })}
+                    </span>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </section>
+
         {/* Journey medals */}
         <section>
           <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-3">
