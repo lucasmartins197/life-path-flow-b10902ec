@@ -4,7 +4,7 @@ import { Loader2, Heart } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Bell, Flame, Award } from "lucide-react";
+import { Award } from "lucide-react";
 import { BottomNavigation } from "@/components/BottomNavigation";
 import { PortoSeguroButton } from "@/components/PortoSeguroButton";
 import { PremiumNavCards } from "@/components/home/PremiumNavCards";
@@ -179,9 +179,6 @@ export default function AppHome() {
             )}
           </button>
           <PortoSeguroButton />
-          <button className="w-10 h-10 flex items-center justify-center rounded-full bg-card touch-target active:scale-[0.98] transition-transform">
-            <Bell className="h-5 w-5 text-muted-foreground" />
-          </button>
         </div>
       </header>
 
