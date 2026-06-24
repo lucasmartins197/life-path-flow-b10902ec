@@ -585,12 +585,12 @@ export default function RoutineHome() {
                               <a href={`https://books.google.com/books?q=${query}`} target="_blank" rel="noreferrer"
                                 className="flex items-center gap-1 text-xs font-medium px-2 py-1 rounded-lg"
                                 style={{background:"#7C3AED15",color:"#7C3AED"}}>
-                                📖 Ler grátis
+                                <BookOpen className="h-3.5 w-3.5" /> Ler grátis
                               </a>
                               <a href={`https://www.amazon.com.br/s?k=${query}`} target="_blank" rel="noreferrer"
                                 className="flex items-center gap-1 text-xs font-medium px-2 py-1 rounded-lg"
                                 style={{background:"#7C3AED15",color:"#7C3AED"}}>
-                                🛒 Comprar
+                                <ShoppingCart className="h-3.5 w-3.5" /> Comprar
                               </a>
                             </div>
                           );
