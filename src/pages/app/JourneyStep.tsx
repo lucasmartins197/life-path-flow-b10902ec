@@ -391,6 +391,74 @@ export default function JourneyStep() {
     }
   }
 
+  async function saveLetter() {
+    if (!user || !letterDef) return;
+    const content = letterContent.trim();
+    if (content.length < letterDef.minChars) {
+      toast({
+        variant: "destructive",
+        title: "Carta muito curta",
+        description: `Escreva pelo menos ${letterDef.minChars} caracteres.`,
+      });
+      return;
+    }
+    setSavingLetter(true);
+    setLetterFeedback(null);
+    const { error } = await supabase
+      .from("journey_letters" as any)
+      .upsert(
+        {
+          user_id: user.id,
+          step_number: stepNumber,
+          letter_type: letterDef.type,
+          title: letterDef.title,
+          content,
+          updated_at: new Date().toISOString(),
+        },
+        { onConflict: "user_id,step_number" },
+      );
+    if (error) {
+      setSavingLetter(false);
+      toast({ variant: "destructive", title: "Erro ao salvar carta", description: error.message });
+      return;
+    }
+    setLetterSaved(true);
+    toast({ title: "💌 Carta salva", description: "Sua carta foi guardada com segurança." });
+
+    // Ana feedback for the letter
+    try {
+      const { data: prof } = await supabase
+        .from("profiles")
+        .select("full_name")
+        .eq("id", user.id)
+        .maybeSingle();
+      const { data: fbData } = await supabase.functions.invoke("journey-feedback", {
+        body: {
+          step_number: stepNumber,
+          depoimento: content,
+          user_name: prof?.full_name || "você",
+        },
+      });
+      const fb = (fbData as any)?.feedback;
+      if (fb) setLetterFeedback(fb);
+
+      // Send letter to anchor if applicable
+      if (letterDef.sendToAnchor) {
+        try {
+          await supabase.functions.invoke("send-letter-to-anchor", {
+            body: { letter_content: content, user_name: prof?.full_name || "" },
+          });
+          toast({ title: "💌 Sua carta foi enviada ao seu âncora!" });
+        } catch (e) {
+          console.warn("send-letter-to-anchor failed:", e);
+        }
+      }
+    } catch (e) {
+      console.warn("letter feedback failed:", e);
+    }
+    setSavingLetter(false);
+  }
+
   function fireConfetti() {
     const end = Date.now() + 1500;
     const colors = ["#C9A84C", "#E8D590", "#1B4332", "#2D6A4F"];
