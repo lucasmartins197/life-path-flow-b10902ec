@@ -97,6 +97,7 @@ const App = () => (
             <Route path="/app/medalhas" element={<ProtectedRoute allowedRoles={["user", "admin"]}><MedalsHome /></ProtectedRoute>} />
             <Route path="/app/mensagens" element={<ProtectedRoute allowedRoles={["user", "admin"]}><MessagesHome /></ProtectedRoute>} />
             <Route path="/app/bloqueio" element={<ProtectedRoute allowedRoles={["user", "admin"]}><BlockingHome /></ProtectedRoute>} />
+            <Route path="/app/cartas" element={<ProtectedRoute allowedRoles={["user", "admin"]}><LettersHome /></ProtectedRoute>} />
             <Route path="/app/escudo" element={<ProtectedRoute allowedRoles={["user", "admin"]}><ShieldHome /></ProtectedRoute>} />
             <Route path="/app/termos" element={<ProtectedRoute allowedRoles={["user", "admin"]}><TermosUso /></ProtectedRoute>} />
             <Route path="/app/privacidade" element={<ProtectedRoute allowedRoles={["user", "admin"]}><Privacidade /></ProtectedRoute>} />
