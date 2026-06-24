@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { BottomNavigation } from "@/components/BottomNavigation";
 import { PortoSeguroButton } from "@/components/PortoSeguroButton";
-import { ChevronLeft, Download, FileText, TrendingUp, Calendar, CheckCircle2, Loader2, ChevronRight, Star, Mail } from "lucide-react";
+import { ChevronLeft, Download, FileText, Calendar, CheckCircle2, Loader2, ChevronRight, Star, Mail } from "lucide-react";
 import { toast } from "sonner";
 import jsPDF from "jspdf";
 
@@ -71,6 +71,7 @@ export default function EvolutionHome() {
   const [onboarding, setOnboarding] = useState<OnboardingClinico | null>(null);
   const [journeyProgress, setJourneyProgress] = useState(0);
   const [streakDays, setStreakDays] = useState(0);
+  const [weeklyCheckins, setWeeklyCheckins] = useState<boolean[]>([false, false, false, false, false, false, false]);
   const [userName, setUserName] = useState("");
   const [activeTab, setActiveTab] = useState<"semana" | "prontuarios" | "historico">("semana");
   const [gerando, setGerando] = useState(false);
@@ -108,6 +109,13 @@ export default function EvolutionHome() {
     const checkinDates = new Set((checkinsRes.data || []).map((c: any) => c.confirmation_date));
     setStreakDays((streakTotalRes.data || []).length);
 
+    const weekDays = Array.from({ length: 7 }, (_, i) => {
+      const d = new Date(weekStart);
+      d.setDate(d.getDate() + i);
+      return d.toISOString().split("T")[0];
+    });
+    setWeeklyCheckins(weekDays.map((d) => checkinDates.has(d)));
+
     const allTasks = tasksRes.data || [];
     const doneTasks = allTasks.filter((t: any) => t.concluido).length;
 
@@ -123,34 +131,28 @@ export default function EvolutionHome() {
     setLoading(false);
   }
 
-  // Calcular índice de recuperação (0-100)
-  function calcRecoveryIndex(): number {
-    if (!weekSummary) return 0;
-    let score = 0;
-    score += Math.min(weekSummary.checkins * 10, 30); // max 30pts
-    if (weekSummary.rotina_tarefas > 0) {
-      score += Math.round((weekSummary.rotina_concluidas / weekSummary.rotina_tarefas) * 25); // max 25pts
-    }
-    score += Math.min(journeyProgress * 3, 25); // max 25pts
-    score += Math.min(weekSummary.terapia_sessoes * 10, 10); // max 10pts
-    score += Math.min(weekSummary.historias * 5, 10); // max 10pts
-    return Math.min(score, 100);
+  interface JourneyLevel {
+    nome: string;
+    emoji: string;
+    cor: string;
+    proximo: number | null;
   }
 
-  const recoveryIndex = calcRecoveryIndex();
-
-  function getIndexColor(score: number): string {
-    if (score >= 70) return "#059669";
-    if (score >= 40) return "#D97706";
-    return "#DC2626";
+  function getJourneyLevel(dias: number): JourneyLevel {
+    if (dias >= 180) return { nome: "Inspiração", emoji: "⭐", cor: "#7C3AED", proximo: null };
+    if (dias >= 90) return { nome: "Veterano", emoji: "🏔️", cor: "#059669", proximo: 180 };
+    if (dias >= 30) return { nome: "Firme", emoji: "🌳", cor: "#0891B2", proximo: 90 };
+    if (dias >= 7) return { nome: "Construindo", emoji: "🌿", cor: "#D97706", proximo: 30 };
+    return { nome: "Primeiros Passos", emoji: "🌱", cor: "#65A30D", proximo: 7 };
   }
 
-  function getIndexLabel(score: number): string {
-    if (score >= 70) return "Excelente";
-    if (score >= 50) return "Bom progresso";
-    if (score >= 30) return "Em desenvolvimento";
-    return "Precisa de atenção";
-  }
+  const level = getJourneyLevel(streakDays);
+  const nextLevelName = level.proximo === 7 ? "Construindo" : level.proximo === 30 ? "Firme" : level.proximo === 90 ? "Veterano" : level.proximo === 180 ? "Inspiração" : null;
+  const progressToNext = level.proximo ? Math.min((streakDays / level.proximo) * 100, 100) : 100;
+
+  const dayLabels = ["D", "S", "T", "Q", "Q", "S", "S"];
+  const weekCheckins = weeklyCheckins.reduce((acc, checked) => acc + (checked ? 1 : 0), 0);
+
 
   async function gerarProntuario() {
     if (gerando) return;
@@ -250,38 +252,56 @@ export default function EvolutionHome() {
         <h1 className="text-2xl font-bold text-white mb-1">Minha Evolução</h1>
         <p className="text-white/60 text-sm">Acompanhe sua jornada de recuperação</p>
 
-        {/* Recovery Index */}
+        {/* Nível de Jornada */}
         <div className="mt-5 bg-white/10 rounded-2xl p-4">
-          <div className="flex items-center justify-between mb-3">
-            <div>
-              <p className="text-white/70 text-xs font-medium uppercase tracking-wide">Índice de Recuperação</p>
-              <p className="text-white text-3xl font-bold mt-0.5">{recoveryIndex}<span className="text-lg font-normal text-white/60">/100</span></p>
-              <p className="text-sm font-medium mt-0.5" style={{ color: getIndexColor(recoveryIndex) === "#059669" ? "#6EE7B7" : "#FCD34D" }}>
-                {getIndexLabel(recoveryIndex)}
+          <div className="flex items-center gap-4">
+            <div className="h-16 w-16 rounded-2xl flex items-center justify-center text-4xl shrink-0"
+              style={{ background: "rgba(255,255,255,0.15)" }}>
+              {level.emoji}
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-white/70 text-xs font-medium uppercase tracking-wide">Nível da Jornada</p>
+              <p className="text-white text-2xl font-bold mt-0.5 truncate" style={{ color: level.cor }}>{level.nome}</p>
+              <p className="text-white/80 text-sm mt-0.5">
+                {streakDays} {streakDays === 1 ? "dia firme" : "dias firmes"} na sua jornada
               </p>
             </div>
-            <div className="relative w-20 h-20">
-              <svg viewBox="0 0 80 80" className="transform -rotate-90">
-                <circle cx="40" cy="40" r="32" fill="none" stroke="rgba(255,255,255,0.15)" strokeWidth="8"/>
-                <circle cx="40" cy="40" r="32" fill="none" stroke="white" strokeWidth="8"
-                  strokeDasharray={`${2 * Math.PI * 32}`}
-                  strokeDashoffset={`${2 * Math.PI * 32 * (1 - recoveryIndex / 100)}`}
-                  strokeLinecap="round"/>
-              </svg>
-              <div className="absolute inset-0 flex items-center justify-center">
-                <TrendingUp className="h-6 w-6 text-white" />
+          </div>
+
+          {level.proximo && nextLevelName && (
+            <div className="mt-4">
+              <div className="flex items-center justify-between text-xs mb-1.5">
+                <span className="text-white/70">Faltam {level.proximo - streakDays} dias para {nextLevelName}</span>
+                <span className="text-white/80 font-medium">{streakDays}/{level.proximo}</span>
+              </div>
+              <div className="h-2.5 w-full rounded-full overflow-hidden bg-white/15">
+                <div className="h-full rounded-full transition-all duration-700"
+                  style={{ width: `${progressToNext}%`, background: level.cor }} />
               </div>
             </div>
+          )}
+
+          <div className="mt-4 pt-4 border-t border-white/10">
+            <p className="text-white/60 text-xs italic leading-relaxed">
+              Recuperação é uma jornada diária, não um destino. Cada dia conta.
+            </p>
           </div>
-          <div className="grid grid-cols-3 gap-2 mt-2">
-            {[
-              { label: "Check-ins", value: weekSummary?.checkins || 0, max: 7 },
-              { label: "Tarefas", value: weekSummary?.rotina_concluidas || 0, max: weekSummary?.rotina_tarefas || 1 },
-              { label: "Passos", value: journeyProgress, max: 12 },
-            ].map(item => (
-              <div key={item.label} className="bg-white/10 rounded-xl p-2 text-center">
-                <p className="text-white font-bold text-base">{item.value}<span className="text-white/50 text-xs">/{item.max}</span></p>
-                <p className="text-white/60 text-xs">{item.label}</p>
+        </div>
+
+        {/* Presença esta semana */}
+        <div className="mt-3 bg-white/10 rounded-2xl p-4">
+          <div className="flex items-center justify-between mb-3">
+            <p className="text-white/70 text-xs font-medium uppercase tracking-wide">Presença esta semana</p>
+            <p className="text-white text-sm font-semibold">{weekCheckins} dos 7 dias</p>
+          </div>
+          <div className="flex items-center justify-between gap-2">
+            {weeklyCheckins.map((checked, i) => (
+              <div key={i} className="flex-1 flex flex-col items-center gap-1.5">
+                <div className="w-full aspect-square rounded-full flex items-center justify-center transition-colors"
+                  style={{ background: checked ? level.cor : "rgba(255,255,255,0.12)" }}>
+                  {checked && <CheckCircle2 className="h-4 w-4 text-white" />}
+                </div>
+                <span className="text-[10px] text-white/50 font-medium">{dayLabels[i]}</span>
               </div>
             ))}
           </div>
