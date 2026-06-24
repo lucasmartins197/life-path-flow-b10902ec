@@ -22,8 +22,12 @@ import {
   Download,
   RefreshCw,
   UserPlus,
-  ArrowLeft
+  ArrowLeft,
+  CreditCard,
+  Brain,
+  Scale
 } from "lucide-react";
+
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
@@ -202,7 +206,46 @@ export default function AdminHome() {
           ))}
         </section>
 
+        {/* Revenue Breakdown */}
+        <section className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+          {[
+            {
+              label: "Assinaturas",
+              value: metrics.revenueByType.subscription,
+              icon: CreditCard,
+              color: "text-primary",
+            },
+            {
+              label: "Terapia",
+              value: metrics.revenueByType.therapy,
+              icon: Brain,
+              color: "text-info",
+            },
+            {
+              label: "Jurídico",
+              value: metrics.revenueByType.legal,
+              icon: Scale,
+              color: "text-warning",
+            },
+          ].map((item, index) => (
+            <Card key={index} className="metric-card">
+              <div className="flex items-center justify-between mb-2">
+                <p className="metric-label text-sm">{item.label}</p>
+                <item.icon className={`h-4 w-4 ${item.color}`} />
+              </div>
+              {isLoading ? (
+                <Skeleton className="h-6 w-24" />
+              ) : (
+                <p className="metric-value text-base">
+                  {formatCurrency(item.value)}
+                </p>
+              )}
+            </Card>
+          ))}
+        </section>
+
         {/* Data Section */}
+
         <section className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
           {/* Recent Users */}
           <Card className="card-premium">

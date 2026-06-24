@@ -6,7 +6,13 @@ interface DashboardMetrics {
   totalRevenue: number;
   totalConsultations: number;
   activeProfessionals: number;
+  revenueByType: {
+    subscription: number;
+    therapy: number;
+    legal: number;
+  };
 }
+
 
 interface RecentUser {
   id: string;
@@ -29,7 +35,13 @@ export function useAdminDashboard() {
     totalRevenue: 0,
     totalConsultations: 0,
     activeProfessionals: 0,
+    revenueByType: {
+      subscription: 0,
+      therapy: 0,
+      legal: 0,
+    },
   });
+
   const [recentUsers, setRecentUsers] = useState<RecentUser[]>([]);
   const [recentPayments, setRecentPayments] = useState<PaymentRecord[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -58,16 +70,30 @@ export function useAdminDashboard() {
         .from("sessions")
         .select("*", { count: "exact", head: true });
 
-      // Fetch total revenue from payments
-      const { data: paymentsData } = await supabase
+      // Fetch total revenue from payments grouped by type
+      const { data: allPayments } = await supabase
         .from("payments")
-        .select("amount")
+        .select("amount, payment_type")
         .eq("status", "completed");
 
-      const totalRevenue = paymentsData?.reduce(
-        (sum, p) => sum + Number(p.amount),
-        0
-      ) || 0;
+      const revenueByType = {
+        subscription: 0,
+        therapy: 0,
+        legal: 0,
+      };
+
+      (allPayments || []).forEach((p) => {
+        const val = Number(p.amount);
+        if (p.payment_type === "subscription") revenueByType.subscription += val;
+        else if (p.payment_type === "therapy") revenueByType.therapy += val;
+        else if (p.payment_type === "legal") revenueByType.legal += val;
+      });
+
+      const totalRevenue =
+        revenueByType.subscription +
+        revenueByType.therapy +
+        revenueByType.legal;
+
 
       // Fetch recent users (last 10 signups)
       const { data: recentUsersData } = await supabase
@@ -88,7 +114,9 @@ export function useAdminDashboard() {
         totalRevenue,
         totalConsultations: sessionsCount || 0,
         activeProfessionals: professionalsCount || 0,
+        revenueByType,
       });
+
 
       setRecentUsers(recentUsersData || []);
       setRecentPayments(recentPaymentsData || []);
