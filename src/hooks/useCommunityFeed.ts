@@ -109,7 +109,7 @@ export function useCommunityFeed() {
         reactCountMap.set(r.post_id, cur);
       });
 
-      const enriched: CommunityPost[] = postsData.map((p: any) => {
+      const enriched: CommunityPost[] = filteredPosts.map((p: any) => {
         const mine = myReactMap.get(p.id) || [];
         const prof = profileMap.get(p.user_id);
         const realName = prof?.full_name?.trim();
