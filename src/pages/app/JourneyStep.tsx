@@ -603,8 +603,9 @@ export default function JourneyStep() {
       >
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle className="text-lg" style={{ color: "#1B4332" }}>
-              💚 Ana tem uma mensagem para você
+            <DialogTitle className="text-lg flex items-center gap-2" style={{ color: "#1B4332" }}>
+              <Heart className="h-4.5 w-4.5 fill-current" style={{ color: "#1B4332" }} />
+              Ana tem uma mensagem para você
             </DialogTitle>
           </DialogHeader>
           <div
