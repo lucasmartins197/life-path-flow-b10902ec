@@ -480,6 +480,14 @@ export default function JourneyStep() {
       });
       return;
     }
+    if (letterDef && letterContent.trim().length < letterDef.minChars) {
+      toast({
+        variant: "destructive",
+        title: "Carta obrigatória",
+        description: `Escreva sua carta "${letterDef.title}" (mín. ${letterDef.minChars} caracteres).`,
+      });
+      return;
+    }
     setCompleting(true);
     await saveResposta();
 
