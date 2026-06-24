@@ -123,34 +123,28 @@ export default function EvolutionHome() {
     setLoading(false);
   }
 
-  // Calcular índice de recuperação (0-100)
-  function calcRecoveryIndex(): number {
-    if (!weekSummary) return 0;
-    let score = 0;
-    score += Math.min(weekSummary.checkins * 10, 30); // max 30pts
-    if (weekSummary.rotina_tarefas > 0) {
-      score += Math.round((weekSummary.rotina_concluidas / weekSummary.rotina_tarefas) * 25); // max 25pts
-    }
-    score += Math.min(journeyProgress * 3, 25); // max 25pts
-    score += Math.min(weekSummary.terapia_sessoes * 10, 10); // max 10pts
-    score += Math.min(weekSummary.historias * 5, 10); // max 10pts
-    return Math.min(score, 100);
+  interface JourneyLevel {
+    nome: string;
+    emoji: string;
+    cor: string;
+    proximo: number | null;
   }
 
-  const recoveryIndex = calcRecoveryIndex();
-
-  function getIndexColor(score: number): string {
-    if (score >= 70) return "#059669";
-    if (score >= 40) return "#D97706";
-    return "#DC2626";
+  function getJourneyLevel(dias: number): JourneyLevel {
+    if (dias >= 180) return { nome: "Inspiração", emoji: "⭐", cor: "#7C3AED", proximo: null };
+    if (dias >= 90) return { nome: "Veterano", emoji: "🏔️", cor: "#059669", proximo: 180 };
+    if (dias >= 30) return { nome: "Firme", emoji: "🌳", cor: "#0891B2", proximo: 90 };
+    if (dias >= 7) return { nome: "Construindo", emoji: "🌿", cor: "#D97706", proximo: 30 };
+    return { nome: "Primeiros Passos", emoji: "🌱", cor: "#65A30D", proximo: 7 };
   }
 
-  function getIndexLabel(score: number): string {
-    if (score >= 70) return "Excelente";
-    if (score >= 50) return "Bom progresso";
-    if (score >= 30) return "Em desenvolvimento";
-    return "Precisa de atenção";
-  }
+  const level = getJourneyLevel(streakDays);
+  const nextLevelName = level.proximo === 7 ? "Construindo" : level.proximo === 30 ? "Firme" : level.proximo === 90 ? "Veterano" : level.proximo === 180 ? "Inspiração" : null;
+  const progressToNext = level.proximo ? Math.min((streakDays / level.proximo) * 100, 100) : 100;
+
+  const dayLabels = ["D", "S", "T", "Q", "Q", "S", "S"];
+  const weekCheckins = weeklyCheckins.reduce((acc, checked) => acc + (checked ? 1 : 0), 0);
+
 
   async function gerarProntuario() {
     if (gerando) return;
