@@ -435,8 +435,13 @@ function PostCard({
               </DropdownMenuItem>
             )}
             <DropdownMenuItem onClick={onReport} className="text-destructive gap-2">
-              <Flag className="h-4 w-4" /> Reportar
+              <Flag className="h-4 w-4" /> Denunciar
             </DropdownMenuItem>
+            {!isOwn && (
+              <DropdownMenuItem onClick={onBlock} className="text-destructive gap-2">
+                <Ban className="h-4 w-4" /> Bloquear usuário
+              </DropdownMenuItem>
+            )}
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
