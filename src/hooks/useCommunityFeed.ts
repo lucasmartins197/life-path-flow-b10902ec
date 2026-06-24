@@ -52,6 +52,13 @@ export function useCommunityFeed() {
     if (!user) return;
     setLoading(true);
     try {
+      // Fetch the user's block list first so we can filter the feed.
+      const { data: blocks } = await supabase
+        .from("blocked_users")
+        .select("blocked_id")
+        .eq("blocker_id", user.id);
+      const blockedSet = new Set<string>((blocks || []).map((b: any) => b.blocked_id));
+
       const { data: postsData, error } = await supabase
         .from("community_posts")
         .select("*")
@@ -59,14 +66,15 @@ export function useCommunityFeed() {
         .limit(50);
 
       if (error) throw error;
-      if (!postsData || postsData.length === 0) {
+      const filteredPosts = (postsData || []).filter((p: any) => !blockedSet.has(p.user_id));
+      if (filteredPosts.length === 0) {
         setPosts([]);
         setLoading(false);
         return;
       }
 
-      const postIds = postsData.map((p) => p.id);
-      const userIds = [...new Set(postsData.map((p) => p.user_id))];
+      const postIds = filteredPosts.map((p) => p.id);
+      const userIds = [...new Set(filteredPosts.map((p) => p.user_id))];
 
       const [
         { data: patientProfiles },
