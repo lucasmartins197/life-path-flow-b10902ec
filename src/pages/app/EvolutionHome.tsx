@@ -85,15 +85,16 @@ export default function EvolutionHome() {
 
   async function loadAll() {
     setLoading(true);
-    const [profileRes, prontuariosRes, onboardingRes, journeyRes, checkinsRes, tasksRes, therapyRes, storiesRes] = await Promise.all([
+    const [profileRes, prontuariosRes, onboardingRes, journeyRes, checkinsRes, tasksRes, therapyRes, storiesRes, streakTotalRes] = await Promise.all([
       supabase.from("profiles").select("full_name").eq("user_id", user!.id).maybeSingle(),
       supabase.from("prontuarios").select("*").eq("user_id", user!.id).order("gerado_em", { ascending: false }).limit(6),
       supabase.from("onboarding_clinico").select("*").eq("user_id", user!.id).maybeSingle(),
       supabase.from("journey_progress").select("step_number, completed, is_completed").eq("user_id", user!.id),
       supabase.from("gambling_streak").select("confirmation_date, stayed_clean").eq("user_id", user!.id).eq("stayed_clean", true).gte("confirmation_date", weekStartStr),
       supabase.from("daily_tasks").select("concluido").eq("user_id", user!.id).gte("data", weekStartStr),
-      supabase.from("appointments").select("id").eq("user_id", user!.id).gte("created_at", weekStart.toISOString()),
+      supabase.from("payments").select("id").eq("user_id", user!.id).eq("payment_type", "therapy").eq("status", "completed"),
       supabase.from("community_posts").select("id").eq("user_id", user!.id).gte("created_at", weekStart.toISOString()),
+      supabase.from("gambling_streak").select("confirmation_date, stayed_clean").eq("user_id", user!.id).eq("stayed_clean", true),
     ]);
 
     if (profileRes.data?.full_name) setUserName(profileRes.data.full_name.split(" ")[0]);
@@ -105,7 +106,7 @@ export default function EvolutionHome() {
     setJourneyProgress(completedSteps);
 
     const checkinDates = new Set((checkinsRes.data || []).map((c: any) => c.confirmation_date));
-    setStreakDays(checkinDates.size);
+    setStreakDays((streakTotalRes.data || []).length);
 
     const allTasks = tasksRes.data || [];
     const doneTasks = allTasks.filter((t: any) => t.concluido).length;
