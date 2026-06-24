@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { ChevronLeft, CreditCard, Calendar, Loader2, CheckCircle2 } from "lucide-react";
 import { BottomNavigation } from "@/components/BottomNavigation";
@@ -9,6 +9,7 @@ export default function TherapyHome() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const paymentSuccess = searchParams.get("success") === "true";
+  const dossieSentRef = useRef(false);
   const [loading, setLoading] = useState(false);
   const [dataSelecionada, setDataSelecionada] = useState(false);
   const [coupon, setCoupon] = useState("");
