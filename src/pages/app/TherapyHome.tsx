@@ -141,7 +141,10 @@ export default function TherapyHome() {
               <div className="w-20 h-20 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-4">
                 <CheckCircle2 className="h-10 w-10 text-green-600" />
               </div>
-              <h2 className="text-2xl font-bold text-gray-900 mb-2">Pagamento confirmado! ✅</h2>
+              <h2 className="text-2xl font-bold text-gray-900 mb-2 flex items-center justify-center gap-2">
+                <CheckCircle2 className="h-6 w-6 text-green-600" />
+                Pagamento confirmado!
+              </h2>
               <p className="text-gray-600 mb-2">Seu pagamento foi confirmado com sucesso.</p>
               <p className="text-sm text-gray-500 mb-6">
                 Nossa equipe entrará em contato em até 24 horas para confirmar data e horário da sua sessão via WhatsApp e email.
