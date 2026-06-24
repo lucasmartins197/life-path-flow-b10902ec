@@ -284,7 +284,7 @@ export default function JourneyStep() {
     if (!user) return;
     (async () => {
       setLoading(true);
-      const [{ data: r }, { data: p }] = await Promise.all([
+      const [{ data: r }, { data: p }, letterRes] = await Promise.all([
         supabase
           .from("jornada_respostas" as any)
           .select("resposta, audio_played, quiz_passed")
@@ -297,6 +297,14 @@ export default function JourneyStep() {
           .eq("user_id", user.id)
           .eq("step_number", stepNumber)
           .maybeSingle(),
+        letterDef
+          ? supabase
+              .from("journey_letters" as any)
+              .select("content")
+              .eq("user_id", user.id)
+              .eq("step_number", stepNumber)
+              .maybeSingle()
+          : Promise.resolve({ data: null }),
       ]);
       const row = r as any;
       if (row?.resposta) setResposta(row.resposta);
@@ -306,6 +314,11 @@ export default function JourneyStep() {
         setQuizPassed(true);
       }
       if (p?.is_completed) setIsCompleted(true);
+      const lc = (letterRes as any)?.data?.content;
+      if (lc) {
+        setLetterContent(lc);
+        if (letterDef && lc.trim().length >= letterDef.minChars) setLetterSaved(true);
+      }
       setLoading(false);
     })();
   }, [user, stepNumber]);
