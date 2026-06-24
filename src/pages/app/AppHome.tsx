@@ -220,7 +220,34 @@ export default function AppHome() {
       </header>
 
       <main className="max-w-lg mx-auto px-5 pt-3 space-y-3">
+        {/* ── Daily check-in ── */}
+        {user && !todayCheckin && !checkedIn && (
+          <section className="bg-card border border-border rounded-2xl p-4 shadow-card">
+            <h2 className="text-base font-semibold text-foreground mb-1">
+              Como foi seu dia?
+            </h2>
+            <p className="text-sm text-muted-foreground mb-4">
+              Você ficou longe das apostas hoje?
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => handleCheckIn(true)}
+                className="flex-1 py-3 px-4 rounded-xl text-sm font-semibold text-primary-foreground bg-primary active:scale-[0.98] transition-transform"
+              >
+                Sim, fiquei firme 💪
+              </button>
+              <button
+                onClick={() => handleCheckIn(false)}
+                className="flex-1 py-3 px-4 rounded-xl text-sm font-semibold text-foreground bg-muted active:scale-[0.98] transition-transform"
+              >
+                Tive uma recaída
+              </button>
+            </div>
+          </section>
+        )}
+
         <BlockingBanner />
+
         {/* ── Motivational Quote ── */}
         <section
           className="relative overflow-hidden p-4"
