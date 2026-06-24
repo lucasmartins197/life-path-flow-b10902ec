@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { BottomNavigation } from "@/components/BottomNavigation";
 import { PortoSeguroButton } from "@/components/PortoSeguroButton";
-import { ChevronLeft, Download, FileText, TrendingUp, Calendar, CheckCircle2, Loader2, ChevronRight, Star } from "lucide-react";
+import { ChevronLeft, Download, FileText, TrendingUp, Calendar, CheckCircle2, Loader2, ChevronRight, Star, Mail } from "lucide-react";
 import { toast } from "sonner";
 import jsPDF from "jspdf";
 
