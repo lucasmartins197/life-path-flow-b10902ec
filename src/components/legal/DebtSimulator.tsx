@@ -14,7 +14,18 @@ interface SimulationResult {
   total_paid: number;
   savings_percentage: number;
   recommendation: string;
+  negotiated_debt?: number;
+  discount_rate?: number;
+  savings_amount?: number;
 }
+
+const formatBRL = (value: number) =>
+  value.toLocaleString("pt-BR", {
+    style: "currency",
+    currency: "BRL",
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
 
 export function DebtSimulator() {
   const [debtAmount, setDebtAmount] = useState("");
