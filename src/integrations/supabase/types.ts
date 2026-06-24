@@ -1073,6 +1073,7 @@ export type Database = {
       }
       journey_letters: {
         Row: {
+          ai_feedback: string | null
           content: string
           created_at: string
           id: string
@@ -1084,6 +1085,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          ai_feedback?: string | null
           content: string
           created_at?: string
           id?: string
@@ -1095,6 +1097,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          ai_feedback?: string | null
           content?: string
           created_at?: string
           id?: string

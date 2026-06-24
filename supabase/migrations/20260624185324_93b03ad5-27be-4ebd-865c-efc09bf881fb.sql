@@ -1,0 +1,1 @@
+ALTER TABLE public.journey_letters ADD COLUMN IF NOT EXISTS ai_feedback text;

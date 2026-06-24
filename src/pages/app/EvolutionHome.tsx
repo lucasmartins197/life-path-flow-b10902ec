@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { BottomNavigation } from "@/components/BottomNavigation";
 import { PortoSeguroButton } from "@/components/PortoSeguroButton";
-import { ChevronLeft, Download, FileText, TrendingUp, Calendar, CheckCircle2, Loader2, ChevronRight, Star } from "lucide-react";
+import { ChevronLeft, Download, FileText, TrendingUp, Calendar, CheckCircle2, Loader2, ChevronRight, Star, Mail } from "lucide-react";
 import { toast } from "sonner";
 import jsPDF from "jspdf";
 
@@ -300,6 +300,33 @@ export default function EvolutionHome() {
           </button>
         ))}
       </div>
+
+      {/* Atalho: Minhas Cartas */}
+      <div className="px-5 pt-4">
+        <button
+          onClick={() => navigate("/app/cartas")}
+          className="w-full flex items-center gap-3 p-4 rounded-2xl text-left active:scale-[0.98] transition-transform"
+          style={{
+            background: "linear-gradient(135deg, #5C4A1A, #C9A84C)",
+            boxShadow: "0 6px 18px rgba(92,74,26,0.18)",
+          }}
+        >
+          <div
+            className="h-11 w-11 rounded-xl flex items-center justify-center shrink-0"
+            style={{ background: "rgba(255,255,255,0.2)" }}
+          >
+            <Mail className="h-5 w-5 text-white" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="text-white font-bold text-sm leading-tight">Minhas Cartas</div>
+            <div className="text-white/80 text-[11px] mt-0.5">
+              Releia suas reflexões da jornada
+            </div>
+          </div>
+          <ChevronRight className="h-5 w-5 text-white/80 shrink-0" />
+        </button>
+      </div>
+
 
       <div className="px-5 pt-4 space-y-4">
 
