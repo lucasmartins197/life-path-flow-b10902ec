@@ -780,6 +780,38 @@ export default function JourneyStep() {
       </div>
 
       <div className="max-w-2xl mx-auto px-5 pt-5 space-y-5">
+        {/* Card guia explicativo do passo */}
+        {STEP_GUIDE[stepNumber] && (
+          <div
+            className="rounded-2xl p-4 border border-[#E8D590]/40"
+            style={{ background: "rgba(245,240,232,0.65)" }}
+          >
+            <div className="space-y-2 text-sm">
+              <div className="flex items-start gap-2">
+                <span className="shrink-0">📋</span>
+                <p className="text-foreground">
+                  <span className="font-semibold" style={{ color: "#1B4332" }}>O que fazer:</span>{" "}
+                  {STEP_GUIDE[stepNumber].what}
+                </p>
+              </div>
+              <div className="flex items-start gap-2">
+                <span className="shrink-0">📍</span>
+                <p className="text-foreground">
+                  <span className="font-semibold" style={{ color: "#1B4332" }}>Onde:</span>{" "}
+                  {STEP_GUIDE[stepNumber].where}
+                </p>
+              </div>
+              <div className="flex items-start gap-2">
+                <span className="shrink-0">💚</span>
+                <p className="text-foreground">
+                  <span className="font-semibold" style={{ color: "#1B4332" }}>Por que:</span>{" "}
+                  {STEP_GUIDE[stepNumber].why}
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* 1. ÁUDIO */}
         {STEP_AUDIO[stepNumber] && (
           <div
