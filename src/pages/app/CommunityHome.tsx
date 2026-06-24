@@ -687,6 +687,7 @@ export default function CommunityHome() {
               onReport={() => reportPost(post.id, "Conteúdo inadequado")}
               onToggleFollow={() => toggleFollow(post.user_id)}
               onDelete={() => deletePost(post.id)}
+              onBlock={() => blockUser(post.user_id)}
             />
           ))
         )}
