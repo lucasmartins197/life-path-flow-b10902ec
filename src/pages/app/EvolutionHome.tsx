@@ -252,38 +252,56 @@ export default function EvolutionHome() {
         <h1 className="text-2xl font-bold text-white mb-1">Minha Evolução</h1>
         <p className="text-white/60 text-sm">Acompanhe sua jornada de recuperação</p>
 
-        {/* Recovery Index */}
+        {/* Nível de Jornada */}
         <div className="mt-5 bg-white/10 rounded-2xl p-4">
-          <div className="flex items-center justify-between mb-3">
-            <div>
-              <p className="text-white/70 text-xs font-medium uppercase tracking-wide">Índice de Recuperação</p>
-              <p className="text-white text-3xl font-bold mt-0.5">{recoveryIndex}<span className="text-lg font-normal text-white/60">/100</span></p>
-              <p className="text-sm font-medium mt-0.5" style={{ color: getIndexColor(recoveryIndex) === "#059669" ? "#6EE7B7" : "#FCD34D" }}>
-                {getIndexLabel(recoveryIndex)}
+          <div className="flex items-center gap-4">
+            <div className="h-16 w-16 rounded-2xl flex items-center justify-center text-4xl shrink-0"
+              style={{ background: "rgba(255,255,255,0.15)" }}>
+              {level.emoji}
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-white/70 text-xs font-medium uppercase tracking-wide">Nível da Jornada</p>
+              <p className="text-white text-2xl font-bold mt-0.5 truncate" style={{ color: level.cor }}>{level.nome}</p>
+              <p className="text-white/80 text-sm mt-0.5">
+                {streakDays} {streakDays === 1 ? "dia firme" : "dias firmes"} na sua jornada
               </p>
             </div>
-            <div className="relative w-20 h-20">
-              <svg viewBox="0 0 80 80" className="transform -rotate-90">
-                <circle cx="40" cy="40" r="32" fill="none" stroke="rgba(255,255,255,0.15)" strokeWidth="8"/>
-                <circle cx="40" cy="40" r="32" fill="none" stroke="white" strokeWidth="8"
-                  strokeDasharray={`${2 * Math.PI * 32}`}
-                  strokeDashoffset={`${2 * Math.PI * 32 * (1 - recoveryIndex / 100)}`}
-                  strokeLinecap="round"/>
-              </svg>
-              <div className="absolute inset-0 flex items-center justify-center">
-                <TrendingUp className="h-6 w-6 text-white" />
+          </div>
+
+          {level.proximo && nextLevelName && (
+            <div className="mt-4">
+              <div className="flex items-center justify-between text-xs mb-1.5">
+                <span className="text-white/70">Faltam {level.proximo - streakDays} dias para {nextLevelName}</span>
+                <span className="text-white/80 font-medium">{streakDays}/{level.proximo}</span>
+              </div>
+              <div className="h-2.5 w-full rounded-full overflow-hidden bg-white/15">
+                <div className="h-full rounded-full transition-all duration-700"
+                  style={{ width: `${progressToNext}%`, background: level.cor }} />
               </div>
             </div>
+          )}
+
+          <div className="mt-4 pt-4 border-t border-white/10">
+            <p className="text-white/60 text-xs italic leading-relaxed">
+              Recuperação é uma jornada diária, não um destino. Cada dia conta.
+            </p>
           </div>
-          <div className="grid grid-cols-3 gap-2 mt-2">
-            {[
-              { label: "Check-ins", value: weekSummary?.checkins || 0, max: 7 },
-              { label: "Tarefas", value: weekSummary?.rotina_concluidas || 0, max: weekSummary?.rotina_tarefas || 1 },
-              { label: "Passos", value: journeyProgress, max: 12 },
-            ].map(item => (
-              <div key={item.label} className="bg-white/10 rounded-xl p-2 text-center">
-                <p className="text-white font-bold text-base">{item.value}<span className="text-white/50 text-xs">/{item.max}</span></p>
-                <p className="text-white/60 text-xs">{item.label}</p>
+        </div>
+
+        {/* Presença esta semana */}
+        <div className="mt-3 bg-white/10 rounded-2xl p-4">
+          <div className="flex items-center justify-between mb-3">
+            <p className="text-white/70 text-xs font-medium uppercase tracking-wide">Presença esta semana</p>
+            <p className="text-white text-sm font-semibold">{weekCheckins} dos 7 dias</p>
+          </div>
+          <div className="flex items-center justify-between gap-2">
+            {weeklyCheckins.map((checked, i) => (
+              <div key={i} className="flex-1 flex flex-col items-center gap-1.5">
+                <div className="w-full aspect-square rounded-full flex items-center justify-center transition-colors"
+                  style={{ background: checked ? level.cor : "rgba(255,255,255,0.12)" }}>
+                  {checked && <CheckCircle2 className="h-4 w-4 text-white" />}
+                </div>
+                <span className="text-[10px] text-white/50 font-medium">{dayLabels[i]}</span>
               </div>
             ))}
           </div>
