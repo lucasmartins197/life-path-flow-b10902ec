@@ -21,6 +21,30 @@ export default function TherapyHome() {
   const [couponError, setCouponError] = useState("");
   const [couponLoading, setCouponLoading] = useState(false);
 
+  useEffect(() => {
+    if (!paymentSuccess) return;
+    (async () => {
+      try {
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
+        if (user?.id && !dossieSentRef.current) {
+          dossieSentRef.current = true;
+          // 1. Gerar prontuário atualizado primeiro
+          await supabase.functions.invoke("gerar-prontuario", {
+            body: { user_id: user.id },
+          });
+          // 2. Enviar dossiê com o prontuário fresco
+          await supabase.functions.invoke("send-clinical-dossier", {
+            body: { user_id: user.id },
+          });
+        }
+      } catch (err) {
+        console.error("Erro ao processar dossiê:", err);
+      }
+    })();
+  }, [paymentSuccess]);
+
   const BASE_PRICE = 229.2;
   const finalPrice = appliedCoupon
     ? appliedCoupon.percent_off
