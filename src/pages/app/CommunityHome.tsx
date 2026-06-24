@@ -93,9 +93,10 @@ function RulesAcceptance({ onAccept }: { onAccept: () => void }) {
           <p className="flex items-start gap-2"><span className="w-1.5 h-1.5 rounded-full bg-[#1B4332] mt-1.5 shrink-0" /> Não incentive comportamentos de risco</p>
           <p className="flex items-start gap-2"><span className="w-1.5 h-1.5 rounded-full bg-[#1B4332] mt-1.5 shrink-0" /> Conteúdos inadequados serão removidos</p>
           <p className="flex items-start gap-2"><span className="w-1.5 h-1.5 rounded-full bg-[#1B4332] mt-1.5 shrink-0" /> Sua privacidade é prioridade</p>
+          <p className="flex items-start gap-2 font-semibold text-foreground bg-[#1B4332]/5 border border-[#1B4332]/20 rounded-lg p-3"><Shield className="h-4 w-4 text-[#1B4332] mt-0.5 shrink-0" /> Tolerância zero a conteúdo ofensivo, abusivo ou discriminatório. Usuários que violarem serão removidos.</p>
         </div>
         <Button onClick={onAccept} className="w-full mt-4 bg-[#1B4332] hover:bg-[#1B4332]/90 text-white">
-          Entendo e quero participar
+          Li e aceito as regras
         </Button>
       </DialogContent>
     </Dialog>
