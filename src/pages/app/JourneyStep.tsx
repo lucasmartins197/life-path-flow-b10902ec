@@ -1122,6 +1122,18 @@ export default function JourneyStep() {
                 {stepTaskDone || isAdmin ? <CheckCircle className="h-4 w-4" /> : <Lock className="h-4 w-4" />}
                 Completar atividade prática
               </div>
+              {letterDef && (
+                <div
+                  className={`flex items-center gap-2 text-sm ${letterContent.trim().length >= letterDef.minChars ? "text-green-600" : "text-muted-foreground"}`}
+                >
+                  {letterContent.trim().length >= letterDef.minChars ? (
+                    <CheckCircle className="h-4 w-4" />
+                  ) : (
+                    <Lock className="h-4 w-4" />
+                  )}
+                  Escrever a carta "{letterDef.title}" (mín. {letterDef.minChars} caracteres)
+                </div>
+              )}
             </div>
           </div>
         )}
@@ -1133,13 +1145,17 @@ export default function JourneyStep() {
             !resposta.trim() ||
             resposta.trim().length < 50 ||
             (!stepTaskDone && !isAdmin) ||
-            (!quizPassed && !isCompleted)
+            (!quizPassed && !isCompleted) ||
+            (!!letterDef && letterContent.trim().length < letterDef.minChars)
           }
           className="w-full h-12 text-white font-semibold disabled:opacity-60"
           style={{
             background: isCompleted
               ? "linear-gradient(135deg, #C9A84C, #E8D590)"
-              : (stepTaskDone || isAdmin) && quizPassed && resposta.trim().length >= 50
+              : (stepTaskDone || isAdmin) &&
+                  quizPassed &&
+                  resposta.trim().length >= 50 &&
+                  (!letterDef || letterContent.trim().length >= letterDef.minChars)
                 ? "linear-gradient(135deg, #1B4332, #2D6A4F)"
                 : "#9CA3AF",
           }}
@@ -1161,6 +1177,10 @@ export default function JourneyStep() {
           ) : resposta.trim().length < 50 ? (
             <>
               <Lock className="h-5 w-5 mr-2" /> Escreva seu depoimento
+            </>
+          ) : letterDef && letterContent.trim().length < letterDef.minChars ? (
+            <>
+              <Mail className="h-5 w-5 mr-2" /> Escreva sua carta
             </>
           ) : !stepTaskDone && !isAdmin ? (
             <>
