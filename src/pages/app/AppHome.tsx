@@ -132,39 +132,6 @@ export default function AppHome() {
     },
   });
 
-  const todayISO = new Date().toISOString().split("T")[0];
-
-  const { data: todayCheckin } = useQuery({
-    queryKey: ["daily-checkin", user?.id, todayISO],
-    enabled: !!user?.id,
-    queryFn: async () => {
-      const { data } = await supabase
-        .from("gambling_streak")
-        .select("stayed_clean")
-        .eq("user_id", user!.id)
-        .eq("confirmation_date", todayISO)
-        .maybeSingle();
-      return data;
-    },
-  });
-
-  const handleCheckIn = async (stayedClean: boolean) => {
-    if (!user?.id) return;
-    await supabase.from("gambling_streak").upsert(
-      {
-        user_id: user.id,
-        confirmation_date: todayISO,
-        stayed_clean: stayedClean,
-      },
-      { onConflict: "user_id,confirmation_date" }
-    );
-    setCheckedIn(true);
-    if (stayedClean) {
-      toast("🔥 Mais um dia de vitória! Continue assim.");
-    } else {
-      toast("Recaídas fazem parte. O importante é continuar. Estamos com você. 💚");
-    }
-  };
 
 
   if (confirmingPayment) {
