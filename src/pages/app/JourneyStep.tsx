@@ -1014,6 +1014,71 @@ export default function JourneyStep() {
           )}
         </div>
 
+        {/* CARTA TERAPÊUTICA — para passos específicos */}
+        {letterDef && (
+          <div className="rounded-2xl p-5 bg-card border border-border shadow-sm">
+            <div className="flex items-center gap-2 mb-3">
+              <Mail className="h-5 w-5" style={{ color: "#1B4332" }} />
+              <h2 className="text-sm font-bold uppercase tracking-wide flex-1" style={{ color: "#1B4332" }}>
+                {letterDef.title}
+              </h2>
+              {letterSaved && (
+                <span
+                  className="text-xs font-bold px-2 py-1 rounded-full flex items-center gap-1"
+                  style={{ background: "#D1FAE5", color: "#065F46" }}
+                >
+                  <CheckCircle className="h-3 w-3" /> Salva
+                </span>
+              )}
+            </div>
+            <p className="text-foreground text-sm mb-3 leading-relaxed">{letterDef.prompt}</p>
+            <Textarea
+              value={letterContent}
+              onChange={(e) => {
+                setLetterContent(e.target.value);
+                if (letterSaved) setLetterSaved(false);
+              }}
+              placeholder={`Sua carta (mínimo ${letterDef.minChars} caracteres)...`}
+              rows={8}
+              className="resize-none"
+            />
+            <div className="flex items-center justify-between mt-3">
+              <span
+                className={`text-xs ${letterContent.trim().length >= letterDef.minChars ? "text-green-600" : "text-muted-foreground"}`}
+              >
+                {letterContent.trim().length}/{letterDef.minChars} caracteres
+              </span>
+              <Button
+                onClick={saveLetter}
+                disabled={savingLetter || letterContent.trim().length < letterDef.minChars}
+                size="sm"
+                style={{ background: "#1B4332", color: "#fff" }}
+              >
+                {savingLetter ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : letterDef.sendToAnchor ? (
+                  <>
+                    <Send className="h-4 w-4 mr-1" /> Salvar e enviar ao âncora
+                  </>
+                ) : (
+                  "Salvar carta"
+                )}
+              </Button>
+            </div>
+            {letterFeedback && (
+              <div
+                className="mt-4 rounded-xl p-4 text-sm leading-relaxed whitespace-pre-line"
+                style={{ background: "#F5F0E8", color: "#1B4332", border: "1px solid #E8D590" }}
+              >
+                <p className="text-xs font-bold uppercase tracking-widest mb-2" style={{ color: "#C9A84C" }}>
+                  💚 Ana
+                </p>
+                {letterFeedback}
+              </div>
+            )}
+          </div>
+        )}
+
         {/* 5. VÍDEO YOUTUBE */}
         <div className="rounded-2xl overflow-hidden shadow-md bg-black">
           <iframe
