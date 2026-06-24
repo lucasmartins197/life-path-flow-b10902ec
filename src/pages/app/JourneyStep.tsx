@@ -25,6 +25,25 @@ import {
   CheckSquare,
 } from "lucide-react";
 import { STEP_QUIZ } from "./quiz_data";
+import { Mail, Send } from "lucide-react";
+
+/* ── Cartas terapêuticas por passo ── */
+interface StepLetter {
+  type: string;
+  title: string;
+  prompt: string;
+  minChars: number;
+  sendToAnchor?: boolean;
+}
+
+const STEP_LETTERS: Record<number, StepLetter> = {
+  1: { type: "por_que_estou_aqui", title: "Por que estou aqui", prompt: "Escreva o que te trouxe até aqui. O que você sente que precisa mudar? Seja honesto consigo mesmo.", minChars: 300 },
+  3: { type: "carta_ancora", title: "Carta ao meu âncora", prompt: "Escreva uma mensagem para a pessoa que você escolheu como âncora. O que ela significa para você? Por que confia nela nessa jornada?", minChars: 300, sendToAnchor: true },
+  4: { type: "meus_gatilhos", title: "Meus gatilhos", prompt: "Descreva as 3 situações que mais te fazem querer apostar. Quando acontecem? Como você se sente?", minChars: 300 },
+  5: { type: "eu_do_passado", title: "Carta ao meu eu do passado", prompt: "Escreva uma carta para você mesmo de quando estava no auge das apostas. O que você diria? O que gostaria que soubesse?", minChars: 300 },
+  8: { type: "meta_financeira", title: "Minha meta financeira", prompt: "Descreva onde você quer chegar financeiramente. Qual sua meta? Como sua vida será quando estiver livre das dívidas?", minChars: 300 },
+  12: { type: "conquista", title: "Carta de conquista", prompt: "Você chegou ao fim da jornada. Escreva sobre tudo que conquistou, o que aprendeu, e a pessoa que você se tornou.", minChars: 400 },
+};
 
 /* ── Áudio do passo (Supabase Storage) ── */
 const AUDIO_BASE = "https://dmrlkxwpbwmzpdecsgnw.supabase.co/storage/v1/object/public/audios-jornada";
@@ -242,6 +261,13 @@ export default function JourneyStep() {
   const [anaFeedback, setAnaFeedback] = useState<string | null>(null);
   const [showAnaFeedback, setShowAnaFeedback] = useState(false);
 
+  // Letter states
+  const letterDef = STEP_LETTERS[stepNumber];
+  const [letterContent, setLetterContent] = useState("");
+  const [letterSaved, setLetterSaved] = useState(false);
+  const [savingLetter, setSavingLetter] = useState(false);
+  const [letterFeedback, setLetterFeedback] = useState<string | null>(null);
+
   // Quiz states
   const [audioPlayed, setAudioPlayed] = useState(false);
   const [quizAnswers, setQuizAnswers] = useState<Record<number, number>>({});
@@ -258,7 +284,7 @@ export default function JourneyStep() {
     if (!user) return;
     (async () => {
       setLoading(true);
-      const [{ data: r }, { data: p }] = await Promise.all([
+      const [{ data: r }, { data: p }, letterRes] = await Promise.all([
         supabase
           .from("jornada_respostas" as any)
           .select("resposta, audio_played, quiz_passed")
@@ -271,6 +297,14 @@ export default function JourneyStep() {
           .eq("user_id", user.id)
           .eq("step_number", stepNumber)
           .maybeSingle(),
+        letterDef
+          ? supabase
+              .from("journey_letters" as any)
+              .select("content")
+              .eq("user_id", user.id)
+              .eq("step_number", stepNumber)
+              .maybeSingle()
+          : Promise.resolve({ data: null }),
       ]);
       const row = r as any;
       if (row?.resposta) setResposta(row.resposta);
@@ -280,6 +314,11 @@ export default function JourneyStep() {
         setQuizPassed(true);
       }
       if (p?.is_completed) setIsCompleted(true);
+      const lc = (letterRes as any)?.data?.content;
+      if (lc) {
+        setLetterContent(lc);
+        if (letterDef && lc.trim().length >= letterDef.minChars) setLetterSaved(true);
+      }
       setLoading(false);
     })();
   }, [user, stepNumber]);
@@ -352,6 +391,74 @@ export default function JourneyStep() {
     }
   }
 
+  async function saveLetter() {
+    if (!user || !letterDef) return;
+    const content = letterContent.trim();
+    if (content.length < letterDef.minChars) {
+      toast({
+        variant: "destructive",
+        title: "Carta muito curta",
+        description: `Escreva pelo menos ${letterDef.minChars} caracteres.`,
+      });
+      return;
+    }
+    setSavingLetter(true);
+    setLetterFeedback(null);
+    const { error } = await supabase
+      .from("journey_letters" as any)
+      .upsert(
+        {
+          user_id: user.id,
+          step_number: stepNumber,
+          letter_type: letterDef.type,
+          title: letterDef.title,
+          content,
+          updated_at: new Date().toISOString(),
+        },
+        { onConflict: "user_id,step_number" },
+      );
+    if (error) {
+      setSavingLetter(false);
+      toast({ variant: "destructive", title: "Erro ao salvar carta", description: error.message });
+      return;
+    }
+    setLetterSaved(true);
+    toast({ title: "💌 Carta salva", description: "Sua carta foi guardada com segurança." });
+
+    // Ana feedback for the letter
+    try {
+      const { data: prof } = await supabase
+        .from("profiles")
+        .select("full_name")
+        .eq("id", user.id)
+        .maybeSingle();
+      const { data: fbData } = await supabase.functions.invoke("journey-feedback", {
+        body: {
+          step_number: stepNumber,
+          depoimento: content,
+          user_name: prof?.full_name || "você",
+        },
+      });
+      const fb = (fbData as any)?.feedback;
+      if (fb) setLetterFeedback(fb);
+
+      // Send letter to anchor if applicable
+      if (letterDef.sendToAnchor) {
+        try {
+          await supabase.functions.invoke("send-letter-to-anchor", {
+            body: { letter_content: content, user_name: prof?.full_name || "" },
+          });
+          toast({ title: "💌 Sua carta foi enviada ao seu âncora!" });
+        } catch (e) {
+          console.warn("send-letter-to-anchor failed:", e);
+        }
+      }
+    } catch (e) {
+      console.warn("letter feedback failed:", e);
+    }
+    setSavingLetter(false);
+  }
+
   function fireConfetti() {
     const end = Date.now() + 1500;
     const colors = ["#C9A84C", "#E8D590", "#1B4332", "#2D6A4F"];
@@ -370,6 +477,14 @@ export default function JourneyStep() {
         variant: "destructive",
         title: "Reflexão necessária",
         description: "Responda a pergunta antes de concluir.",
+      });
+      return;
+    }
+    if (letterDef && letterContent.trim().length < letterDef.minChars) {
+      toast({
+        variant: "destructive",
+        title: "Carta obrigatória",
+        description: `Escreva sua carta "${letterDef.title}" (mín. ${letterDef.minChars} caracteres).`,
       });
       return;
     }
@@ -899,6 +1014,71 @@ export default function JourneyStep() {
           )}
         </div>
 
+        {/* CARTA TERAPÊUTICA — para passos específicos */}
+        {letterDef && (
+          <div className="rounded-2xl p-5 bg-card border border-border shadow-sm">
+            <div className="flex items-center gap-2 mb-3">
+              <Mail className="h-5 w-5" style={{ color: "#1B4332" }} />
+              <h2 className="text-sm font-bold uppercase tracking-wide flex-1" style={{ color: "#1B4332" }}>
+                {letterDef.title}
+              </h2>
+              {letterSaved && (
+                <span
+                  className="text-xs font-bold px-2 py-1 rounded-full flex items-center gap-1"
+                  style={{ background: "#D1FAE5", color: "#065F46" }}
+                >
+                  <CheckCircle className="h-3 w-3" /> Salva
+                </span>
+              )}
+            </div>
+            <p className="text-foreground text-sm mb-3 leading-relaxed">{letterDef.prompt}</p>
+            <Textarea
+              value={letterContent}
+              onChange={(e) => {
+                setLetterContent(e.target.value);
+                if (letterSaved) setLetterSaved(false);
+              }}
+              placeholder={`Sua carta (mínimo ${letterDef.minChars} caracteres)...`}
+              rows={8}
+              className="resize-none"
+            />
+            <div className="flex items-center justify-between mt-3">
+              <span
+                className={`text-xs ${letterContent.trim().length >= letterDef.minChars ? "text-green-600" : "text-muted-foreground"}`}
+              >
+                {letterContent.trim().length}/{letterDef.minChars} caracteres
+              </span>
+              <Button
+                onClick={saveLetter}
+                disabled={savingLetter || letterContent.trim().length < letterDef.minChars}
+                size="sm"
+                style={{ background: "#1B4332", color: "#fff" }}
+              >
+                {savingLetter ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : letterDef.sendToAnchor ? (
+                  <>
+                    <Send className="h-4 w-4 mr-1" /> Salvar e enviar ao âncora
+                  </>
+                ) : (
+                  "Salvar carta"
+                )}
+              </Button>
+            </div>
+            {letterFeedback && (
+              <div
+                className="mt-4 rounded-xl p-4 text-sm leading-relaxed whitespace-pre-line"
+                style={{ background: "#F5F0E8", color: "#1B4332", border: "1px solid #E8D590" }}
+              >
+                <p className="text-xs font-bold uppercase tracking-widest mb-2" style={{ color: "#C9A84C" }}>
+                  💚 Ana
+                </p>
+                {letterFeedback}
+              </div>
+            )}
+          </div>
+        )}
+
         {/* 5. VÍDEO YOUTUBE */}
         <div className="rounded-2xl overflow-hidden shadow-md bg-black">
           <iframe
@@ -942,6 +1122,18 @@ export default function JourneyStep() {
                 {stepTaskDone || isAdmin ? <CheckCircle className="h-4 w-4" /> : <Lock className="h-4 w-4" />}
                 Completar atividade prática
               </div>
+              {letterDef && (
+                <div
+                  className={`flex items-center gap-2 text-sm ${letterContent.trim().length >= letterDef.minChars ? "text-green-600" : "text-muted-foreground"}`}
+                >
+                  {letterContent.trim().length >= letterDef.minChars ? (
+                    <CheckCircle className="h-4 w-4" />
+                  ) : (
+                    <Lock className="h-4 w-4" />
+                  )}
+                  Escrever a carta "{letterDef.title}" (mín. {letterDef.minChars} caracteres)
+                </div>
+              )}
             </div>
           </div>
         )}
@@ -953,13 +1145,17 @@ export default function JourneyStep() {
             !resposta.trim() ||
             resposta.trim().length < 50 ||
             (!stepTaskDone && !isAdmin) ||
-            (!quizPassed && !isCompleted)
+            (!quizPassed && !isCompleted) ||
+            (!!letterDef && letterContent.trim().length < letterDef.minChars)
           }
           className="w-full h-12 text-white font-semibold disabled:opacity-60"
           style={{
             background: isCompleted
               ? "linear-gradient(135deg, #C9A84C, #E8D590)"
-              : (stepTaskDone || isAdmin) && quizPassed && resposta.trim().length >= 50
+              : (stepTaskDone || isAdmin) &&
+                  quizPassed &&
+                  resposta.trim().length >= 50 &&
+                  (!letterDef || letterContent.trim().length >= letterDef.minChars)
                 ? "linear-gradient(135deg, #1B4332, #2D6A4F)"
                 : "#9CA3AF",
           }}
@@ -981,6 +1177,10 @@ export default function JourneyStep() {
           ) : resposta.trim().length < 50 ? (
             <>
               <Lock className="h-5 w-5 mr-2" /> Escreva seu depoimento
+            </>
+          ) : letterDef && letterContent.trim().length < letterDef.minChars ? (
+            <>
+              <Mail className="h-5 w-5 mr-2" /> Escreva sua carta
             </>
           ) : !stepTaskDone && !isAdmin ? (
             <>
