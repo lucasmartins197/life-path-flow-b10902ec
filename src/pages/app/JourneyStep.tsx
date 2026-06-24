@@ -261,6 +261,13 @@ export default function JourneyStep() {
   const [anaFeedback, setAnaFeedback] = useState<string | null>(null);
   const [showAnaFeedback, setShowAnaFeedback] = useState(false);
 
+  // Letter states
+  const letterDef = STEP_LETTERS[stepNumber];
+  const [letterContent, setLetterContent] = useState("");
+  const [letterSaved, setLetterSaved] = useState(false);
+  const [savingLetter, setSavingLetter] = useState(false);
+  const [letterFeedback, setLetterFeedback] = useState<string | null>(null);
+
   // Quiz states
   const [audioPlayed, setAudioPlayed] = useState(false);
   const [quizAnswers, setQuizAnswers] = useState<Record<number, number>>({});
