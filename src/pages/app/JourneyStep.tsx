@@ -983,8 +983,9 @@ export default function JourneyStep() {
             )}
           </div>
           {!quizPassed && !isCompleted && (
-            <p className="text-xs text-muted-foreground mb-3 italic">
-              🔒 Complete o questionário para liberar o depoimento
+            <p className="text-xs text-muted-foreground mb-3 italic flex items-center gap-1">
+              <Lock className="h-3.5 w-3.5" />
+              Complete o questionário para liberar o depoimento
             </p>
           )}
           <p className="text-foreground text-sm mb-3 leading-relaxed">{quiz?.depositoPrompt || step.question}</p>
