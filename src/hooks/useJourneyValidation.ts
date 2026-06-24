@@ -27,7 +27,7 @@ export const STEP_TASK_LABEL: Record<number, string> = {
   2: "Publicar 1 história E curtir pelo menos 2 histórias de outros membros",
   3: "Cadastrar pelo menos 1 Contato Âncora",
   4: "Registrar pelo menos 1 gatilho ativo no Meu Escudo",
-  5: "Publicar 2ª história E fazer reflexão noturna por 2 dias",
+  5: "Publicar 2ª história E escrever a carta do Passo 5",
   6: "Configurar rotina E completar atividades por 2 dias",
   7: "Agendar 1 sessão de terapia",
   8: "Registrar pelo menos 2 dívidas E definir uma meta financeira",
@@ -94,19 +94,14 @@ async function validateStep(stepNumber: number, userId: string): Promise<StepVal
         .select("id", { count: "exact", head: true })
         .eq("user_id", userId);
 
-      const { data: reflections } = await supabase
-        .from("daily_reflections")
-        .select("created_at")
+      const { count: letterCount } = await supabase
+        .from("journey_letters")
+        .select("id", { count: "exact", head: true })
         .eq("user_id", userId)
-        .order("created_at", { ascending: false })
-        .limit(10);
+        .eq("step_number", 5);
 
-      const uniqueDays = new Set(
-        (reflections || []).map((r: any) => r.created_at.slice(0, 10))
-      );
-
-      const done = (postsCount ?? 0) >= 2 && uniqueDays.size >= 2;
-      return { done, detail: `${postsCount ?? 0} de 2 histórias · ${uniqueDays.size} dias de reflexão` };
+      const done = (postsCount ?? 0) >= 2 && (letterCount ?? 0) >= 1;
+      return { done, detail: `${postsCount ?? 0} de 2 histórias · ${letterCount ?? 0} de 1 carta` };
     }
     case 6: {
       const { count: prefCount } = await supabase
