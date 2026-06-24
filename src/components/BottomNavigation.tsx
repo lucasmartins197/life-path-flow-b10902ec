@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import {
   House, Users, Calendar, Grid2x2,
-  Shield, BookOpen, Video, Award, Wallet, Scale, Lock,
+  Shield, BookOpen, Video, Award, Wallet, Scale, Lock, Mail,
   Anchor, User as UserIcon, CreditCard, TrendingUp, Footprints, HeartHandshake,
   LucideIcon,
 } from "lucide-react";
