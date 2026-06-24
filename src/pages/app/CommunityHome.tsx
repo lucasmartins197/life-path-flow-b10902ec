@@ -5,7 +5,7 @@ import { useCommunityFeed, CommunityPost, PostComment, ReactionType } from "@/ho
 import { useAuth } from "@/contexts/AuthContext";
 import {
   Heart, MessageCircle, Send, Plus, Users, ChevronLeft,
-  Camera, MoreHorizontal, Flag, X, Image as ImageIcon, Video, UserPlus, UserCheck, Trash2
+  Camera, MoreHorizontal, Flag, X, Image as ImageIcon, Video, UserPlus, UserCheck, Trash2, Ban
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -358,7 +358,7 @@ function CommentsDrawer({
 }
 
 function PostCard({
-  post, currentUserId, onReact, onComment, onReport, onToggleFollow, onDelete,
+  post, currentUserId, onReact, onComment, onReport, onToggleFollow, onDelete, onBlock,
 }: {
   post: CommunityPost;
   currentUserId?: string;
@@ -367,6 +367,7 @@ function PostCard({
   onReport: () => void;
   onToggleFollow: () => void;
   onDelete: () => Promise<boolean>;
+  onBlock: () => void;
 }) {
   const isOwn = post.user_id === currentUserId;
   const totalReactions =
