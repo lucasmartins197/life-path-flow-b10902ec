@@ -275,6 +275,20 @@ export function useCommunityFeed() {
     return true;
   };
 
+  const blockUser = async (targetUserId: string): Promise<boolean> => {
+    if (!user || targetUserId === user.id) return false;
+    const { error } = await supabase
+      .from("blocked_users")
+      .insert({ blocker_id: user.id, blocked_id: targetUserId });
+    if (error && !error.message.includes("duplicate")) {
+      toast({ title: "Erro ao bloquear", description: error.message, variant: "destructive" });
+      return false;
+    }
+    setPosts((prev) => prev.filter((p) => p.user_id !== targetUserId));
+    toast({ title: "Usuário bloqueado", description: "Você não verá mais publicações dele." });
+    return true;
+  };
+
   const uploadPostImage = async (file: File): Promise<string | null> => {
     if (!user) return null;
     const ext = file.name.split(".").pop();
@@ -354,6 +368,7 @@ export function useCommunityFeed() {
     addComment,
     reportPost,
     deletePost,
+    blockUser,
     uploadPostImage,
     uploadPostVideo,
     refreshPosts: fetchPosts,
