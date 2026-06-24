@@ -11,7 +11,7 @@ import { PremiumNavCards } from "@/components/home/PremiumNavCards";
 import { useMedals } from "@/hooks/useMedals";
 import { BlockingBanner } from "@/components/recovery/BlockingBanner";
 import { EveningCheckIn } from "@/components/recovery/EveningCheckIn";
-import { toast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 
 /* ── Motivational quotes ── */
 const quotes = [
@@ -63,6 +63,8 @@ export default function AppHome() {
   const quote = getDailyQuote();
 
   const [confirmingPayment, setConfirmingPayment] = useState(false);
+  const [checkedIn, setCheckedIn] = useState(false);
+
 
   // Handle Stripe checkout success redirect: ?payment=success
   useEffect(() => {
@@ -87,10 +89,10 @@ export default function AppHome() {
         .maybeSingle();
 
       if (cancelled) return;
-      toast({
-        title: "Pagamento confirmado!",
+      toast.success("Pagamento confirmado!", {
         description: "Sua assinatura está ativa.",
       });
+
       window.history.replaceState({}, "", "/app");
       setConfirmingPayment(false);
       if (!ob) navigate("/app", { replace: true });
@@ -130,6 +132,41 @@ export default function AppHome() {
       return calcStreak(data?.map((d) => d.date) || []);
     },
   });
+
+  const todayISO = new Date().toISOString().split("T")[0];
+
+  const { data: todayCheckin } = useQuery({
+    queryKey: ["daily-checkin", user?.id, todayISO],
+    enabled: !!user?.id,
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("gambling_streak")
+        .select("stayed_clean")
+        .eq("user_id", user!.id)
+        .eq("confirmation_date", todayISO)
+        .maybeSingle();
+      return data;
+    },
+  });
+
+  const handleCheckIn = async (stayedClean: boolean) => {
+    if (!user?.id) return;
+    await supabase.from("gambling_streak").upsert(
+      {
+        user_id: user.id,
+        confirmation_date: todayISO,
+        stayed_clean: stayedClean,
+      },
+      { onConflict: "user_id,confirmation_date" }
+    );
+    setCheckedIn(true);
+    if (stayedClean) {
+      toast("🔥 Mais um dia de vitória! Continue assim.");
+    } else {
+      toast("Recaídas fazem parte. O importante é continuar. Estamos com você. 💚");
+    }
+  };
+
 
   if (confirmingPayment) {
     return (
@@ -183,7 +220,34 @@ export default function AppHome() {
       </header>
 
       <main className="max-w-lg mx-auto px-5 pt-3 space-y-3">
+        {/* ── Daily check-in ── */}
+        {user && !todayCheckin && !checkedIn && (
+          <section className="bg-card border border-border rounded-2xl p-4 shadow-card">
+            <h2 className="text-base font-semibold text-foreground mb-1">
+              Como foi seu dia?
+            </h2>
+            <p className="text-sm text-muted-foreground mb-4">
+              Você ficou longe das apostas hoje?
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => handleCheckIn(true)}
+                className="flex-1 py-3 px-4 rounded-xl text-sm font-semibold text-primary-foreground bg-primary active:scale-[0.98] transition-transform"
+              >
+                Sim, fiquei firme 💪
+              </button>
+              <button
+                onClick={() => handleCheckIn(false)}
+                className="flex-1 py-3 px-4 rounded-xl text-sm font-semibold text-foreground bg-muted active:scale-[0.98] transition-transform"
+              >
+                Tive uma recaída
+              </button>
+            </div>
+          </section>
+        )}
+
         <BlockingBanner />
+
         {/* ── Motivational Quote ── */}
         <section
           className="relative overflow-hidden p-4"
