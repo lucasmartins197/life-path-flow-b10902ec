@@ -1071,6 +1071,42 @@ export type Database = {
         }
         Relationships: []
       }
+      journey_letters: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          letter_type: string
+          sent_to_anchor: boolean
+          step_number: number
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          letter_type: string
+          sent_to_anchor?: boolean
+          step_number: number
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          letter_type?: string
+          sent_to_anchor?: boolean
+          step_number?: number
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       journey_progress: {
         Row: {
           ai_conversation: Json | null
