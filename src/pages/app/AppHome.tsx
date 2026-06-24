@@ -63,7 +63,6 @@ export default function AppHome() {
   const quote = getDailyQuote();
 
   const [confirmingPayment, setConfirmingPayment] = useState(false);
-  const [checkedIn, setCheckedIn] = useState(false);
 
 
   // Handle Stripe checkout success redirect: ?payment=success
