@@ -10,7 +10,7 @@ import { PortoSeguroButton } from "@/components/PortoSeguroButton";
 import { PremiumNavCards } from "@/components/home/PremiumNavCards";
 import { useMedals } from "@/hooks/useMedals";
 import { BlockingBanner } from "@/components/recovery/BlockingBanner";
-import { EveningCheckIn } from "@/components/recovery/EveningCheckIn";
+import { DailyCheckIn } from "@/components/recovery/DailyCheckIn";
 import { toast } from "sonner";
 
 /* ── Motivational quotes ── */
