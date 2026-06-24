@@ -39,6 +39,7 @@ import SubscriptionHome from "./pages/app/SubscriptionHome";
 import MedalsHome from "./pages/app/MedalsHome";
 import MessagesHome from "./pages/app/MessagesHome";
 import BlockingHome from "./pages/app/BlockingHome";
+import LettersHome from "./pages/app/LettersHome";
 import ShieldHome from "./pages/app/ShieldHome";
 import TermosUso from "./pages/app/TermosUso";
 import Privacidade from "./pages/app/Privacidade";
