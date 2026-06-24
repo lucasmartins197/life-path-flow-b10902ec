@@ -10,7 +10,8 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import {
   Settings, Loader2, BookOpen, Dumbbell, Smile, Leaf,
-  CheckCircle2, Circle, ExternalLink, ChevronRight, Sparkles
+  CheckCircle2, Circle, ExternalLink, ChevronRight, Sparkles,
+  ShoppingCart, PartyPopper
 } from "lucide-react";
 
 /* ─── Types ─── */
