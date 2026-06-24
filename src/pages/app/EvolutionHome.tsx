@@ -71,6 +71,7 @@ export default function EvolutionHome() {
   const [onboarding, setOnboarding] = useState<OnboardingClinico | null>(null);
   const [journeyProgress, setJourneyProgress] = useState(0);
   const [streakDays, setStreakDays] = useState(0);
+  const [weeklyCheckins, setWeeklyCheckins] = useState<boolean[]>([false, false, false, false, false, false, false]);
   const [userName, setUserName] = useState("");
   const [activeTab, setActiveTab] = useState<"semana" | "prontuarios" | "historico">("semana");
   const [gerando, setGerando] = useState(false);
@@ -107,6 +108,13 @@ export default function EvolutionHome() {
 
     const checkinDates = new Set((checkinsRes.data || []).map((c: any) => c.confirmation_date));
     setStreakDays((streakTotalRes.data || []).length);
+
+    const weekDays = Array.from({ length: 7 }, (_, i) => {
+      const d = new Date(weekStart);
+      d.setDate(d.getDate() + i);
+      return d.toISOString().split("T")[0];
+    });
+    setWeeklyCheckins(weekDays.map((d) => checkinDates.has(d)));
 
     const allTasks = tasksRes.data || [];
     const doneTasks = allTasks.filter((t: any) => t.concluido).length;
