@@ -45,6 +45,22 @@ const STEP_LETTERS: Record<number, StepLetter> = {
   12: { type: "conquista", title: "Carta de conquista", prompt: "Você chegou ao fim da jornada. Escreva sobre tudo que conquistou, o que aprendeu, e a pessoa que você se tornou.", minChars: 400 },
 };
 
+/* ── Guia explicativo no topo de cada passo ── */
+const STEP_GUIDE: Record<number, { what: string; where: string; why: string }> = {
+  1: { what: "Ouça o áudio, responda o quiz e escreva sua primeira carta", where: "Tudo nesta tela + complete seu perfil", why: "Reconhecer o problema é o primeiro passo da recuperação" },
+  2: { what: "Publique sua primeira história na comunidade", where: "Botão abaixo leva para Histórias que Conectam", why: "Seu relato pode ser a esperança de outra pessoa" },
+  3: { what: "Cadastre seu âncora e escreva uma carta a ele", where: "Botão leva para Contato Âncora", why: "Ter apoio real reduz o risco de recaída" },
+  4: { what: "Configure o bloqueio e mapeie seus gatilhos", where: "Botão leva para Meu Escudo", why: "Conhecer seus gatilhos é se proteger deles" },
+  5: { what: "Publique sua 2ª história e escreva ao seu eu do passado", where: "Comunidade + carta nesta tela", why: "Olhar para trás mostra o quanto você evoluiu" },
+  6: { what: "Configure sua rotina e complete atividades por 2 dias", where: "Botão leva para Rotina Inteligente", why: "Novos hábitos ocupam o espaço que o jogo deixou" },
+  7: { what: "Agende e pague sua sessão de terapia", where: "Botão leva para Terapia", why: "Apoio profissional acelera a recuperação" },
+  8: { what: "Registre 2 dívidas, defina meta e escreva sua carta financeira", where: "Finanças + carta nesta tela", why: "Encarar os números é retomar o controle" },
+  9: { what: "Faça check-in por 3 dias consecutivos", where: "Check-in diário na tela inicial após as 20h", why: "Consistência constrói a recuperação" },
+  10: { what: "Ative os alertas do âncora e mantenha 5 dias de rotina", where: "Meu Escudo + Rotina", why: "Vigilância contínua previne recaídas" },
+  11: { what: "Faça sua avaliação jurídica com especialista", where: "Botão leva para Apoio Jurídico", why: "Você pode ter direito a reaver valores perdidos" },
+  12: { what: "Escreva sua carta de conquista e celebre", where: "Carta nesta tela + compartilhe", why: "Reconhecer a jornada fortalece a mudança" },
+};
+
 /* ── Áudio do passo (Supabase Storage) ── */
 const AUDIO_BASE = "https://dmrlkxwpbwmzpdecsgnw.supabase.co/storage/v1/object/public/audios-jornada";
 const STEP_AUDIO: Record<number, string> = {
