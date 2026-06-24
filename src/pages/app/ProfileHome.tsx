@@ -444,22 +444,13 @@ export default function ProfileHome() {
     if (!user) return;
     setDeleting(true);
     try {
-      // Soft cleanup of user-owned data; auth user removal would require an edge function with service role
-      await supabase
-        .from("profiles")
-        .update({
-          full_name: "Conta excluída",
-          bio: null,
-          city: null,
-          avatar_url: null,
-          is_public: false,
-        })
-        .eq("id", user.id);
+      const { error } = await supabase.functions.invoke("delete-account");
+      if (error) throw error;
       await signOut();
-      toast({ title: "Conta excluída", description: "Você foi desconectado." });
+      toast({ title: "Conta excluída", description: "Todos os seus dados foram removidos permanentemente." });
       navigate("/auth");
     } catch (e: any) {
-      toast({ title: "Erro", description: e.message, variant: "destructive" });
+      toast({ title: "Erro", description: "Não foi possível excluir a conta. Tente novamente.", variant: "destructive" });
     } finally {
       setDeleting(false);
       setDeleteOpen(false);

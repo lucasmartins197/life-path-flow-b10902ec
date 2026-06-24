@@ -5,7 +5,7 @@ import { useCommunityFeed, CommunityPost, PostComment, ReactionType } from "@/ho
 import { useAuth } from "@/contexts/AuthContext";
 import {
   Heart, MessageCircle, Send, Plus, Users, ChevronLeft,
-  Camera, MoreHorizontal, Flag, X, Image as ImageIcon, Video, UserPlus, UserCheck, Trash2
+  Camera, MoreHorizontal, Flag, X, Image as ImageIcon, Video, UserPlus, UserCheck, Trash2, Ban
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -93,9 +93,10 @@ function RulesAcceptance({ onAccept }: { onAccept: () => void }) {
           <p className="flex items-start gap-2"><span className="w-1.5 h-1.5 rounded-full bg-[#1B4332] mt-1.5 shrink-0" /> Não incentive comportamentos de risco</p>
           <p className="flex items-start gap-2"><span className="w-1.5 h-1.5 rounded-full bg-[#1B4332] mt-1.5 shrink-0" /> Conteúdos inadequados serão removidos</p>
           <p className="flex items-start gap-2"><span className="w-1.5 h-1.5 rounded-full bg-[#1B4332] mt-1.5 shrink-0" /> Sua privacidade é prioridade</p>
+          <p className="flex items-start gap-2 font-semibold text-foreground bg-[#1B4332]/5 border border-[#1B4332]/20 rounded-lg p-3"><Shield className="h-4 w-4 text-[#1B4332] mt-0.5 shrink-0" /> Tolerância zero a conteúdo ofensivo, abusivo ou discriminatório. Usuários que violarem serão removidos.</p>
         </div>
         <Button onClick={onAccept} className="w-full mt-4 bg-[#1B4332] hover:bg-[#1B4332]/90 text-white">
-          Entendo e quero participar
+          Li e aceito as regras
         </Button>
       </DialogContent>
     </Dialog>
@@ -357,7 +358,7 @@ function CommentsDrawer({
 }
 
 function PostCard({
-  post, currentUserId, onReact, onComment, onReport, onToggleFollow, onDelete,
+  post, currentUserId, onReact, onComment, onReport, onToggleFollow, onDelete, onBlock,
 }: {
   post: CommunityPost;
   currentUserId?: string;
@@ -366,6 +367,7 @@ function PostCard({
   onReport: () => void;
   onToggleFollow: () => void;
   onDelete: () => Promise<boolean>;
+  onBlock: () => void;
 }) {
   const isOwn = post.user_id === currentUserId;
   const totalReactions =
@@ -433,8 +435,13 @@ function PostCard({
               </DropdownMenuItem>
             )}
             <DropdownMenuItem onClick={onReport} className="text-destructive gap-2">
-              <Flag className="h-4 w-4" /> Reportar
+              <Flag className="h-4 w-4" /> Denunciar
             </DropdownMenuItem>
+            {!isOwn && (
+              <DropdownMenuItem onClick={onBlock} className="text-destructive gap-2">
+                <Ban className="h-4 w-4" /> Bloquear usuário
+              </DropdownMenuItem>
+            )}
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
@@ -533,7 +540,7 @@ export default function CommunityHome() {
   const { user } = useAuth();
   const {
     posts, loading, createPost, toggleReaction, toggleFollow,
-    addComment, reportPost, deletePost, uploadPostImage, uploadPostVideo, fetchComments,
+    addComment, reportPost, deletePost, blockUser, uploadPostImage, uploadPostVideo, fetchComments,
   } = useCommunityFeed();
   const [showCreate, setShowCreate] = useState(false);
   const [commentsPostId, setCommentsPostId] = useState<string | null>(null);
@@ -680,6 +687,7 @@ export default function CommunityHome() {
               onReport={() => reportPost(post.id, "Conteúdo inadequado")}
               onToggleFollow={() => toggleFollow(post.user_id)}
               onDelete={() => deletePost(post.id)}
+              onBlock={() => blockUser(post.user_id)}
             />
           ))
         )}
