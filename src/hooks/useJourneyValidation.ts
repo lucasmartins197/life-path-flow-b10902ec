@@ -237,12 +237,12 @@ export function useJourneyValidation() {
     },
   });
 
-  /** True if step N is unlocked: step 1 always, step N>1 iff step N-1 task is validated. */
+  /** True if step N is unlocked: step 1 always, step N>1 iff step N-1 was completed via "Concluir Passo". */
   function isUnlocked(stepNumber: number): boolean {
     if (isAdmin) return true;
     if (stepNumber === 1) return true;
-    const prev = query.data?.[stepNumber - 1];
-    return !!prev?.done;
+    const prev = progressQuery.data?.[stepNumber - 1];
+    return !!prev?.is_completed;
   }
 
   /** True if the user finished the practical task of the step. */
