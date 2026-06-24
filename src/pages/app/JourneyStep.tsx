@@ -25,6 +25,25 @@ import {
   CheckSquare,
 } from "lucide-react";
 import { STEP_QUIZ } from "./quiz_data";
+import { Mail, Send } from "lucide-react";
+
+/* ── Cartas terapêuticas por passo ── */
+interface StepLetter {
+  type: string;
+  title: string;
+  prompt: string;
+  minChars: number;
+  sendToAnchor?: boolean;
+}
+
+const STEP_LETTERS: Record<number, StepLetter> = {
+  1: { type: "por_que_estou_aqui", title: "Por que estou aqui", prompt: "Escreva o que te trouxe até aqui. O que você sente que precisa mudar? Seja honesto consigo mesmo.", minChars: 300 },
+  3: { type: "carta_ancora", title: "Carta ao meu âncora", prompt: "Escreva uma mensagem para a pessoa que você escolheu como âncora. O que ela significa para você? Por que confia nela nessa jornada?", minChars: 300, sendToAnchor: true },
+  4: { type: "meus_gatilhos", title: "Meus gatilhos", prompt: "Descreva as 3 situações que mais te fazem querer apostar. Quando acontecem? Como você se sente?", minChars: 300 },
+  5: { type: "eu_do_passado", title: "Carta ao meu eu do passado", prompt: "Escreva uma carta para você mesmo de quando estava no auge das apostas. O que você diria? O que gostaria que soubesse?", minChars: 300 },
+  8: { type: "meta_financeira", title: "Minha meta financeira", prompt: "Descreva onde você quer chegar financeiramente. Qual sua meta? Como sua vida será quando estiver livre das dívidas?", minChars: 300 },
+  12: { type: "conquista", title: "Carta de conquista", prompt: "Você chegou ao fim da jornada. Escreva sobre tudo que conquistou, o que aprendeu, e a pessoa que você se tornou.", minChars: 400 },
+};
 
 /* ── Áudio do passo (Supabase Storage) ── */
 const AUDIO_BASE = "https://dmrlkxwpbwmzpdecsgnw.supabase.co/storage/v1/object/public/audios-jornada";
