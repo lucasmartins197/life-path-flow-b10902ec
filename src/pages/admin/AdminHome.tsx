@@ -22,8 +22,12 @@ import {
   Download,
   RefreshCw,
   UserPlus,
-  ArrowLeft
+  ArrowLeft,
+  CreditCard,
+  Brain,
+  Scale
 } from "lucide-react";
+
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
