@@ -23,6 +23,7 @@ import {
   RefreshCw,
   PlayCircle,
   CheckSquare,
+  Heart,
 } from "lucide-react";
 import { STEP_QUIZ } from "./quiz_data";
 import { Mail, Send } from "lucide-react";
