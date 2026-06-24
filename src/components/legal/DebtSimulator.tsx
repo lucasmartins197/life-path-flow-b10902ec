@@ -48,6 +48,7 @@ export function DebtSimulator() {
       return;
     }
 
+    setResult(null);
     setIsLoading(true);
 
     try {
