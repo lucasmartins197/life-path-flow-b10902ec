@@ -1,3 +1,4 @@
+import { HealthDisclaimer } from "@/components/HealthDisclaimer";
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -420,6 +421,8 @@ export default function EvolutionHome() {
 
         {/* ABA: PRONTUÁRIOS */}
         {activeTab === "prontuarios" && (<>
+          <HealthDisclaimer />
+
           <div className="flex items-center justify-between">
             <p className="text-sm font-semibold" style={{ color: "#1B4332" }}>Prontuários da IA</p>
             <button onClick={gerarProntuario}
