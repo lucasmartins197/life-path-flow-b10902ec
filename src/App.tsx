@@ -70,6 +70,7 @@ const App = () => (
             <Route path="/auth" element={<Auth />} />
             <Route path="/termos" element={<TermosUso />} />
             <Route path="/privacidade" element={<Privacidade />} />
+            <Route path="/excluir-conta" element={<ExcluirConta />} />
             <Route path="/auth/forgot-password" element={<ForgotPassword />} />
             <Route path="/auth/reset-password" element={<ResetPassword />} />
             <Route path="/auth/professional-register" element={<ProfessionalRegister />} />
