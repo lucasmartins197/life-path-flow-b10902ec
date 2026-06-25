@@ -12,6 +12,7 @@ import Auth from "./pages/Auth";
 import ForgotPassword from "./pages/auth/ForgotPassword";
 import ResetPassword from "./pages/auth/ResetPassword";
 import ProfessionalRegister from "./pages/auth/ProfessionalRegister";
+import ExcluirConta from "./pages/ExcluirConta";
 import NotFound from "./pages/NotFound";
 
 import AppHome from "./pages/app/AppHome";
@@ -69,6 +70,7 @@ const App = () => (
             <Route path="/auth" element={<Auth />} />
             <Route path="/termos" element={<TermosUso />} />
             <Route path="/privacidade" element={<Privacidade />} />
+            <Route path="/excluir-conta" element={<ExcluirConta />} />
             <Route path="/auth/forgot-password" element={<ForgotPassword />} />
             <Route path="/auth/reset-password" element={<ResetPassword />} />
             <Route path="/auth/professional-register" element={<ProfessionalRegister />} />
