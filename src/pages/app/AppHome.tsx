@@ -183,6 +183,8 @@ export default function AppHome() {
       </header>
 
       <main className="max-w-lg mx-auto px-5 pt-3 space-y-3">
+        <HealthDisclaimer />
+
         {/* ── Daily check-in ── */}
         <div className="animate-in fade-in slide-in-from-bottom-2 duration-500">
           <DailyCheckIn />

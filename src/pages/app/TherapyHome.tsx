@@ -1,3 +1,4 @@
+import { HealthDisclaimer } from "@/components/HealthDisclaimer";
 import { useState, useEffect, useRef } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { ChevronLeft, CreditCard, Calendar, Loader2, CheckCircle2 } from "lucide-react";
@@ -134,6 +135,8 @@ export default function TherapyHome() {
       </header>
 
       <main className="max-w-lg mx-auto px-5 pt-6 space-y-6">
+        <HealthDisclaimer />
+
         {/* Sucesso após pagamento */}
         {paymentSuccess && (
           <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-6">
