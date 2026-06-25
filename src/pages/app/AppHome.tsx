@@ -1,3 +1,4 @@
+import { HealthDisclaimer } from "@/components/HealthDisclaimer";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Loader2, Heart } from "lucide-react";
