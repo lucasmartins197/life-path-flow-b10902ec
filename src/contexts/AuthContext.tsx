@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
+import { initRevenueCat } from "@/lib/revenuecat";
 
 type AppRole = "user" | "professional" | "admin";
 
@@ -147,6 +148,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           ...profileData,
           subscription_status: profileData.subscription_status ?? "inactive",
         });
+        // Inicializa o RevenueCat no iOS usando o user_id do Supabase
+        // (garante unificacao cross-platform e anti-duplicacao). No Android/web nao faz nada.
+        initRevenueCat(userId).catch((e) =>
+          console.error("initRevenueCat falhou:", e)
+        );
       }
 
       const { data: rolesData } = await withTimeout(
