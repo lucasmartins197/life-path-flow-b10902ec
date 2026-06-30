@@ -17,6 +17,12 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useEffect, useState } from "react";
 import { toast } from "@/hooks/use-toast";
+import {
+  isIOSNative,
+  purchaseAppleSubscription,
+  hasActiveAppleSubscription,
+  restoreApplePurchases,
+} from "@/lib/revenuecat";
 
 export default function SubscriptionHome() {
   const navigate = useNavigate();
@@ -102,6 +108,60 @@ export default function SubscriptionHome() {
         return;
       }
 
+      // === iOS: usar In-App Purchase da Apple (RevenueCat) ===
+      if (isIOSNative()) {
+        // ANTI-DUPLICACAO: se ja tem assinatura ativa (Stripe ou Apple), nao cobra de novo
+        if (isActive) {
+          toast({
+            title: "Você já é assinante",
+            description: "Sua assinatura já está ativa. Aproveite o app!",
+          });
+          return;
+        }
+        // Verifica direto na Apple se ja existe assinatura ativa (restauracao)
+        const alreadyApple = await hasActiveAppleSubscription();
+        if (alreadyApple) {
+          await supabase
+            .from("profiles")
+            .update({ subscription_status: "active" })
+            .eq("id", authUser.id);
+          await refreshProfile();
+          toast({
+            title: "Assinatura restaurada",
+            description: "Encontramos sua assinatura ativa. Acesso liberado!",
+          });
+          navigate("/app", { replace: true });
+          return;
+        }
+        // Inicia a compra via Apple
+        const result = await purchaseAppleSubscription();
+        if (result.success) {
+          await supabase
+            .from("profiles")
+            .update({ subscription_status: "active" })
+            .eq("id", authUser.id);
+          await refreshProfile();
+          toast({
+            title: "Parabéns!",
+            description: "Sua assinatura foi ativada com sucesso. Aproveite!",
+          });
+          navigate("/app", { replace: true });
+        } else if (result.cancelled) {
+          toast({
+            title: "Pagamento cancelado",
+            description: "Você pode tentar novamente quando quiser.",
+          });
+        } else {
+          toast({
+            title: "Erro",
+            description: result.error || "Não foi possível concluir a compra.",
+            variant: "destructive",
+          });
+        }
+        return;
+      }
+
+      // === Android/Web: fluxo Stripe (inalterado) ===
       console.log("Iniciando checkout...");
       const response = await fetch("https://dmrlkxwpbwmzpdecsgnw.supabase.co/functions/v1/create-checkout-session", {
         method: "POST",
