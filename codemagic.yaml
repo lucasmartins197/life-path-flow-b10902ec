@@ -1,0 +1,81 @@
+workflows:
+  android-release:
+    name: Android Release
+    max_build_duration: 60
+    environment:
+      android_signing:
+        - keystore_reference
+      vars:
+        PACKAGE_NAME: com.apostandonavida.stakereal
+        VITE_SUPABASE_URL: https://dmrlkxwpbwmzpdecsgnw.supabase.co
+        VITE_SUPABASE_PUBLISHABLE_KEY: $SUPABASE_ANON_KEY
+      node: "20"
+    scripts:
+      - name: Install dependencies
+        script: npm install
+      - name: Build web app
+        script: npm run build
+      - name: Install Capacitor Android
+        script: npm install @capacitor/core @capacitor/cli @capacitor/android
+      - name: Init Capacitor
+        script: npx cap init "Saindo do Jogo" "com.apostandonavida.stakereal" --web-dir dist
+      - name: Add Android platform
+        script: npx cap add android || true
+      - name: Sync Capacitor
+        script: npx cap sync android
+      - name: Build Android AAB
+        script: cd android && ./gradlew bundleRelease
+    artifacts:
+      - android/app/build/outputs/**/*.aab
+
+  ios-release:
+    name: iOS Release
+    max_build_duration: 120
+    environment:
+      groups:
+        - ios_credentials
+      ios_signing:
+        distribution_type: app_store
+        bundle_identifier: com.apostandonavida.stakereal
+      vars:
+        BUNDLE_ID: com.apostandonavida.stakereal
+        VITE_SUPABASE_URL: https://dmrlkxwpbwmzpdecsgnw.supabase.co
+        VITE_SUPABASE_PUBLISHABLE_KEY: $SUPABASE_ANON_KEY
+      node: "20"
+    scripts:
+      - name: Install dependencies
+        script: npm install
+      - name: Build web app
+        script: npm run build
+      - name: Install Capacitor iOS
+        script: npm install @capacitor/core @capacitor/cli @capacitor/ios
+      - name: Confirmar plugin RevenueCat instalado
+        script: |
+          npm ls @revenuecat/purchases-capacitor || npm install @revenuecat/purchases-capacitor@^13.2.0
+      - name: Init Capacitor
+        script: npx cap init "Saindo do Jogo" "com.apostandonavida.stakereal" --web-dir dist
+      - name: Add iOS platform
+        script: npx cap add ios || true
+      - name: Fix deployment target
+        script: |
+          cd ios/App
+          sed -i "" "s/platform :ios, '[0-9.]*'/platform :ios, '16.0'/" Podfile || true
+          grep -q "platform :ios" Podfile || sed -i "" "1s/^/platform :ios, '16.0'\n/" Podfile
+          sed -i "" "s/IPHONEOS_DEPLOYMENT_TARGET = [0-9.]*/IPHONEOS_DEPLOYMENT_TARGET = 16.0/g" App.xcodeproj/project.pbxproj
+          pod install --repo-update
+      - name: Sync Capacitor
+        script: npx cap sync ios
+      - name: Build and export IPA
+        script: |
+          xcode-project use-profiles
+          xcodebuild -workspace ios/App/App.xcworkspace -scheme App -configuration Release -archivePath build/App.xcarchive archive
+          xcode-project build-ipa --workspace ios/App/App.xcworkspace --scheme App --config Release
+    artifacts:
+      - build/ios/ipa/*.ipa
+    publishing:
+      app_store_connect:
+        api_key: $APP_STORE_CONNECT_PRIVATE_KEY
+        key_id: $APP_STORE_CONNECT_KEY_IDENTIFIER
+        issuer_id: $APP_STORE_CONNECT_ISSUER_ID
+        submit_to_testflight: true
+        submit_to_app_store: false
