@@ -21,6 +21,10 @@ workflows:
         script: npx cap init "Saindo do Jogo" "com.apostandonavida.stakereal" --web-dir dist
       - name: Add Android platform
         script: npx cap add android || true
+      - name: Gerar icones do app (ancora)
+        script: |
+          npm install @capacitor/assets --save-dev
+          npx capacitor-assets generate --android --assetPath assets
       - name: Sync Capacitor
         script: npx cap sync android
       - name: Build Android AAB
@@ -56,6 +60,10 @@ workflows:
         script: npx cap init "Saindo do Jogo" "com.apostandonavida.stakereal" --web-dir dist
       - name: Add iOS platform
         script: npx cap add ios || true
+      - name: Gerar icones do app (ancora)
+        script: |
+          npm install @capacitor/assets --save-dev
+          npx capacitor-assets generate --ios --assetPath assets
       - name: Fix deployment target
         script: |
           cd ios/App
