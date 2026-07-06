@@ -42,6 +42,11 @@ jobs:
       - name: Add Android platform
         run: npx cap add android
 
+      - name: Gerar icones do app (ancora) para o launcher
+        run: |
+          npm install @capacitor/assets --save-dev
+          npx capacitor-assets generate --android --assetPath assets
+
       - name: Fix Kotlin duplicates
         run: echo "subprojects { configurations.all { resolutionStrategy { force 'org.jetbrains.kotlin:kotlin-stdlib:1.8.22'; force 'org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.8.22'; force 'org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.8.22' } } }" >> android/build.gradle
 
