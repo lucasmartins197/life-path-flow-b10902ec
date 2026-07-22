@@ -239,7 +239,8 @@ export default function SubscriptionHome() {
 
   const benefits = [
     "Acesso completo à Jornada de 12 passos",
-    "Consultas com profissionais de saúde",
+    "Acesso a profissionais especializados",
+    "Instruções de bloqueio a casas de apostas",
     "Índice de Recuperação personalizado",
     "Relatórios diários com IA",
     "Comunidade Histórias que Conectam",
