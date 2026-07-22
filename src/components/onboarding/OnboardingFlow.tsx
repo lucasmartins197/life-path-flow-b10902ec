@@ -266,10 +266,60 @@ export function OnboardingFlow({ onComplete }: { onComplete: () => void }) {
   }
 
   async function finishOnboarding(target: "step1" | "explore") {
-    if (!user) return;
     setSaving(true);
-    await supabase.from("profiles").update({ onboarding_completed: true }).eq("id", user.id);
+
+    // A sessao pode ter expirado durante o onboarding (que e longo).
+    // Pegamos o id direto da sessao atual em vez de confiar no estado React.
+    const { data: sessionData } = await supabase.auth.getSession();
+    const activeUserId = sessionData.session?.user?.id ?? user?.id;
+
+    if (!activeUserId) {
+      setSaving(false);
+      toast({
+        title: "Sua sessao expirou",
+        description: "Entre novamente para concluir o cadastro.",
+        variant: "destructive",
+      });
+      navigate("/auth", { replace: true });
+      return;
+    }
+
+    // .select() devolve as linhas afetadas: e assim que sabemos se gravou mesmo.
+    let { data: updated, error } = await supabase
+      .from("profiles")
+      .update({ onboarding_completed: true })
+      .eq("id", activeUserId)
+      .select("id");
+
+    // Alguns perfis sao identificados por user_id em vez de id.
+    if (!error && (!updated || updated.length === 0)) {
+      const fb = await supabase
+        .from("profiles")
+        .update({ onboarding_completed: true })
+        .eq("user_id", activeUserId)
+        .select("id");
+      updated = fb.data;
+      error = fb.error;
+    }
+
     setSaving(false);
+    console.log(
+      "finishOnboarding:",
+      error ? "ERRO: " + error.message : `OK (${updated?.length ?? 0} linha(s))`
+    );
+
+    // Se nao gravou, NAO navegamos: antes o app seguia como se tivesse dado
+    // certo e o OnboardingGate jogava o usuario de volta para o comeco.
+    if (error || !updated || updated.length === 0) {
+      console.error("finishOnboarding falhou:", JSON.stringify(error));
+      toast({
+        title: "Nao foi possivel concluir",
+        description: error?.message || "Tente novamente em instantes.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     onComplete();
     navigate(target === "step1" ? "/app/jornada/1" : "/app", { replace: true });
   }
