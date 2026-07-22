@@ -1,7 +1,7 @@
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
-import { ArrowLeft, Check, CreditCard, Crown, Loader2, X, ShieldCheck, AlertTriangle } from "lucide-react";
+import { ArrowLeft, Check, CreditCard, Crown, Loader2, X, ShieldCheck, AlertTriangle, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -26,7 +26,7 @@ import {
 
 export default function SubscriptionHome() {
   const navigate = useNavigate();
-  const { profile, user, refreshProfile } = useAuth();
+  const { profile, user, refreshProfile, signOut } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
   const [loading, setLoading] = useState(false);
   const [canceling, setCanceling] = useState(false);
@@ -92,6 +92,21 @@ export default function SubscriptionHome() {
       });
     }
   }, [success, canceled, cancelDone]);
+
+  const [signingOut, setSigningOut] = useState(false);
+
+  // Permite sair da conta a partir do paywall (trocar de usuario / criar outra conta).
+  async function handleSignOut() {
+    setSigningOut(true);
+    try {
+      await signOut();
+    } catch (e) {
+      console.error("Erro ao sair:", e);
+    } finally {
+      setSigningOut(false);
+      navigate("/auth", { replace: true });
+    }
+  }
 
   const handleSubscribe = async () => {
     setLoading(true);
@@ -247,10 +262,33 @@ export default function SubscriptionHome() {
     <div className="min-h-screen bg-background pb-24">
       <header className="sticky top-0 z-30 bg-background/95 backdrop-blur border-b border-border">
         <div className="container px-4 py-4 flex items-center gap-3">
-          <button onClick={() => navigate(-1)} className="text-muted-foreground hover:text-foreground">
-            <ArrowLeft className="h-5 w-5" />
+          {/* Seta de voltar so faz sentido para quem JA tem acesso ao app.
+              Sem assinatura, o ProtectedRoute rejogaria de volta aqui (loop). */}
+          {isActive && (
+            <button
+              onClick={() => navigate("/app")}
+              className="text-muted-foreground hover:text-foreground"
+              aria-label="Voltar"
+            >
+              <ArrowLeft className="h-5 w-5" />
+            </button>
+          )}
+          <h1 className="text-lg font-semibold flex-1">Minha Assinatura</h1>
+          {/* Saida sempre disponivel: sem isto, quem cria conta e nao assina
+              fica preso nesta tela para sempre, sem poder trocar de conta. */}
+          <button
+            onClick={handleSignOut}
+            disabled={signingOut}
+            className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground disabled:opacity-50"
+            aria-label="Sair da conta"
+          >
+            {signingOut ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <LogOut className="h-4 w-4" />
+            )}
+            <span>Sair</span>
           </button>
-          <h1 className="text-lg font-semibold">Minha Assinatura</h1>
         </div>
       </header>
 
