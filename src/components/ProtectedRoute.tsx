@@ -101,8 +101,35 @@ function PaymentConfirmation({ userId }: { userId: string }) {
 
     async function confirmPayment() {
       try {
-        // Atualiza diretamente o status para 'active' (não esperar o webhook)
-        await supabase.from("profiles").update({ subscription_status: "active" }).eq("id", userId);
+        // Atualiza diretamente o status para 'active' (não esperar o webhook).
+        // O Supabase devolve { error } em vez de lancar excecao: sem checar o
+        // retorno, alguem que PAGOU podia ser mandado de volta ao paywall.
+        let { data: updated, error } = await supabase
+          .from("profiles")
+          .update({ subscription_status: "active" })
+          .eq("id", userId)
+          .select("id");
+
+        // Alguns perfis sao identificados por user_id em vez de id.
+        if (!error && (!updated || updated.length === 0)) {
+          const fb = await supabase
+            .from("profiles")
+            .update({ subscription_status: "active" })
+            .eq("user_id", userId)
+            .select("id");
+          updated = fb.data;
+          error = fb.error;
+        }
+
+        if (error || !updated || updated.length === 0) {
+          console.error(
+            "payment confirmation: falha ao ativar assinatura",
+            error?.message ?? "nenhuma linha atualizada"
+          );
+          // O webhook do Stripe tambem grava 'active'. Damos um instante para
+          // ele chegar antes de decidir, em vez de jogar o usuario no paywall.
+          await new Promise((r) => setTimeout(r, 3000));
+        }
 
         if (!active) return;
         window.location.replace("/app");
