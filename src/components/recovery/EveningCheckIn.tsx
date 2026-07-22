@@ -67,11 +67,23 @@ export function EveningCheckIn() {
         "Obrigada por ter coragem de me contar. Recaída faz parte do processo, não anula seu progresso. Que tal reforçar o bloqueio agora? Estou aqui com você.",
     };
     try {
-      await supabase.from("daily_reflections").insert({
+      // O Supabase devolve { error } em vez de lancar excecao: sem checar,
+      // a reflexao se perdia E o localStorage marcava o dia como concluido,
+      // impedindo o usuario de tentar de novo.
+      const { error } = await supabase.from("daily_reflections").insert({
         user_id: user.id,
         content: `[checkin-apostas] ${labelMap[answer]}`,
         ai_response: aiResponseMap[answer],
       });
+      if (error) {
+        console.error("Falha ao salvar check-in:", error.message);
+        toast({
+          title: "Nao foi possivel salvar",
+          description: "Sua resposta nao se perdeu. Tente novamente.",
+          variant: "destructive",
+        });
+        return;
+      }
       setSubmitted(answer);
       localStorage.setItem(STORAGE_KEY, todayKey());
     } catch (e: any) {
