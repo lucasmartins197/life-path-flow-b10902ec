@@ -530,24 +530,45 @@ export default function JourneyStep() {
       .eq("step_number", stepNumber)
       .maybeSingle();
 
+    // O Supabase nao lanca excecao em erro de banco: devolve { error }.
+    // Sem checar, o app celebrava o passo mesmo sem ter salvo o progresso.
+    let progressError = null;
     if (existing) {
-      await supabase
+      const { error } = await supabase
         .from("journey_progress")
         .update({ is_completed: true, completed_at: new Date().toISOString() })
         .eq("id", existing.id);
+      progressError = error;
     } else {
-      await supabase.from("journey_progress").insert({
+      const { error } = await supabase.from("journey_progress").insert({
         user_id: user.id,
         step_number: stepNumber,
         is_completed: true,
         completed_at: new Date().toISOString(),
       });
+      progressError = error;
     }
 
-    await supabase
+    if (progressError) {
+      console.error("Falha ao salvar progresso da jornada:", progressError.message);
+      setCompleting(false);
+      toast({
+        variant: "destructive",
+        title: "Nao foi possivel salvar seu progresso",
+        description: "Sua resposta nao se perdeu. Tente concluir novamente.",
+      });
+      return;
+    }
+
+    // Avanco do passo atual: se falhar, o progresso principal ja esta salvo,
+    // entao apenas registramos sem bloquear o usuario.
+    const { error: stepError } = await supabase
       .from("patient_profiles")
       .update({ current_step: stepNumber + 1 })
       .eq("user_id", user.id);
+    if (stepError) {
+      console.error("Falha ao avancar current_step:", stepError.message);
+    }
 
     // Award the step validation medal
     await awardMedal(STEP_VALIDATION_MEDAL[stepNumber].id);
