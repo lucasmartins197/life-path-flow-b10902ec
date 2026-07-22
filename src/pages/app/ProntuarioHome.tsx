@@ -168,14 +168,26 @@ export default function ProntuarioHome() {
   const sendToContact = async (contactName: string, contactType: string) => {
     setIsSending(true);
     try {
-      // Save as patient record entry
-      await supabase.from("patient_record_entries").insert({
+      // Save as patient record entry.
+      // O Supabase devolve { error } em vez de lancar excecao, entao o
+      // try/catch nao pega falha de banco: e preciso checar o retorno.
+      const { error } = await supabase.from("patient_record_entries").insert({
         patient_id: user!.id,
         entry_type: "prontuario_ai",
         title: `Prontuário IA - ${new Date().toLocaleDateString("pt-BR")}`,
         content: JSON.stringify(prontuario),
         metadata: { sent_to: contactName, contact_type: contactType, generated_at: prontuario?.generated_at },
       });
+
+      if (error) {
+        console.error("Falha ao salvar prontuario:", error.message);
+        toast({
+          title: "Nao foi possivel enviar",
+          description: error.message || "O prontuario nao foi salvo. Tente novamente.",
+          variant: "destructive",
+        });
+        return;
+      }
 
       toast({
         title: `Prontuário enviado!`,
