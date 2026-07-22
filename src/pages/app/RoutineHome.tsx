@@ -301,7 +301,16 @@ export default function RoutineHome() {
       progresso: "Leitura registrada (pulou feedback)",
       resposta_usuario: respostaTexto.trim() || null,
     };
-    await supabase.from("daily_tasks").update(updateFields).eq("id", task.id);
+    // Sem checar o retorno, a tarefa aparecia concluida na tela mas nao salvava.
+    const { error: taskError } = await supabase
+      .from("daily_tasks")
+      .update(updateFields)
+      .eq("id", task.id);
+    if (taskError) {
+      console.error("Falha ao concluir tarefa:", taskError.message);
+      toast.error("Nao foi possivel salvar. Tente concluir novamente.");
+      return;
+    }
     if (task.meta_paginas != null) {
       const { data: rp } = await supabase
         .from("reading_progress").select("id")
