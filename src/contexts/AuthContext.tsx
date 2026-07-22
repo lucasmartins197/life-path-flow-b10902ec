@@ -153,6 +153,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         initRevenueCat(userId).catch((e) =>
           console.error("initRevenueCat falhou:", e)
         );
+
+        // Registra a ultima atividade. E isto que permite ao cron diario saber
+        // quem sumiu e avisar o Contato Ancora. Falha aqui nao bloqueia o login.
+        supabase
+          .from("profiles")
+          .update({ last_seen_at: new Date().toISOString() })
+          .eq("id", userId)
+          .then(({ error }) => {
+            if (error) console.warn("last_seen_at nao registrado:", error.message);
+          });
       }
 
       const { data: rolesData } = await withTimeout(
