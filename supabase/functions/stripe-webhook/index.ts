@@ -304,14 +304,21 @@ serve(async (req) => {
         if (priceId === THERAPY_PRICE) payment_type = "therapy";
         else if (priceId === LEGAL_PRICE_1 || priceId === LEGAL_PRICE_2) payment_type = "legal";
 
-        const amount = (session.amount_total ?? 0) / 100;
-        await supabase.from("payments").insert({
+        // amount na tabela é INTEGER (centavos) — não dividir por 100.
+        // A coluna real é stripe_session_id (não stripe_payment_id).
+        const amountCents = session.amount_total ?? 0;
+        const { error: payErr } = await supabase.from("payments").insert({
           user_id: userId,
           payment_type,
-          amount,
+          amount: amountCents,
           status: "completed",
-          stripe_payment_id: session.id,
+          stripe_session_id: session.id,
         });
+        if (payErr) {
+          console.error("Falha ao registrar pagamento:", payErr.message);
+        } else {
+          console.log("Pagamento registrado:", payment_type, amountCents, "centavos");
+        }
 
         if (payment_type === "therapy") {
           if (userEmail) {
