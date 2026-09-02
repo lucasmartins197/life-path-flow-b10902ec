@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { Bell, Check, MessageCircle, Heart, Video, Trophy, Gift } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -202,7 +202,14 @@ export function NotificationBell() {
     }
   };
 
+  // O sino e um botao flutuante (fixed, canto superior direito). Na tela de
+  // perfil ele cai EXATAMENTE sobre o botao "Editar" e trava o clique.
+  // Escondemos o sino no perfil — ali o usuario quer editar, nao ver avisos.
+  const location = useLocation();
+  const esconderNoPerfil = location.pathname.startsWith("/app/perfil");
+
   if (!user) return null;
+  if (esconderNoPerfil) return null;
 
   return (
     <>
