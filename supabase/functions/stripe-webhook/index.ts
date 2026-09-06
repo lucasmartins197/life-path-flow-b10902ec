@@ -355,6 +355,16 @@ serve(async (req) => {
             ADMIN_PHONE,
             `⚖️ *Nova avaliação jurídica contratada!*\n\n👤 Nome: ${userName}\n📧 Email: ${userEmail}\n📱 WhatsApp: ${userPhone || "não informado"}\n\n⚡ Entre em contato em até 24h para agendar a avaliação.`
           );
+
+          // Cria o caso juridico para o cliente acompanhar na tela "Meu Processo".
+          // Comeca em 'documentacao'. Falha aqui nao interrompe o restante.
+          const { error: caseErr } = await supabase.from("legal_cases").insert({
+            user_id: userId,
+            payment_session_id: session.id,
+            status: "documentacao",
+          });
+          if (caseErr) console.error("Falha ao criar legal_case:", caseErr.message);
+          else console.log("legal_case criado para", userId);
         }
       }
     }
