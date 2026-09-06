@@ -281,16 +281,6 @@ export default function LegalHome() {
               <li className="flex gap-2.5"><CheckCircle2 className="h-4 w-4 mt-0.5 shrink-0" style={{ color: "#1B4332" }} /><span><strong>Bloqueio de saque</strong> — impedir a retirada ou exigir novos depósitos.</span></li>
               <li className="flex gap-2.5"><CheckCircle2 className="h-4 w-4 mt-0.5 shrink-0" style={{ color: "#1B4332" }} /><span><strong>Plataforma irregular</strong> — sem autorização do Ministério da Fazenda.</span></li>
             </ul>
-
-            <p className="text-sm font-semibold text-foreground mb-2">Provas que fortalecem o caso:</p>
-            <ul className="space-y-2 text-sm text-foreground/80 mb-4">
-              <li className="flex gap-2.5"><FileText className="h-4 w-4 mt-0.5 shrink-0 text-muted-foreground" /><span>Documentos pessoais (RG, CPF, comprovante de residência).</span></li>
-              <li className="flex gap-2.5"><FileText className="h-4 w-4 mt-0.5 shrink-0 text-muted-foreground" /><span>Extratos bancários e comprovantes de PIX/cartão para as casas (baixe em PDF pelo banco).</span></li>
-              <li className="flex gap-2.5"><FileText className="h-4 w-4 mt-0.5 shrink-0 text-muted-foreground" /><span>Dentro da plataforma: histórico de apostas, depósitos, saques e prints de saldo.</span></li>
-              <li className="flex gap-2.5"><FileText className="h-4 w-4 mt-0.5 shrink-0 text-muted-foreground" /><span>Laudo psicológico ou psiquiátrico de ludopatia, se houver.</span></li>
-              <li className="flex gap-2.5"><FileText className="h-4 w-4 mt-0.5 shrink-0 text-muted-foreground" /><span>Prints de publicidade abusiva (ganhos garantidos, notificações após perdas).</span></li>
-            </ul>
-
             <div className="rounded-xl p-3.5 mb-4" style={{ backgroundColor: "#C9A84C1A", border: "1px solid #C9A84C55" }}>
               <p className="text-xs text-foreground/80 leading-relaxed">
                 <strong>Importante e realista:</strong> nem todo caso resulta em
