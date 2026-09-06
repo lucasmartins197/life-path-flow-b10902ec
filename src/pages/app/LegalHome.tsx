@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { CheckCircle2 } from "lucide-react";
 import {
@@ -123,6 +123,22 @@ export default function LegalHome() {
   const [loading, setLoading] = useState(false);
   const [checkoutLoading, setCheckoutLoading] = useState<string | null>(null);
   const [specialistOpen, setSpecialistOpen] = useState(false);
+  const [hasCase, setHasCase] = useState(false);
+
+  // Verifica se o usuario ja tem um processo juridico registrado.
+  // So quem pagou tem caso (criado pelo webhook) — e so esse ve o botao.
+  useEffect(() => {
+    (async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      const { data } = await supabase
+        .from("legal_cases")
+        .select("id")
+        .eq("user_id", user.id)
+        .limit(1);
+      setHasCase(!!data && data.length > 0);
+    })();
+  }, [paymentSuccess]);
 
   const handleCheckout = async (priceAlias: "legal_consult" | "legal_full") => {
     setCheckoutLoading(priceAlias);
@@ -350,6 +366,26 @@ export default function LegalHome() {
             })}
           </div>
         </section>
+
+        {/* Acesso ao acompanhamento do processo — so aparece para quem tem caso (pagou) */}
+        {hasCase && (
+          <section>
+            <button
+              onClick={() => navigate("/app/juridico/meu-processo")}
+              className="w-full text-left rounded-2xl p-4 flex items-center gap-3 transition-all active:scale-[0.99]"
+              style={{ background: "linear-gradient(135deg, #1B4332, #2D6A4F)" }}
+            >
+              <div className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0" style={{ backgroundColor: "#C9A84C" }}>
+                <Scale className="h-5 w-5" style={{ color: "#1B4332" }} />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="font-bold text-sm" style={{ color: "#F5F0E8" }}>Acompanhar meu processo</p>
+                <p className="text-xs mt-0.5" style={{ color: "#F5F0E8CC" }}>Veja em que etapa está o seu caso</p>
+              </div>
+              <ArrowRight className="h-4 w-4" style={{ color: "#C9A84C" }} />
+            </button>
+          </section>
+        )}
 
         {/* Card destaque: Fala com Especialista */}
         <section>
