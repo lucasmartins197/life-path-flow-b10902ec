@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { ChevronLeft, Shield, ExternalLink, Check, Apple, Smartphone, Copy } from "lucide-react";
+import { ChevronLeft, Shield, ExternalLink, Check, Apple, Smartphone, Copy, Landmark, Ban } from "lucide-react";
 import { BottomNavigation } from "@/components/BottomNavigation";
 import { useRecoveryCommitment } from "@/hooks/useRecoveryCommitment";
 import { useToast } from "@/hooks/use-toast";
@@ -76,6 +76,95 @@ export default function BlockingHome() {
             mais eficazes de evitar recaídas. É um gesto de cuidado consigo mesmo — você não
             precisa contar só com a força de vontade.
           </p>
+        </section>
+
+        {/* Autoexclusão oficial do Governo Federal — o bloqueio mais completo */}
+        <section className="bg-card border border-border/40 rounded-2xl p-5">
+          <div className="flex items-center gap-2.5 mb-3">
+            <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+              <Landmark className="h-5 w-5 text-primary" />
+            </div>
+            <div>
+              <h2 className="text-base font-bold text-foreground">Autoexclusão oficial (Gov.br)</h2>
+              <p className="text-xs text-muted-foreground">O bloqueio mais completo, feito pelo Governo Federal</p>
+            </div>
+          </div>
+          <p className="text-sm text-muted-foreground leading-relaxed mb-4">
+            A Plataforma Centralizada de Autoexclusão bloqueia de uma só vez o
+            acesso a todas as casas de apostas autorizadas no Brasil, impede a
+            criação de novas contas e ainda tira você das listas de propaganda.
+            O bloqueio vale em até 72 horas.
+          </p>
+          <ol className="space-y-3 text-sm mb-4">
+            <li className="flex gap-3">
+              <span className="w-6 h-6 rounded-full bg-primary/10 text-primary text-xs font-bold flex items-center justify-center shrink-0">1</span>
+              <span className="text-foreground/80">
+                Tenha uma conta <strong>Gov.br nível Prata ou Ouro</strong> (necessária para confirmar sua identidade).
+              </span>
+            </li>
+            <li className="flex gap-3">
+              <span className="w-6 h-6 rounded-full bg-primary/10 text-primary text-xs font-bold flex items-center justify-center shrink-0">2</span>
+              <span className="text-foreground/80">
+                Acesse o site oficial e siga as instruções para efetivar a autoexclusão.
+              </span>
+            </li>
+            <li className="flex gap-3">
+              <span className="w-6 h-6 rounded-full bg-primary/10 text-primary text-xs font-bold flex items-center justify-center shrink-0">3</span>
+              <span className="text-foreground/80">
+                Escolha o prazo: <strong>tempo determinado</strong> (ex.: 12 meses) ou <strong>indeterminado</strong> (definitivo). O mínimo é 1 mês.
+              </span>
+            </li>
+          </ol>
+          <a
+            href="https://www.gov.br/autoexclusaoapostas"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="w-full inline-flex items-center justify-center gap-2 py-3.5 rounded-2xl text-white font-semibold transition-all active:scale-[0.98]"
+            style={{ background: "linear-gradient(135deg, #1B4332, #2D6A4F)" }}
+          >
+            <Landmark className="h-4 w-4" />
+            Acessar a autoexclusão oficial
+          </a>
+          <p className="text-xs text-muted-foreground leading-relaxed mt-3">
+            A autoexclusão é uma medida de proteção ao consumidor: não gera
+            multas e não apaga dívidas já existentes. Para sites ilegais (fora
+            da lista oficial), use também os bloqueadores abaixo.
+          </p>
+        </section>
+
+        {/* Bloqueadores externos — para sites ilegais fora da lista oficial */}
+        <section className="bg-card border border-border/40 rounded-2xl p-5">
+          <div className="flex items-center gap-2.5 mb-3">
+            <div className="w-9 h-9 rounded-xl bg-foreground/5 flex items-center justify-center shrink-0">
+              <Ban className="h-5 w-5 text-foreground" />
+            </div>
+            <h2 className="text-base font-bold text-foreground">Reforço contra sites ilegais</h2>
+          </div>
+          <p className="text-sm text-muted-foreground leading-relaxed mb-3">
+            Apps que bloqueiam milhares de sites e aplicativos de apostas de uma
+            vez, inclusive os não regulamentados — funcionam em celular, tablet e
+            computador.
+          </p>
+          <div className="grid grid-cols-1 gap-2.5">
+            <a
+              href="https://gamban.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="bg-secondary/40 rounded-xl p-3.5 flex items-center gap-3 hover:bg-secondary/60 transition-all active:scale-[0.98]"
+            >
+              <span className="flex-1 text-sm font-semibold text-foreground">Gamban</span>
+              <ExternalLink className="h-4 w-4 text-muted-foreground" />
+            </a>
+            <a
+              href="https://www.betblocker.org"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="bg-secondary/40 rounded-xl p-3.5 flex items-center gap-3 hover:bg-secondary/60 transition-all active:scale-[0.98]"
+            >
+              <span className="flex-1 text-sm font-semibold text-foreground">BetBlocker <span className="text-xs font-normal text-muted-foreground">(gratuito)</span></span>
+              <ExternalLink className="h-4 w-4 text-muted-foreground" />
+            </a>
+          </div>
         </section>
 
         {/* Tutorial cards */}
