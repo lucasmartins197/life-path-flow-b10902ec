@@ -284,6 +284,61 @@ export default function LegalHome() {
           </p>
         </section>
 
+        {/* Guia: reaver valores perdidos — conteudo educativo */}
+        <section>
+          <div className="rounded-2xl border border-border/40 bg-card p-5">
+            <div className="flex items-center gap-2.5 mb-3">
+              <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0" style={{ backgroundColor: "#1B433215" }}>
+                <Scale className="h-5 w-5" style={{ color: "#1B4332" }} />
+              </div>
+              <div>
+                <h2 className="text-base font-bold text-foreground">Dá para reaver o que perdi?</h2>
+                <p className="text-xs text-muted-foreground">O que a Lei 14.790/2023 mudou</p>
+              </div>
+            </div>
+            <p className="text-sm text-muted-foreground leading-relaxed mb-4">
+              Em alguns casos, sim. A recuperação de valores perdidos em apostas
+              é possível principalmente quando há ludopatia comprovada por laudo
+              médico, ou quando a plataforma falhou no dever de cuidado. A ação
+              se apoia no Código de Defesa do Consumidor, e o prazo para buscar
+              a restituição é de até 5 anos.
+            </p>
+
+            <p className="text-sm font-semibold text-foreground mb-2">Situações em que pode caber ação:</p>
+            <ul className="space-y-2 text-sm text-foreground/80 mb-4">
+              <li className="flex gap-2.5"><CheckCircle2 className="h-4 w-4 mt-0.5 shrink-0" style={{ color: "#1B4332" }} /><span><strong>Ludopatia comprovada</strong> — laudo médico indicando perda de autocontrole.</span></li>
+              <li className="flex gap-2.5"><CheckCircle2 className="h-4 w-4 mt-0.5 shrink-0" style={{ color: "#1B4332" }} /><span><strong>Falha da plataforma</strong> — não limitou nem bloqueou mesmo com apostas compulsivas evidentes.</span></li>
+              <li className="flex gap-2.5"><CheckCircle2 className="h-4 w-4 mt-0.5 shrink-0" style={{ color: "#1B4332" }} /><span><strong>Publicidade enganosa</strong> — bônus ou promessas de ganho fácil.</span></li>
+              <li className="flex gap-2.5"><CheckCircle2 className="h-4 w-4 mt-0.5 shrink-0" style={{ color: "#1B4332" }} /><span><strong>Bloqueio de saque</strong> — impedir a retirada ou exigir novos depósitos.</span></li>
+              <li className="flex gap-2.5"><CheckCircle2 className="h-4 w-4 mt-0.5 shrink-0" style={{ color: "#1B4332" }} /><span><strong>Plataforma irregular</strong> — sem autorização do Ministério da Fazenda.</span></li>
+            </ul>
+
+            <p className="text-sm font-semibold text-foreground mb-2">Provas que fortalecem o caso:</p>
+            <ul className="space-y-2 text-sm text-foreground/80 mb-4">
+              <li className="flex gap-2.5"><FileText className="h-4 w-4 mt-0.5 shrink-0 text-muted-foreground" /><span>Documentos pessoais (RG, CPF, comprovante de residência).</span></li>
+              <li className="flex gap-2.5"><FileText className="h-4 w-4 mt-0.5 shrink-0 text-muted-foreground" /><span>Extratos bancários e comprovantes de PIX/cartão para as casas (baixe em PDF pelo banco).</span></li>
+              <li className="flex gap-2.5"><FileText className="h-4 w-4 mt-0.5 shrink-0 text-muted-foreground" /><span>Dentro da plataforma: histórico de apostas, depósitos, saques e prints de saldo.</span></li>
+              <li className="flex gap-2.5"><FileText className="h-4 w-4 mt-0.5 shrink-0 text-muted-foreground" /><span>Laudo psicológico ou psiquiátrico de ludopatia, se houver.</span></li>
+              <li className="flex gap-2.5"><FileText className="h-4 w-4 mt-0.5 shrink-0 text-muted-foreground" /><span>Prints de publicidade abusiva (ganhos garantidos, notificações após perdas).</span></li>
+            </ul>
+
+            <div className="rounded-xl p-3.5 mb-4" style={{ backgroundColor: "#C9A84C1A", border: "1px solid #C9A84C55" }}>
+              <p className="text-xs text-foreground/80 leading-relaxed">
+                <strong>Importante e realista:</strong> nem todo caso resulta em
+                ressarcimento. O resultado depende das provas, da conduta da casa
+                e do entendimento do juiz. Por isso, reunir a documentação certa
+                faz toda a diferença.
+              </p>
+            </div>
+
+            <p className="text-sm text-muted-foreground leading-relaxed">
+              Se você já tem a documentação, nossa equipe de advocacia
+              especializada em ludopatia pode analisar e direcionar seu caso.
+              Toque em <strong>"Fala com Especialista"</strong> acima para começar.
+            </p>
+          </div>
+        </section>
+
         {/* Simulador de dívidas */}
         <section>
           <DebtSimulator />
