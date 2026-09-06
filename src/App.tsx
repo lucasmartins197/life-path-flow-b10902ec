@@ -31,6 +31,7 @@ import ProfileHome from "./pages/app/ProfileHome";
 import EvolutionHome from "./pages/app/EvolutionHome";
 import ProntuarioHome from "./pages/app/ProntuarioHome";
 import LegalHome from "./pages/app/LegalHome";
+import LegalCaseHome from "./pages/app/LegalCaseHome";
 import LegalLawyersHome from "./pages/app/LegalLawyersHome";
 import FinancialSupportHome from "./pages/app/FinancialSupportHome";
 import RecoveryIndexPage from "./pages/app/RecoveryIndexPage";
@@ -93,6 +94,7 @@ const App = () => (
             <Route path="/app/prontuario" element={<ProtectedRoute allowedRoles={["user", "admin"]}><ProntuarioHome /></ProtectedRoute>} />
             <Route path="/app/juridico" element={<ProtectedRoute allowedRoles={["user", "admin"]}><LegalHome /></ProtectedRoute>} />
             <Route path="/app/juridico/advogados" element={<ProtectedRoute allowedRoles={["user", "admin"]}><LegalLawyersHome /></ProtectedRoute>} />
+            <Route path="/app/juridico/meu-processo" element={<ProtectedRoute allowedRoles={["user", "admin"]}><LegalCaseHome /></ProtectedRoute>} />
             <Route path="/app/apoio-financeiro" element={<ProtectedRoute allowedRoles={["user", "admin"]}><FinancialSupportHome /></ProtectedRoute>} />
             <Route path="/app/indice" element={<ProtectedRoute allowedRoles={["user", "admin"]}><RecoveryIndexPage /></ProtectedRoute>} />
             <Route path="/app/comunidade" element={<ProtectedRoute allowedRoles={["user", "admin"]}><CommunityHome /></ProtectedRoute>} />
