@@ -10,7 +10,7 @@ const WHATSAPP_MSG = "Olá! Tenho uma dúvida sobre o andamento do meu processo 
 
 // As 5 etapas, em ordem. O status do caso aponta para uma delas.
 const ETAPAS = [
-  { key: "documentacao", label: "Documentação recebida", desc: "Recebemos seus documentos e demos início ao seu caso." },
+  { key: "documentacao", label: "Aguardando documentação", desc: "Contratação confirmada! Envie seus documentos pelo WhatsApp para darmos início ao seu caso." },
   { key: "analise", label: "Em análise pela equipe", desc: "Nossa equipe jurídica está avaliando as provas e a viabilidade da ação." },
   { key: "protocolada", label: "Ação protocolada", desc: "Sua ação foi ajuizada e registrada na Justiça." },
   { key: "tramitacao", label: "Em tramitação", desc: "O processo está correndo na Justiça, aguardando as etapas legais." },
