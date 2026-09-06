@@ -19,7 +19,7 @@ import {
 } from "lucide-react";
 import { BottomNavigation } from "@/components/BottomNavigation";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
-import { DebtSimulator } from "@/components/legal/DebtSimulator";
+import { RecoverySimulator } from "@/components/legal/RecoverySimulator";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -237,53 +237,6 @@ export default function LegalHome() {
             </div>
           </div>
         )}
-        {/* Card destaque: Fala com Especialista */}
-        <section>
-          <button
-            onClick={() => setSpecialistOpen(true)}
-            title="Uma orientação especializada pode mudar o rumo do seu caso."
-            className="group w-full text-left rounded-2xl p-5 shadow-lg transition-transform hover:scale-[1.01] active:scale-[0.99] border-2"
-            style={{
-              backgroundColor: "#1B4332",
-              borderColor: "#C9A84C",
-              color: "#F5F0E8",
-            }}
-          >
-            <div className="flex items-start gap-4">
-              <div
-                className="w-12 h-12 rounded-xl flex items-center justify-center shrink-0"
-                style={{ backgroundColor: "#C9A84C", color: "#1B4332" }}
-              >
-                <Headphones className="h-6 w-6" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <p
-                  className="text-[11px] font-bold tracking-[0.18em] mb-1"
-                  style={{ color: "#C9A84C" }}
-                >
-                  FALA COM ESPECIALISTA
-                </p>
-                <p className="text-base font-bold leading-snug" style={{ color: "#F5F0E8" }}>
-                  Entenda seus direitos e o que pode ser feito no seu caso
-                </p>
-                <p className="text-xs mt-1.5 leading-relaxed" style={{ color: "#F5F0E8CC" }}>
-                  Reúna documentação e descubra possibilidades — inclusive sobre
-                  valores perdidos em apostas.
-                </p>
-                <span
-                  className="inline-flex items-center gap-1 text-xs font-semibold mt-3"
-                  style={{ color: "#C9A84C" }}
-                >
-                  Ver opções <ArrowRight className="h-3.5 w-3.5" />
-                </span>
-              </div>
-            </div>
-          </button>
-          <p className="text-[11px] text-muted-foreground mt-2 px-1 italic">
-            Uma orientação especializada pode mudar o rumo do seu caso.
-          </p>
-        </section>
-
         {/* Guia: reaver valores perdidos — conteudo educativo */}
         <section>
           <div className="rounded-2xl border border-border/40 bg-card p-5">
@@ -339,9 +292,9 @@ export default function LegalHome() {
           </div>
         </section>
 
-        {/* Simulador de dívidas */}
+        {/* Simulador de potencial de recuperação */}
         <section>
-          <DebtSimulator />
+          <RecoverySimulator />
         </section>
 
         {/* Vídeo introdutório */}
@@ -398,38 +351,51 @@ export default function LegalHome() {
           </div>
         </section>
 
-        {/* Pacote de atendimento */}
+        {/* Card destaque: Fala com Especialista */}
         <section>
-          <p className="section-title flex items-center gap-2">
-            <Sparkles className="h-3.5 w-3.5" />
-            Pacote de atendimento
-          </p>
-          <div className="card-premium p-4">
-            <div className="flex items-start gap-3">
-              <div className="w-11 h-11 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
-                <Scale className="h-5 w-5 text-primary" />
+          <button
+            onClick={() => setSpecialistOpen(true)}
+            title="Uma orientação especializada pode mudar o rumo do seu caso."
+            className="group w-full text-left rounded-2xl p-5 shadow-lg transition-transform hover:scale-[1.01] active:scale-[0.99] border-2"
+            style={{
+              backgroundColor: "#1B4332",
+              borderColor: "#C9A84C",
+              color: "#F5F0E8",
+            }}
+          >
+            <div className="flex items-start gap-4">
+              <div
+                className="w-12 h-12 rounded-xl flex items-center justify-center shrink-0"
+                style={{ backgroundColor: "#C9A84C", color: "#1B4332" }}
+              >
+                <Headphones className="h-6 w-6" />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="font-semibold text-sm text-foreground">Avaliação inicial com especialista</p>
-                <p className="text-xs text-muted-foreground mt-0.5">Orientação personalizada para o seu caso</p>
-                <p className="text-base font-bold text-foreground mt-2">R$ 199,90</p>
+                <p
+                  className="text-[11px] font-bold tracking-[0.18em] mb-1"
+                  style={{ color: "#C9A84C" }}
+                >
+                  FALA COM ESPECIALISTA
+                </p>
+                <p className="text-base font-bold leading-snug" style={{ color: "#F5F0E8" }}>
+                  Entenda seus direitos e o que pode ser feito no seu caso
+                </p>
+                <p className="text-xs mt-1.5 leading-relaxed" style={{ color: "#F5F0E8CC" }}>
+                  Reúna documentação e descubra possibilidades — inclusive sobre
+                  valores perdidos em apostas.
+                </p>
+                <span
+                  className="inline-flex items-center gap-1 text-xs font-semibold mt-3"
+                  style={{ color: "#C9A84C" }}
+                >
+                  Ver opções <ArrowRight className="h-3.5 w-3.5" />
+                </span>
               </div>
             </div>
-            <button
-              onClick={() => handleCheckout("legal_consult")}
-              disabled={checkoutLoading === "legal_consult"}
-              className="btn-cta w-full mt-3 py-2.5 text-sm disabled:opacity-60"
-            >
-              {checkoutLoading === "legal_consult" ? (
-                <>
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  Processando...
-                </>
-              ) : (
-                "Agendar minha avaliação — R$ 199,90"
-              )}
-            </button>
-          </div>
+          </button>
+          <p className="text-[11px] text-muted-foreground mt-2 px-1 italic">
+            Uma orientação especializada pode mudar o rumo do seu caso.
+          </p>
         </section>
 
         {/* LGPD */}
