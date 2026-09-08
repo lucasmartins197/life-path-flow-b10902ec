@@ -10,7 +10,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 // Tipos: "invite" (novo contato cadastrado) | "temptation" (botão de emergência)
 // ─────────────────────────────────────────────────────────────────────────────
 
-const RESEND_KEY = "re_eLRc8cwT_HZYSsQonMX3K1U1LZ3kby9k4";
+const RESEND_KEY = Deno.env.get("RESEND_KEY")!;
 const ZAPI_URL = "https://api.z-api.io/instances/3F4251576B10F1BE557C9A7EE4F1867E/token/2D6CDE945D6DB4F275171067/send-text";
 const ZAPI_CLIENT_TOKEN = "F2ca9adb207a14c09a1d0005e62825cb6S";
 const FROM_EMAIL = "Saindo do Jogo <contato@apostandonavida.com.br>";
