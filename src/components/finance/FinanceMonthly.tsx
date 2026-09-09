@@ -16,7 +16,7 @@ import { Switch } from "@/components/ui/switch";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Textarea } from "@/components/ui/textarea";
-import { CalendarIcon } from "lucide-react";
+import { CalendarIcon, Download } from "lucide-react";
 
 /* ─── Types ─── */
 export interface Transaction {
@@ -199,6 +199,45 @@ export function FinanceMonthly({
   const totalExpense = monthTxs.filter(t => t.type === "expense").reduce((s, t) => s + t.amount, 0);
   const totalDebtPayments = monthTxs.filter(t => t.type === "debt_payment").reduce((s, t) => s + t.amount, 0);
   const balance = totalIncome - totalExpense - totalDebtPayments;
+
+  // Exporta as transacoes do mes visivel para CSV (abre no Excel).
+  // Usa ; como separador e BOM UTF-8 para acentos aparecerem certo no Excel BR.
+  function exportarExcel() {
+    const linhas = [...monthTxs].sort((a, b) =>
+      b.transaction_date.localeCompare(a.transaction_date)
+    );
+    const tipoLabel: Record<string, string> = {
+      income: "Entrada",
+      expense: "Saida",
+      debt_payment: "Pagamento de divida",
+    };
+    const cabecalho = ["Data", "Tipo", "Categoria", "Descricao", "Valor (R$)"];
+    const corpo = linhas.map((t) => [
+      t.transaction_date,
+      tipoLabel[t.type] || t.type,
+      t.category,
+      (t.description || "").replace(/;/g, ","),
+      t.amount.toFixed(2).replace(".", ","),
+    ]);
+    // Linha de resumo no fim
+    const resumo = [
+      [],
+      ["Entradas", "", "", "", totalIncome.toFixed(2).replace(".", ",")],
+      ["Saidas", "", "", "", totalExpense.toFixed(2).replace(".", ",")],
+      ["Saldo", "", "", "", balance.toFixed(2).replace(".", ",")],
+    ];
+    const todas = [cabecalho, ...corpo, ...resumo];
+    const csv = todas.map((l) => l.join(";")).join("\n");
+    const blob = new Blob(["\ufeff" + csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `minhas-financas-${format(new Date(), "yyyy-MM")}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
   const totalActiveDebts = debts.reduce((s, d) => s + (d.total || 0), 0);
 
   const filteredTxs = useMemo(() => {
@@ -260,6 +299,17 @@ export function FinanceMonthly({
           <p className="text-sm font-bold text-warning">{fmtBRL(totalActiveDebts)}</p>
         </div>
       </div>
+
+      {/* ── Exportar para Excel ── */}
+      {monthTxs.length > 0 && (
+        <button
+          onClick={exportarExcel}
+          className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl border border-border text-sm font-semibold text-muted-foreground hover:bg-muted transition-colors"
+        >
+          <Download className="h-4 w-4" />
+          Exportar para Excel
+        </button>
+      )}
 
       {/* ── Gambling Alert ── */}
       {showGamblingAlert && (
