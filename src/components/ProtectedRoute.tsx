@@ -73,16 +73,34 @@ export function ProtectedRoute({ children, allowedRoles, redirectTo = "/auth" }:
 
   const hasSubscription = profile !== null && ["active", "canceling"].includes((profile as any)?.subscription_status);
 
+  // Onboarding vem ANTES do paywall: a pessoa experimenta o app e so entao
+  // ve o "assine". Quem ainda nao completou o onboarding NAO e mandado pro
+  // paywall — segue para o OnboardingGate. Regra do negocio: quem tem
+  // assinatura ja fez onboarding, entao assinante nunca cai aqui.
+  // Anti-loop: o onboarding marca onboarding_completed=true no banco ao
+  // terminar; a partir dai, sim, o paywall aparece.
+  const completouOnboarding = (profile as any)?.onboarding_completed === true;
+
   console.log("[ProtectedRoute]", {
     userId: user.id,
     subscriptionStatus: (profile as any)?.subscription_status,
     isAdminUser,
     isExempt,
     hasSubscription,
+    completouOnboarding,
     path: location.pathname,
   });
 
-  if (!isAdminUser && !isExempt && !hasSubscription) {
+  // Quem ainda NAO fez onboarding precisa ve-lo antes de qualquer coisa.
+  // O OnboardingGate so existe na rota /app, entao mandamos para la quem
+  // cair em outra rota sem ter completado (fecha o furo de acesso).
+  if (!isAdminUser && !isExempt && !completouOnboarding && location.pathname !== "/app") {
+    return <Navigate to="/app" replace />;
+  }
+
+  // So bloqueia no paywall quem JA fez o onboarding e nao tem assinatura.
+  // (Quem nao fez onboarding ja foi tratado acima e vai para o OnboardingGate.)
+  if (!isAdminUser && !isExempt && !hasSubscription && completouOnboarding) {
     return <Navigate to="/app/assinatura" state={{ from: location }} replace />;
   }
 
