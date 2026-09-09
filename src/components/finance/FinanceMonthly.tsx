@@ -202,8 +202,10 @@ export function FinanceMonthly({
 
   // Exporta as transacoes do mes visivel para CSV (abre no Excel).
   // Usa ; como separador e BOM UTF-8 para acentos aparecerem certo no Excel BR.
-  function exportarExcel() {
-    const linhas = [...monthTxs].sort((a, b) =>
+  function exportarExcel(escopo: "mes" | "tudo" = "mes") {
+    // "mes" = so o mes visivel; "tudo" = todo o historico carregado.
+    const base = escopo === "tudo" ? transactions : monthTxs;
+    const linhas = [...base].sort((a, b) =>
       b.transaction_date.localeCompare(a.transaction_date)
     );
     const tipoLabel: Record<string, string> = {
@@ -220,11 +222,15 @@ export function FinanceMonthly({
       t.amount.toFixed(2).replace(".", ","),
     ]);
     // Linha de resumo no fim
+    // Resumo recalculado conforme o escopo exportado
+    const inc = base.filter((t) => t.type === "income").reduce((s, t) => s + t.amount, 0);
+    const exp = base.filter((t) => t.type === "expense").reduce((s, t) => s + t.amount, 0);
+    const pay = base.filter((t) => t.type === "debt_payment").reduce((s, t) => s + t.amount, 0);
     const resumo = [
       [],
-      ["Entradas", "", "", "", totalIncome.toFixed(2).replace(".", ",")],
-      ["Saidas", "", "", "", totalExpense.toFixed(2).replace(".", ",")],
-      ["Saldo", "", "", "", balance.toFixed(2).replace(".", ",")],
+      ["Entradas", "", "", "", inc.toFixed(2).replace(".", ",")],
+      ["Saidas", "", "", "", exp.toFixed(2).replace(".", ",")],
+      ["Saldo", "", "", "", (inc - exp - pay).toFixed(2).replace(".", ",")],
     ];
     const todas = [cabecalho, ...corpo, ...resumo];
     const csv = todas.map((l) => l.join(";")).join("\n");
@@ -232,7 +238,7 @@ export function FinanceMonthly({
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `minhas-financas-${format(new Date(), "yyyy-MM")}.csv`;
+    a.download = escopo === "tudo" ? `minhas-financas-completo.csv` : `minhas-financas-${format(new Date(), "yyyy-MM")}.csv`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -301,14 +307,24 @@ export function FinanceMonthly({
       </div>
 
       {/* ── Exportar para Excel ── */}
-      {monthTxs.length > 0 && (
-        <button
-          onClick={exportarExcel}
-          className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl border border-border text-sm font-semibold text-muted-foreground hover:bg-muted transition-colors"
-        >
-          <Download className="h-4 w-4" />
-          Exportar para Excel
-        </button>
+      {transactions.length > 0 && (
+        <div className="grid grid-cols-2 gap-2">
+          <button
+            onClick={() => exportarExcel("mes")}
+            disabled={monthTxs.length === 0}
+            className="flex items-center justify-center gap-2 py-2.5 rounded-xl border border-border text-sm font-semibold text-muted-foreground hover:bg-muted transition-colors disabled:opacity-40"
+          >
+            <Download className="h-4 w-4" />
+            Este mês
+          </button>
+          <button
+            onClick={() => exportarExcel("tudo")}
+            className="flex items-center justify-center gap-2 py-2.5 rounded-xl border border-border text-sm font-semibold text-muted-foreground hover:bg-muted transition-colors"
+          >
+            <Download className="h-4 w-4" />
+            Tudo (Excel)
+          </button>
+        </div>
       )}
 
       {/* ── Gambling Alert ── */}
