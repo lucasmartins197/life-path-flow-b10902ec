@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { Bell, Check, MessageCircle, Heart, Video, Trophy, Gift } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -66,7 +66,7 @@ function isSelfAction(n: NotificationRow): boolean {
   return n.actor_id === n.user_id && (n.type === "reaction" || n.type === "comment");
 }
 
-export function NotificationBell() {
+export function NotificationBell({ inline = false }: { inline?: boolean } = {}) {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
@@ -202,24 +202,24 @@ export function NotificationBell() {
     }
   };
 
-  // O sino e um botao flutuante (fixed, canto superior direito). Na tela de
-  // perfil ele cai EXATAMENTE sobre o botao "Editar" e trava o clique.
-  // Escondemos o sino no perfil — ali o usuario quer editar, nao ver avisos.
-  const location = useLocation();
-  const esconderNoPerfil = location.pathname.startsWith("/app/perfil");
-
   if (!user) return null;
-  if (esconderNoPerfil) return null;
 
   return (
     <>
       <button
         onClick={() => handleOpen(true)}
         aria-label="Notificações"
-        className="fixed z-40 top-3 right-4 safe-top w-10 h-10 rounded-full bg-card border border-border/60 shadow-md flex items-center justify-center text-foreground hover:bg-muted transition-colors"
-        style={{ marginTop: "env(safe-area-inset-top, 0px)" }}
+        className={
+          inline
+            ? "relative flex flex-col items-center justify-center gap-0.5 text-muted-foreground hover:text-primary transition-colors"
+            : "fixed z-40 top-3 right-4 safe-top w-10 h-10 rounded-full bg-card border border-border/60 shadow-md flex items-center justify-center text-foreground hover:bg-muted transition-colors"
+        }
+        style={inline ? undefined : { marginTop: "env(safe-area-inset-top, 0px)" }}
       >
-        <Bell className="h-4 w-4" />
+        <div className={inline ? "nav-icon-bg" : ""}>
+          <Bell className="h-5 w-5 stroke-[1.6]" />
+        </div>
+        {inline && <span className="text-[10px] font-semibold tracking-tight">Avisos</span>}
         {unread > 0 && (
           <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-destructive text-destructive-foreground text-[10px] font-bold flex items-center justify-center border-2 border-background">
             {unread > 99 ? "99+" : unread}
