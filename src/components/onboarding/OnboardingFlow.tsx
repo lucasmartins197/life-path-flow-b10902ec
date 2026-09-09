@@ -320,23 +320,21 @@ export function OnboardingFlow({ onComplete }: { onComplete: () => void }) {
       return;
     }
 
-    // Atualiza o profile no contexto para o ProtectedRoute enxergar que o
-    // onboarding foi concluido (evita o app decidir com dado velho).
-    await refreshProfile();
-
     onComplete();
 
     // Fluxo correto: apos o onboarding, a pessoa vai para o PAYWALL —
-    // a menos que ja seja assinante (ex.: liberada via Pix). Antes, o
-    // onboarding navegava direto pro app e a pessoa nunca pagava.
+    // a menos que ja seja assinante (ex.: liberada via Pix).
+    // Usamos window.location (nao o navigate do React) para forcar um
+    // recarregamento limpo: assim o app rele o perfil do zero, ja com
+    // onboarding_completed=true, e nao decide com estado velho (o que
+    // deixava a pessoa presa numa tela sem acesso).
     const jaAssinante = ["active", "canceling"].includes(
       (profile as any)?.subscription_status
     );
-    if (jaAssinante) {
-      navigate(target === "step1" ? "/app/jornada/1" : "/app", { replace: true });
-    } else {
-      navigate("/app/assinatura", { replace: true });
-    }
+    const destino = jaAssinante
+      ? (target === "step1" ? "/app/jornada/1" : "/app")
+      : "/app/assinatura";
+    window.location.href = destino;
   }
 
   // Validation per step
