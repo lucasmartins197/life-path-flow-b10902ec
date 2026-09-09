@@ -131,6 +131,61 @@ export default function HealthHome() {
             </button>
           ))}
         </section>
+
+        {/* Entenda a ludopatia — conteudo educativo */}
+        <section className="mt-6 space-y-4">
+          <div className="card-premium p-5">
+            <div className="flex items-center gap-2.5 mb-3">
+              <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+                <Stethoscope className="h-5 w-5 text-primary" />
+              </div>
+              <div>
+                <h2 className="text-base font-bold text-foreground">Entenda a ludopatia</h2>
+                <p className="text-xs text-muted-foreground">O que a ciência diz sobre o vício em apostas</p>
+              </div>
+            </div>
+            <p className="text-sm text-muted-foreground leading-relaxed">
+              A ludopatia — ou transtorno do jogo — é uma doença reconhecida pela
+              Organização Mundial da Saúde, classificada ao lado das dependências
+              químicas (CID F63.0). Não é falta de força de vontade nem fraqueza de
+              caráter: é uma condição médica que afeta o cérebro e exige cuidado.
+            </p>
+          </div>
+
+          <div className="card-premium p-5">
+            <h3 className="text-sm font-bold text-foreground mb-2">Por que é tão difícil parar sozinho</h3>
+            <p className="text-sm text-muted-foreground leading-relaxed mb-3">
+              A aposta ativa no cérebro os mesmos circuitos de recompensa das drogas.
+              Cada jogada libera dopamina, criando um ciclo que se retroalimenta — e o
+              cérebro passa a pedir mais para sentir o mesmo. Por isso "só querer parar"
+              raramente basta.
+            </p>
+            <p className="text-sm text-muted-foreground leading-relaxed">
+              Um dos mecanismos mais traiçoeiros é o <strong>"quase ganhar"</strong>: perder por
+              pouco ativa o cérebro quase tanto quanto ganhar, e alimenta a vontade de
+              continuar. Não é você sendo fraco — é o jogo sendo desenhado para prender.
+            </p>
+          </div>
+
+          <div className="card-premium p-5">
+            <h3 className="text-sm font-bold text-foreground mb-3">Sinais de alerta</h3>
+            <ul className="space-y-2 text-sm text-foreground/80">
+              <li className="flex gap-2.5"><Activity className="h-4 w-4 mt-0.5 shrink-0 text-primary" /><span>Pensar em apostas o tempo todo, planejando a próxima jogada.</span></li>
+              <li className="flex gap-2.5"><Activity className="h-4 w-4 mt-0.5 shrink-0 text-primary" /><span>Precisar apostar valores cada vez maiores para sentir emoção.</span></li>
+              <li className="flex gap-2.5"><Activity className="h-4 w-4 mt-0.5 shrink-0 text-primary" /><span>Tentar parar e não conseguir, com irritação ou inquietação.</span></li>
+              <li className="flex gap-2.5"><Activity className="h-4 w-4 mt-0.5 shrink-0 text-primary" /><span>Apostar para "recuperar" o que perdeu (perseguir as perdas).</span></li>
+              <li className="flex gap-2.5"><Activity className="h-4 w-4 mt-0.5 shrink-0 text-primary" /><span>Mentir para esconder o quanto joga.</span></li>
+            </ul>
+          </div>
+
+          <div className="rounded-2xl p-5" style={{ background: "#F0FDF4", border: "1px solid #BBF7D0" }}>
+            <p className="text-sm text-green-800 leading-relaxed">
+              <strong>A boa notícia:</strong> como toda doença, a ludopatia tem tratamento — e
+              quanto mais cedo se começa, maiores as chances de recuperação. Procurar
+              ajuda não é fraqueza. É o ato mais corajoso que você pode fazer por você.
+            </p>
+          </div>
+        </section>
       </main>
 
       <BottomNavigation />
