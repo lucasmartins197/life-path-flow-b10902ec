@@ -654,6 +654,55 @@ export default function RoutineHome() {
               })}
           </div>
         )}
+
+        {/* Reconstruir a vida — conteudo objetivo (modulo 8 adaptado) */}
+        <section className="mt-6 space-y-3 px-4">
+          <div className="flex items-center gap-2">
+            <Leaf className="h-5 w-5 text-primary" />
+            <h2 className="text-base font-bold text-foreground">Reconstruindo sua vida</h2>
+          </div>
+          <p className="text-sm text-muted-foreground leading-relaxed">
+            Sair do jogo não é só parar de apostar — é recuperar o que importa: rotina,
+            autoestima e confiança. Pequenas atitudes, todo dia, fazem a diferença.
+          </p>
+
+          <div className="rounded-2xl border border-border/40 bg-card p-4 space-y-3">
+            <div className="flex gap-3">
+              <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                <Circle className="h-4 w-4 text-primary" />
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-foreground">Rotina</p>
+                <p className="text-xs text-muted-foreground leading-relaxed">Horários fixos para dormir e acordar, atividade física, e momentos de lazer saudável. Estrutura reduz os impulsos.</p>
+              </div>
+            </div>
+            <div className="flex gap-3">
+              <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                <Smile className="h-4 w-4 text-primary" />
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-foreground">Autoestima</p>
+                <p className="text-xs text-muted-foreground leading-relaxed">Reconheça cada conquista — um dia sem apostar, uma decisão consciente. Culpa vira aprendizado, não punição.</p>
+              </div>
+            </div>
+            <div className="flex gap-3">
+              <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                <Sparkles className="h-4 w-4 text-primary" />
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-foreground">Confiança</p>
+                <p className="text-xs text-muted-foreground leading-relaxed">Reconstruída aos poucos: cumprir combinados, assumir responsabilidades no seu ritmo, e ser honesto com quem você ama.</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="rounded-2xl p-4" style={{ background: "#F0FDF4", border: "1px solid #BBF7D0" }}>
+            <p className="text-sm text-green-800 leading-relaxed">
+              Sair do jogo é possível — e a vida que espera por você é muito maior.
+              Um passo de cada vez. 💚
+            </p>
+          </div>
+        </section>
       </div>
 
       <BottomNavigation />
