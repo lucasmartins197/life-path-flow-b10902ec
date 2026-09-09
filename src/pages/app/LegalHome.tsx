@@ -124,6 +124,14 @@ export default function LegalHome() {
   const [checkoutLoading, setCheckoutLoading] = useState<string | null>(null);
   const [specialistOpen, setSpecialistOpen] = useState(false);
   const [hasCase, setHasCase] = useState(false);
+  // Trava da agenda juridica (mesma logica da terapia)
+  const [dataConfirmada, setDataConfirmada] = useState(
+    () => localStorage.getItem("juridico_data_confirmada") === "true"
+  );
+  const confirmarData = () => {
+    localStorage.setItem("juridico_data_confirmada", "true");
+    setDataConfirmada(true);
+  };
 
   // Verifica se o usuario ja tem um processo juridico registrado.
   // So quem pagou tem caso (criado pelo webhook) — e so esse ve o botao.
@@ -231,28 +239,81 @@ export default function LegalHome() {
 
       <main className="max-w-lg mx-auto px-5 pt-6 space-y-6">
         {/* Confirmação de pagamento */}
-        {paymentSuccess && (
-          <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-6">
-            <div className="bg-white rounded-2xl p-8 max-w-sm w-full text-center shadow-2xl">
-              <div className="w-20 h-20 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-4">
-                <CheckCircle2 className="h-10 w-10 text-green-600" />
+        {/* JA PAGOU e AINDA NAO confirmou a data: mostra a agenda juridica */}
+        {paymentSuccess && !dataConfirmada && (
+          <div className="space-y-4">
+            <div className="rounded-2xl p-5 text-center" style={{ background: "#F0FDF4", border: "1px solid #BBF7D0" }}>
+              <div className="w-14 h-14 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-2">
+                <CheckCircle2 className="h-7 w-7 text-green-600" />
               </div>
-              <h2 className="text-2xl font-bold text-gray-900 mb-2">Pagamento confirmado! ✅</h2>
-              <p className="text-gray-600 mb-2">Sua consulta jurídica foi solicitada com sucesso.</p>
-              <p className="text-sm text-gray-500 mb-6">
-                Nossa equipe entrará em contato em até 24 horas para agendar sua avaliação com especialista via WhatsApp e
-                email.
-              </p>
-              <button
-                onClick={() => navigate("/app/juridico")}
-                className="w-full py-3 rounded-xl font-semibold text-white"
-                style={{ backgroundColor: "#1B4332" }}
-              >
-                Entendido
-              </button>
+              <h2 className="text-lg font-bold text-green-800">Pagamento confirmado!</h2>
+              <p className="text-sm text-green-700 mt-1">Agora escolha a data da sua consulta com o especialista jurídico.</p>
             </div>
+
+            <section className="space-y-3">
+              <div>
+                <h2 className="text-base font-bold" style={{ color: "#1B4332" }}>Selecione sua data</h2>
+                <p className="text-sm text-muted-foreground mt-1">Escolha o horário disponível para sua avaliação.</p>
+              </div>
+              <div className="w-full overflow-hidden shadow-md bg-card rounded-xl">
+                <iframe
+                  src="https://appagendai.alualab.com/agendar?c=saindodojogo"
+                  width="100%"
+                  height="600px"
+                  style={{ border: "none", display: "block" }}
+                  title="Agendamento Jurídico"
+                />
+              </div>
+              <button
+                onClick={confirmarData}
+                className="w-full py-3.5 rounded-xl text-white font-bold text-base transition-all active:scale-98"
+                style={{ background: "linear-gradient(135deg, #1B4332, #2D6A4F)" }}
+              >
+                ✓ Confirmei minha data
+              </button>
+              <p className="text-xs text-center text-muted-foreground">
+                Confirme só depois de finalizar o agendamento acima.
+              </p>
+            </section>
           </div>
         )}
+
+        {/* JA PAGOU e JA confirmou a data: tela final travada */}
+        {paymentSuccess && dataConfirmada && (
+          <section className="rounded-2xl p-6 text-center space-y-4" style={{ background: "#fff", border: "1px solid #E5E7EB", boxShadow: "0 1px 3px rgba(0,0,0,0.06)" }}>
+            <div className="w-20 h-20 rounded-full bg-green-100 flex items-center justify-center mx-auto">
+              <CheckCircle2 className="h-10 w-10 text-green-600" />
+            </div>
+            <h2 className="text-xl font-bold" style={{ color: "#1B4332" }}>Tudo certo! 💚</h2>
+            <p className="text-sm text-muted-foreground leading-relaxed">
+              Seu pagamento foi confirmado e sua data foi registrada. Nossa equipe
+              jurídica vai validar o agendamento e entrar em contato para confirmar
+              os detalhes da sua avaliação. Acompanhe também em "Meu Processo".
+            </p>
+            <div className="rounded-xl p-4" style={{ background: "#F0FDF4", border: "1px solid #BBF7D0" }}>
+              <p className="text-sm text-green-800">Ficou com alguma dúvida? Fale com a gente.</p>
+            </div>
+            <a
+              href={`https://wa.me/5516981916656?text=${encodeURIComponent("Olá! Acabei de agendar minha consulta jurídica e tenho uma dúvida.")}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="w-full inline-flex items-center justify-center gap-2 py-3.5 rounded-xl text-white font-bold text-base"
+              style={{ backgroundColor: "#25D366" }}
+            >
+              Falar no WhatsApp
+            </a>
+            <button
+              onClick={() => navigate("/app/juridico/meu-processo")}
+              className="w-full py-3 rounded-xl font-semibold"
+              style={{ color: "#1B4332" }}
+            >
+              Ver meu processo
+            </button>
+          </section>
+        )}
+        {/* Conteudo normal da pagina — escondido durante o fluxo de agenda pos-pagamento */}
+        {!paymentSuccess && (
+        <>
         {/* Guia: reaver valores perdidos — conteudo educativo */}
         <section>
           <div className="rounded-2xl border border-border/40 bg-card p-5">
@@ -432,6 +493,8 @@ export default function LegalHome() {
             qualificados.
           </p>
         </div>
+        </>
+        )}
       </main>
 
       {/* Topic Dialog */}
