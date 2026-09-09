@@ -1,10 +1,10 @@
 import { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import {
-  House, Users, Calendar, Grid2x2,
+  House, Users, Calendar, Menu,
   Shield, BookOpen, Video, Award, Wallet, Scale, Lock, Mail,
   Anchor, User as UserIcon, CreditCard, TrendingUp, Footprints, HeartHandshake,
-  LucideIcon,
+  ChevronRight, LucideIcon,
 } from "lucide-react";
 import {
   Sheet, SheetContent, SheetHeader, SheetTitle,
@@ -21,44 +21,71 @@ interface MoreItem {
   label: string;
   icon: LucideIcon;
   path: string;
-  gradient: string;
 }
 
-const moreItems: MoreItem[] = [
-  { label: "Jornada",         icon: Footprints,    path: "/app/jornada",         gradient: "linear-gradient(135deg, #1B4332, #2D6A4F)" },
-  { label: "Terapia",         icon: HeartHandshake,path: "/app/terapia",         gradient: "linear-gradient(135deg, #1A3A5C, #2E6DA4)" },
-  { label: "Meu Escudo",      icon: Shield,        path: "/app/escudo",          gradient: "linear-gradient(135deg, #2C2A4A, #4F518C)" },
-  { label: "Aulão Semanal",   icon: Video,         path: "/app/aulao",           gradient: "linear-gradient(135deg, #1A1A2E, #16213E)" },
-  { label: "Histórias",       icon: BookOpen,      path: "/app/comunidade",      gradient: "linear-gradient(135deg, #1B4332, #40916C)" },
-  { label: "Medalhas",        icon: Award,         path: "/app/medalhas",        gradient: "linear-gradient(135deg, #8B6F1F, #C9A84C)" },
-  { label: "Minhas Finanças", icon: Wallet,        path: "/app/financas",        gradient: "linear-gradient(135deg, #14532D, #166534)" },
-  { label: "Apoio Jurídico",  icon: Scale,         path: "/app/juridico",        gradient: "linear-gradient(135deg, #2C2A4A, #4F518C)" },
-  { label: "Bloqueio de Apostas", icon: Lock,      path: "/app/bloqueio",        gradient: "linear-gradient(135deg, #7C2D12, #C2410C)" },
-  { label: "Minhas Cartas",   icon: Mail,          path: "/app/cartas",          gradient: "linear-gradient(135deg, #5C4A1A, #C9A84C)" },
-  { label: "Contato Âncora",  icon: Anchor,        path: "/app/ancora",          gradient: "linear-gradient(135deg, #0C2340, #1A4A6E)" },
-  { label: "Evolução",        icon: TrendingUp,    path: "/app/evolucao",        gradient: "linear-gradient(135deg, #1B4332, #40916C)" },
-  { label: "Assinatura",      icon: CreditCard,    path: "/app/assinatura",      gradient: "linear-gradient(135deg, #5C2018, #9B4423)" },
-  { label: "Perfil",          icon: UserIcon,      path: "/app/perfil",          gradient: "linear-gradient(135deg, #2D2D2D, #4A4A4A)" },
+// Itens do menu lateral, agrupados por categoria (navegação mais clara).
+const menuGroups: { title: string; items: MoreItem[] }[] = [
+  {
+    title: "Minha recuperação",
+    items: [
+      { label: "Jornada", icon: Footprints, path: "/app/jornada" },
+      { label: "Evolução", icon: TrendingUp, path: "/app/evolucao" },
+      { label: "Medalhas", icon: Award, path: "/app/medalhas" },
+      { label: "Minhas Cartas", icon: Mail, path: "/app/cartas" },
+    ],
+  },
+  {
+    title: "Apoio profissional",
+    items: [
+      { label: "Terapia", icon: HeartHandshake, path: "/app/terapia" },
+      { label: "Apoio Jurídico", icon: Scale, path: "/app/juridico" },
+      { label: "Aulão Semanal", icon: Video, path: "/app/aulao" },
+    ],
+  },
+  {
+    title: "Proteção",
+    items: [
+      { label: "Meu Escudo", icon: Shield, path: "/app/escudo" },
+      { label: "Bloqueio de Apostas", icon: Lock, path: "/app/bloqueio" },
+      { label: "Contato Âncora", icon: Anchor, path: "/app/ancora" },
+    ],
+  },
+  {
+    title: "Finanças",
+    items: [
+      { label: "Minhas Finanças", icon: Wallet, path: "/app/financas" },
+    ],
+  },
+  {
+    title: "Comunidade",
+    items: [
+      { label: "Histórias que Conectam", icon: BookOpen, path: "/app/comunidade" },
+    ],
+  },
+  {
+    title: "Conta",
+    items: [
+      { label: "Assinatura", icon: CreditCard, path: "/app/assinatura" },
+      { label: "Perfil", icon: UserIcon, path: "/app/perfil" },
+    ],
+  },
 ];
 
 export function BottomNavigation() {
   const navigate = useNavigate();
   const location = useLocation();
-  const [moreOpen, setMoreOpen] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
 
-  const isActive = (path: string) => {
-    if (path === "/app") return location.pathname === "/app";
-    return location.pathname.startsWith(path);
-  };
+  const isActive = (path: string) =>
+    path === "/app" ? location.pathname === "/app" : location.pathname.startsWith(path);
 
-  const handleMoreItem = (path: string) => {
-    setMoreOpen(false);
+  const handleMenuItem = (path: string) => {
+    setMenuOpen(false);
     navigate(path);
   };
 
   return (
     <>
-      <NotificationBell />
       <nav className="bottom-nav">
         <div className="bottom-nav-content">
           {mainItems.map((item) => {
@@ -70,9 +97,7 @@ export function BottomNavigation() {
                 className={`bottom-nav-item ${active ? "active" : ""}`}
               >
                 <div className="nav-icon-bg">
-                  <item.icon
-                    className={`h-5 w-5 ${active ? "stroke-[2.2]" : "stroke-[1.6]"}`}
-                  />
+                  <item.icon className={`h-5 w-5 ${active ? "stroke-[2.2]" : "stroke-[1.6]"}`} />
                 </div>
                 <span
                   className={`text-[10px] font-semibold tracking-tight ${
@@ -85,51 +110,64 @@ export function BottomNavigation() {
             );
           })}
 
+          {/* Sino de notificações — agora é um item da barra (não flutua mais) */}
+          <div className="bottom-nav-item">
+            <NotificationBell inline />
+          </div>
+
+          {/* Menu — abre o painel lateral */}
           <button
-            onClick={() => setMoreOpen(true)}
-            className={`bottom-nav-item ${moreOpen ? "active" : ""}`}
+            onClick={() => setMenuOpen(true)}
+            className={`bottom-nav-item ${menuOpen ? "active" : ""}`}
           >
             <div className="nav-icon-bg">
-              <Grid2x2 className={`h-5 w-5 ${moreOpen ? "stroke-[2.2]" : "stroke-[1.6]"}`} />
+              <Menu className={`h-5 w-5 ${menuOpen ? "stroke-[2.2]" : "stroke-[1.6]"}`} />
             </div>
             <span
               className={`text-[10px] font-semibold tracking-tight ${
-                moreOpen ? "text-primary" : "text-muted-foreground"
+                menuOpen ? "text-primary" : "text-muted-foreground"
               }`}
             >
-              Mais
+              Menu
             </span>
           </button>
         </div>
       </nav>
 
-      <Sheet open={moreOpen} onOpenChange={setMoreOpen}>
+      {/* Menu lateral (abre da direita) — organizado por categorias, visual limpo */}
+      <Sheet open={menuOpen} onOpenChange={setMenuOpen}>
         <SheetContent
-          side="bottom"
-          className="rounded-t-3xl border-t border-border/40 bg-background max-h-[85vh] overflow-y-auto safe-bottom"
+          side="right"
+          className="w-[82vw] max-w-sm p-0 flex flex-col bg-background safe-top"
         >
-          <SheetHeader className="text-left mb-4">
-            <SheetTitle className="text-lg font-bold tracking-tight">
-              Tudo do app
+          <SheetHeader className="text-left px-5 pt-6 pb-4 border-b border-border/40">
+            <SheetTitle className="text-xl font-bold tracking-tight" style={{ color: "#1B4332" }}>
+              Menu
             </SheetTitle>
           </SheetHeader>
 
-          <div className="grid grid-cols-3 gap-3 pb-4">
-            {moreItems.map((item) => (
-              <button
-                key={item.path}
-                onClick={() => handleMoreItem(item.path)}
-                className="relative overflow-hidden flex flex-col items-center justify-center gap-2 aspect-square rounded-2xl text-white transition-transform duration-150 active:scale-[0.96]"
-                style={{
-                  background: item.gradient,
-                  boxShadow: "0 6px 18px rgba(0,0,0,0.18)",
-                }}
-              >
-                <item.icon className="h-6 w-6 stroke-[1.8]" />
-                <span className="text-[11px] font-semibold leading-tight text-center px-2 drop-shadow">
-                  {item.label}
-                </span>
-              </button>
+          <div className="flex-1 overflow-y-auto px-3 py-4 space-y-6">
+            {menuGroups.map((group) => (
+              <div key={group.title}>
+                <p className="px-3 mb-1.5 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+                  {group.title}
+                </p>
+                <div className="space-y-0.5">
+                  {group.items.map((item) => (
+                    <button
+                      key={item.path}
+                      onClick={() => handleMenuItem(item.path)}
+                      className="w-full flex items-center gap-3 px-3 py-3 rounded-xl text-left transition-colors hover:bg-muted active:scale-[0.99]"
+                    >
+                      <div className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0" style={{ backgroundColor: "#1B433212" }}>
+                        <item.icon className="h-[18px] w-[18px]" style={{ color: "#1B4332" }} />
+                      </div>
+                      <span className="flex-1 text-sm font-medium text-foreground">{item.label}</span>
+                      <ChevronRight className="h-4 w-4 text-muted-foreground/50" />
+                    </button>
+                  ))}
+                </div>
+              </div>
             ))}
           </div>
         </SheetContent>
