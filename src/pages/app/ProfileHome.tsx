@@ -864,7 +864,7 @@ export default function ProfileHome() {
                 window.open("https://apps.apple.com/app/id6776461153", "_blank");
               } else {
                 window.open(
-                  "https://play.google.com/store/apps/details?id=com.apostandonavida.stakereal",
+                  "https://play.google.com/store/apps/details?id=br.com.saindodojogo.app",
                   "_blank",
                 );
               }
