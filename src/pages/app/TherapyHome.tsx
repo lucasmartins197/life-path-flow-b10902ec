@@ -13,6 +13,14 @@ export default function TherapyHome() {
   const dossieSentRef = useRef(false);
   const [loading, setLoading] = useState(false);
   const [dataSelecionada, setDataSelecionada] = useState(false);
+  // Trava: uma vez confirmada a data, nao mostra a agenda de novo (nem ao reabrir).
+  const [dataConfirmada, setDataConfirmada] = useState(
+    () => localStorage.getItem("terapia_data_confirmada") === "true"
+  );
+  const confirmarData = () => {
+    localStorage.setItem("terapia_data_confirmada", "true");
+    setDataConfirmada(true);
+  };
   const [coupon, setCoupon] = useState("");
   const [appliedCoupon, setAppliedCoupon] = useState<{
     id: string;
@@ -137,174 +145,183 @@ export default function TherapyHome() {
       <main className="max-w-lg mx-auto px-5 pt-6 space-y-6">
         <HealthDisclaimer />
 
-        {/* Sucesso após pagamento */}
-        {paymentSuccess && (
-          <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-6">
-            <div className="bg-white rounded-2xl p-8 max-w-sm w-full text-center shadow-2xl">
-              <div className="w-20 h-20 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-4">
-                <CheckCircle2 className="h-10 w-10 text-green-600" />
-              </div>
-              <h2 className="text-2xl font-bold text-gray-900 mb-2 flex items-center justify-center gap-2">
-                <CheckCircle2 className="h-6 w-6 text-green-600" />
-                Pagamento confirmado!
+        {/* ═══ FLUXO 1: AINDA NAO PAGOU — mostra video, valor, cupom e pagamento ═══ */}
+        {!paymentSuccess && (
+          <>
+            {/* Vídeo */}
+            <section>
+              <h2 className="text-base font-bold mb-3" style={{ color: "#1B4332" }}>
+                Acompanhamento Psicológico
               </h2>
-              <p className="text-gray-600 mb-2">Seu pagamento foi confirmado com sucesso.</p>
-              <p className="text-sm text-gray-500 mb-6">
-                Nossa equipe entrará em contato em até 24 horas para confirmar data e horário da sua sessão via WhatsApp e email.
-              </p>
-              <button
-                onClick={() => navigate("/app/terapia")}
-                className="w-full py-3 rounded-xl font-semibold text-white"
-                style={{ backgroundColor: "#1B4332" }}
-              >
-                Entendido
-              </button>
+              <div className="w-full rounded-xl overflow-hidden shadow-md bg-black">
+                <iframe
+                  src="https://drive.google.com/file/d/1p4L5F5jkiUCltDejhgrK9x54HYU0ErFN/preview"
+                  width="100%"
+                  style={{ aspectRatio: "16/9", border: "none" }}
+                  allow="autoplay"
+                  allowFullScreen
+                  title="Acompanhamento Psicológico"
+                />
+              </div>
+            </section>
+
+            {/* Valor */}
+            <div className="rounded-2xl p-4 flex items-center justify-between" style={{ background: "#F0FDF4", border: "1px solid #BBF7D0" }}>
+              <div>
+                <p className="font-bold text-green-800">Consulta Terapêutica</p>
+                <p className="text-sm text-green-700">Sessão online — psicólogo especializado</p>
+              </div>
+              <p className="text-2xl font-bold text-green-800">R$ 229,20</p>
             </div>
-          </div>
+
+            {/* Como funciona */}
+            <div className="rounded-2xl p-4 text-sm text-muted-foreground" style={{ background: "#fff", border: "1px solid #E5E7EB" }}>
+              <p className="font-semibold mb-1" style={{ color: "#1B4332" }}>Como funciona:</p>
+              <p>1. Você realiza o pagamento.<br />2. Escolhe a data e o horário da sua sessão.<br />3. Recebe a confirmação e nossa equipe valida o agendamento.</p>
+            </div>
+
+            {/* Pagamento */}
+            <section className="rounded-2xl p-5 space-y-4" style={{ background: "#fff", border: "1px solid #E5E7EB", boxShadow: "0 1px 3px rgba(0,0,0,0.06)" }}>
+              <p className="font-bold" style={{ color: "#1B4332" }}>Confirme o pagamento</p>
+
+              {/* Cupom de desconto */}
+              <div className="space-y-2">
+                <label className="text-sm font-semibold" style={{ color: "#1B4332" }}>
+                  Tem um cupom de desconto?
+                </label>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={coupon}
+                    onChange={(e) => {
+                      setCoupon(e.target.value);
+                      setCouponError("");
+                    }}
+                    disabled={!!appliedCoupon}
+                    placeholder="Digite seu cupom"
+                    className="flex-1 px-3 py-2 rounded-lg border text-sm outline-none focus:ring-2"
+                    style={{ borderColor: "#E5E7EB" }}
+                  />
+                  <button
+                    onClick={handleApplyCoupon}
+                    disabled={couponLoading || !coupon.trim() || !!appliedCoupon}
+                    className="px-4 py-2 rounded-lg text-sm font-semibold text-white disabled:opacity-50"
+                    style={{ background: "#1B4332" }}
+                  >
+                    {couponLoading ? "..." : "Aplicar"}
+                  </button>
+                </div>
+                {appliedCoupon && (
+                  <p className="text-sm font-semibold text-green-700">
+                    ✓ Cupom aplicado!{appliedCoupon.percent_off ? ` ${appliedCoupon.percent_off}% de desconto` : ""}
+                  </p>
+                )}
+                {couponError && <p className="text-sm font-semibold text-red-600">{couponError}</p>}
+              </div>
+
+              {appliedCoupon && (
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-muted-foreground line-through">R$ {formatBRL(BASE_PRICE)}</span>
+                  <span className="font-bold text-green-700">Novo total: R$ {formatBRL(finalPrice)}</span>
+                </div>
+              )}
+
+              <button
+                onClick={handleCheckout}
+                disabled={loading}
+                className="w-full py-3.5 rounded-xl text-white font-bold text-base transition-all active:scale-98 disabled:opacity-60"
+                style={{ background: "linear-gradient(135deg, #1B4332, #2D6A4F)" }}
+              >
+                {loading ? (
+                  <span className="flex items-center justify-center gap-2">
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Processando...
+                  </span>
+                ) : (
+                  `Pagar R$ ${formatBRL(finalPrice)} →`
+                )}
+              </button>
+            </section>
+          </>
         )}
 
-        {/* Vídeo */}
-        <section>
-          <h2 className="text-base font-bold mb-3" style={{ color: "#1B4332" }}>
-            Acompanhamento Psicológico
-          </h2>
-          <div className="w-full rounded-xl overflow-hidden shadow-md bg-black">
-            <iframe
-              src="https://drive.google.com/file/d/1p4L5F5jkiUCltDejhgrK9x54HYU0ErFN/preview"
-              width="100%"
-              style={{ aspectRatio: "16/9", border: "none" }}
-              allow="autoplay"
-              allowFullScreen
-              title="Acompanhamento Psicológico"
-            />
-          </div>
-        </section>
-
-        {/* Valor */}
-        <div
-          className="rounded-2xl p-4 flex items-center justify-between"
-          style={{ background: "#F0FDF4", border: "1px solid #BBF7D0" }}
-        >
-          <div>
-            <p className="font-bold text-green-800">Consulta Terapêutica</p>
-            <p className="text-sm text-green-700">Sessão online — psicólogo especializado</p>
-          </div>
-          <p className="text-2xl font-bold text-green-800">R$ 229,20</p>
-        </div>
-
-        {/* Agendamento */}
-        <section className="space-y-3">
-          <div>
-            <h2 className="text-base font-bold" style={{ color: "#1B4332" }}>
-              1. Selecione uma data
-            </h2>
-            <p className="text-sm text-muted-foreground mt-1">Escolha o profissional e horário disponível</p>
-          </div>
-
-          <div className="w-full overflow-hidden shadow-md bg-card rounded-xl">
-            <iframe
-              src="https://appagendai.alualab.com/agendar?c=saindodojogo"
-              width="100%"
-              height="600px"
-              style={{ border: "none", display: "block" }}
-              title="Agendamento"
-            />
-          </div>
-
-          {/* Confirmação de data selecionada */}
-          <button
-            onClick={() => setDataSelecionada(true)}
-            className="w-full py-3 rounded-xl text-sm font-semibold border-2 transition-all"
-            style={{
-              borderColor: dataSelecionada ? "#1B4332" : "#E5E7EB",
-              background: dataSelecionada ? "#F0FDF4" : "#fff",
-              color: dataSelecionada ? "#1B4332" : "#6B7280",
-            }}
-          >
-            {dataSelecionada ? "✓ Data selecionada — prosseguir para pagamento" : "Já selecionei minha data →"}
-          </button>
-        </section>
-
-        {/* Pagamento — só aparece após selecionar data */}
-        {dataSelecionada && (
-          <section
-            className="rounded-2xl p-5 space-y-4"
-            style={{ background: "#fff", border: "1px solid #E5E7EB", boxShadow: "0 1px 3px rgba(0,0,0,0.06)" }}
-          >
-            <div className="flex items-center gap-2">
-              <div
-                className="w-7 h-7 rounded-full flex items-center justify-center text-white text-sm font-bold"
-                style={{ background: "#1B4332" }}
-              >
-                2
+        {/* ═══ FLUXO 2: JA PAGOU e AINDA NAO confirmou a data — mostra a agenda ═══ */}
+        {paymentSuccess && !dataConfirmada && (
+          <>
+            <div className="rounded-2xl p-5 text-center" style={{ background: "#F0FDF4", border: "1px solid #BBF7D0" }}>
+              <div className="w-14 h-14 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-2">
+                <CheckCircle2 className="h-7 w-7 text-green-600" />
               </div>
-              <p className="font-bold" style={{ color: "#1B4332" }}>
-                Confirme o pagamento
+              <h2 className="text-lg font-bold text-green-800">Pagamento confirmado!</h2>
+              <p className="text-sm text-green-700 mt-1">Agora escolha a data e o horário da sua sessão.</p>
+            </div>
+
+            <section className="space-y-3">
+              <div>
+                <h2 className="text-base font-bold" style={{ color: "#1B4332" }}>Selecione sua data</h2>
+                <p className="text-sm text-muted-foreground mt-1">Escolha o profissional e horário disponível.</p>
+              </div>
+
+              <div className="w-full overflow-hidden shadow-md bg-card rounded-xl">
+                <iframe
+                  src="https://appagendai.alualab.com/agendar?c=saindodojogo"
+                  width="100%"
+                  height="600px"
+                  style={{ border: "none", display: "block" }}
+                  title="Agendamento"
+                />
+              </div>
+
+              <button
+                onClick={confirmarData}
+                className="w-full py-3.5 rounded-xl text-white font-bold text-base transition-all active:scale-98"
+                style={{ background: "linear-gradient(135deg, #1B4332, #2D6A4F)" }}
+              >
+                ✓ Confirmei minha data
+              </button>
+              <p className="text-xs text-center text-muted-foreground">
+                Confirme só depois de finalizar o agendamento acima.
+              </p>
+            </section>
+          </>
+        )}
+
+        {/* ═══ FLUXO 3: JA PAGOU e JA confirmou a data — tela final travada ═══ */}
+        {paymentSuccess && dataConfirmada && (
+          <section className="rounded-2xl p-6 text-center space-y-4" style={{ background: "#fff", border: "1px solid #E5E7EB", boxShadow: "0 1px 3px rgba(0,0,0,0.06)" }}>
+            <div className="w-20 h-20 rounded-full bg-green-100 flex items-center justify-center mx-auto">
+              <CheckCircle2 className="h-10 w-10 text-green-600" />
+            </div>
+            <h2 className="text-xl font-bold" style={{ color: "#1B4332" }}>Tudo certo! 💚</h2>
+            <p className="text-sm text-muted-foreground leading-relaxed">
+              Seu pagamento foi confirmado e sua data foi registrada. Nossa equipe
+              vai validar o agendamento e entrar em contato para confirmar os
+              detalhes da sua sessão.
+            </p>
+            <div className="rounded-xl p-4" style={{ background: "#F0FDF4", border: "1px solid #BBF7D0" }}>
+              <p className="text-sm text-green-800">
+                Ficou com alguma dúvida sobre sua sessão? Fale com a gente.
               </p>
             </div>
-            <p className="text-sm text-muted-foreground">
-              Após o pagamento você receberá confirmação por email e nossa equipe validará o agendamento.
-            </p>
-
-            {/* Cupom de desconto */}
-            <div className="space-y-2">
-              <label className="text-sm font-semibold" style={{ color: "#1B4332" }}>
-                Tem um cupom de desconto?
-              </label>
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  value={coupon}
-                  onChange={(e) => {
-                    setCoupon(e.target.value);
-                    setCouponError("");
-                  }}
-                  disabled={!!appliedCoupon}
-                  placeholder="Digite seu cupom"
-                  className="flex-1 px-3 py-2 rounded-lg border text-sm outline-none focus:ring-2"
-                  style={{ borderColor: "#E5E7EB" }}
-                />
-                <button
-                  onClick={handleApplyCoupon}
-                  disabled={couponLoading || !coupon.trim() || !!appliedCoupon}
-                  className="px-4 py-2 rounded-lg text-sm font-semibold text-white disabled:opacity-50"
-                  style={{ background: "#1B4332" }}
-                >
-                  {couponLoading ? "..." : "Aplicar"}
-                </button>
-              </div>
-              {appliedCoupon && (
-                <p className="text-sm font-semibold text-green-700">
-                  ✓ Cupom aplicado!{appliedCoupon.percent_off ? ` ${appliedCoupon.percent_off}% de desconto` : ""}
-                </p>
-              )}
-              {couponError && <p className="text-sm font-semibold text-red-600">{couponError}</p>}
-            </div>
-
-            {appliedCoupon && (
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-muted-foreground line-through">R$ {formatBRL(BASE_PRICE)}</span>
-                <span className="font-bold text-green-700">Novo total: R$ {formatBRL(finalPrice)}</span>
-              </div>
-            )}
-
-            <button
-              onClick={handleCheckout}
-              disabled={loading}
-              className="w-full py-3.5 rounded-xl text-white font-bold text-base transition-all active:scale-98 disabled:opacity-60"
-              style={{ background: "linear-gradient(135deg, #1B4332, #2D6A4F)" }}
+            <a
+              href={`https://wa.me/5516981916656?text=${encodeURIComponent("Olá! Acabei de agendar minha sessão de terapia e tenho uma dúvida.")}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="w-full inline-flex items-center justify-center gap-2 py-3.5 rounded-xl text-white font-bold text-base"
+              style={{ backgroundColor: "#25D366" }}
             >
-              {loading ? (
-                <span className="flex items-center justify-center gap-2">
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  Processando...
-                </span>
-              ) : (
-                `Pagar R$ ${formatBRL(finalPrice)} →`
-              )}
+              Falar no WhatsApp
+            </a>
+            <button
+              onClick={() => navigate("/app")}
+              className="w-full py-3 rounded-xl font-semibold"
+              style={{ color: "#1B4332" }}
+            >
+              Voltar para o início
             </button>
           </section>
         )}
+
       </main>
 
       <BottomNavigation />
