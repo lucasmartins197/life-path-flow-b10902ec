@@ -91,7 +91,19 @@ Deno.serve(async (req) => {
     stripeBody.set("client_reference_id", user_id);
     stripeBody.set("metadata[user_id]", user_id);
     stripeBody.set("metadata[price_id]", resolvedPrice);
-    if (coupon_id) stripeBody.set("discounts[0][coupon]", coupon_id);
+    // Mensagem visivel no checkout: opcao de pagar via Pix pelo WhatsApp.
+    stripeBody.set(
+      "custom_text[submit][message]",
+      "Prefere pagar via Pix? Fale com a gente no WhatsApp (16) 98191-6656 e concluimos por la."
+    );
+    // Se o app mandou um cupom especifico, aplica direto.
+    // Senao, ativa o campo "Adicionar codigo promocional" no checkout do Stripe
+    // (o cliente digita o codigo do lancamento). Os dois nao podem coexistir.
+    if (coupon_id) {
+      stripeBody.set("discounts[0][coupon]", coupon_id);
+    } else {
+      stripeBody.set("allow_promotion_codes", "true");
+    }
 
     const stripeResponse = await fetch("https://api.stripe.com/v1/checkout/sessions", {
       method: "POST",
