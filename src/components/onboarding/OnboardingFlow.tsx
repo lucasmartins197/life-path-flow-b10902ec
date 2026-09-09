@@ -100,7 +100,7 @@ const MOTIVATION_OPTIONS = [
 ];
 
 export function OnboardingFlow({ onComplete }: { onComplete: () => void }) {
-  const { user, profile } = useAuth();
+  const { user, profile, refreshProfile } = useAuth();
   const navigate = useNavigate();
   const [step, setStep] = useState<StepId>(1);
   const [direction, setDirection] = useState<"forward" | "back">("forward");
@@ -320,8 +320,23 @@ export function OnboardingFlow({ onComplete }: { onComplete: () => void }) {
       return;
     }
 
+    // Atualiza o profile no contexto para o ProtectedRoute enxergar que o
+    // onboarding foi concluido (evita o app decidir com dado velho).
+    await refreshProfile();
+
     onComplete();
-    navigate(target === "step1" ? "/app/jornada/1" : "/app", { replace: true });
+
+    // Fluxo correto: apos o onboarding, a pessoa vai para o PAYWALL —
+    // a menos que ja seja assinante (ex.: liberada via Pix). Antes, o
+    // onboarding navegava direto pro app e a pessoa nunca pagava.
+    const jaAssinante = ["active", "canceling"].includes(
+      (profile as any)?.subscription_status
+    );
+    if (jaAssinante) {
+      navigate(target === "step1" ? "/app/jornada/1" : "/app", { replace: true });
+    } else {
+      navigate("/app/assinatura", { replace: true });
+    }
   }
 
   // Validation per step
