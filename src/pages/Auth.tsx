@@ -16,6 +16,7 @@ export default function Auth() {
   const [signupEmail, setSignupEmail] = useState("");
   const [signupPassword, setSignupPassword] = useState("");
   const [signupName, setSignupName] = useState("");
+  const [signupWhatsapp, setSignupWhatsapp] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showLoginPassword, setShowLoginPassword] = useState(false);
   const [showSignupPassword, setShowSignupPassword] = useState(false);
@@ -96,10 +97,19 @@ export default function Auth() {
       return;
     }
 
+    if (signupWhatsapp.replace(/\D/g, "").length < 10) {
+      toast({
+        variant: "destructive",
+        title: "WhatsApp obrigatório",
+        description: "Informe seu WhatsApp com DDD para continuar.",
+      });
+      return;
+    }
+
     setIsLoading(true);
 
     try {
-      const { error } = await signUp(signupEmail, signupPassword, signupName);
+      const { error } = await signUp(signupEmail, signupPassword, signupName, signupWhatsapp.replace(/\D/g, ""));
 
       if (error) {
         toast({
@@ -120,6 +130,7 @@ export default function Auth() {
           body: JSON.stringify({
             full_name: signupName,
             email: signupEmail,
+            whatsapp: signupWhatsapp.replace(/\D/g, ""),
           }),
         });
 
@@ -274,6 +285,20 @@ export default function Auth() {
                       placeholder="Seu nome"
                       value={signupName}
                       onChange={(e) => setSignupName(e.target.value)}
+                      required
+                      className="input-premium"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="signup-whatsapp">WhatsApp (com DDD)</Label>
+                    <Input
+                      id="signup-whatsapp"
+                      type="tel"
+                      inputMode="numeric"
+                      placeholder="Ex: 16999998888"
+                      value={signupWhatsapp}
+                      onChange={(e) => setSignupWhatsapp(e.target.value.replace(/\D/g, ""))}
                       required
                       className="input-premium"
                     />
