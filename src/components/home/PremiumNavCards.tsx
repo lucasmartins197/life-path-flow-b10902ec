@@ -152,6 +152,25 @@ function EvolutionSVG() {
   );
 }
 
+function FinancasSVG() {
+  return (
+    <svg viewBox="0 0 160 120" fill="none" className="absolute inset-0 w-full h-full opacity-25">
+      {/* Barras crescentes */}
+      <rect x="30" y="80" width="14" height="28" rx="2" fill="rgba(255,255,255,0.4)" />
+      <rect x="52" y="66" width="14" height="42" rx="2" fill="rgba(255,255,255,0.5)" />
+      <rect x="74" y="50" width="14" height="58" rx="2" fill="rgba(255,255,255,0.55)" />
+      {/* Moedas empilhadas */}
+      <ellipse cx="118" cy="98" rx="18" ry="6" fill="rgba(255,255,255,0.55)" />
+      <ellipse cx="118" cy="90" rx="18" ry="6" fill="rgba(255,255,255,0.45)" />
+      <ellipse cx="118" cy="82" rx="18" ry="6" fill="rgba(255,255,255,0.55)" />
+      <text x="118" y="86" textAnchor="middle" fontSize="9" fontWeight="bold" fill="rgba(27,67,50,0.7)">R$</text>
+      {/* Seta de crescimento */}
+      <path d="M28 46 L60 30 L88 38 L128 14" stroke="rgba(255,255,255,0.7)" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M120 12 L130 12 L130 22" stroke="rgba(255,255,255,0.7)" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
 function LegalSVG() {
   return (
     <svg viewBox="0 0 160 120" fill="none" className="absolute inset-0 w-full h-full opacity-25">
@@ -204,11 +223,11 @@ const cards: NavCard[] = [
     badge: "AO VIVO",
   },
   {
-    title: "Evolução",
-    subtitle: "Veja seu progresso",
-    gradient: "linear-gradient(135deg, #1B4332, #40916C)",
-    path: "/app/evolucao",
-    Illustration: EvolutionSVG,
+    title: "Minhas Finanças",
+    subtitle: "Controle seus gastos e economias",
+    gradient: "linear-gradient(135deg, #14532D, #166534)",
+    path: "/app/financas",
+    Illustration: FinancasSVG,
   },
   {
     title: "Apoio Jurídico",
