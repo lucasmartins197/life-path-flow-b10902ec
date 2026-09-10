@@ -52,7 +52,10 @@ jobs:
 
       - name: Update version code
         run: |
-          VERSION_CODE=$(date +%s)
+          # versionCode controlado: base fixa (acima do ultimo timestamp ja
+          # publicado, 1788997545) + numero do build do GitHub, que sobe de 1
+          # em 1. Cresce devagar e nunca bate no teto do Android (2.1 bi).
+          VERSION_CODE=$((1789000000 + ${{ github.run_number }}))
           sed -i "s/versionCode [0-9]*/versionCode $VERSION_CODE/" android/app/build.gradle
 
       - name: Sync Capacitor
