@@ -5,11 +5,14 @@ import { ChevronLeft, CreditCard, Calendar, Loader2, CheckCircle2 } from "lucide
 import { BottomNavigation } from "@/components/BottomNavigation";
 import { PortoSeguroButton } from "@/components/PortoSeguroButton";
 import { supabase } from "@/integrations/supabase/client";
+import { abrirCheckoutStripe, checarPagamentoRecente } from "@/lib/checkout";
 import { toast } from "sonner";
 export default function TherapyHome() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const paymentSuccess = searchParams.get("success") === "true";
+  const [pagouNoApp, setPagouNoApp] = useState(false);
+  // paymentSuccess = veio pela URL (web) OU o checkout interno confirmou (app)
+  const paymentSuccess = searchParams.get("success") === "true" || pagouNoApp;
   const dossieSentRef = useRef(false);
   const [loading, setLoading] = useState(false);
   const [dataSelecionada, setDataSelecionada] = useState(false);
@@ -116,7 +119,16 @@ export default function TherapyHome() {
         return;
       }
       if (data?.url) {
-        window.location.href = data.url;
+        // Web: redireciona. App: abre navegador interno e, ao voltar, checa
+        // no banco se o pagamento da terapia entrou (webhook grava) e mostra a agenda.
+        await abrirCheckoutStripe(data.url, async () => {
+          const pago = await checarPagamentoRecente(user.id, "therapy");
+          if (pago) {
+            setPagouNoApp(true);
+          } else {
+            toast.error("Pagamento não confirmado. Se você concluiu, aguarde alguns instantes.");
+          }
+        });
       } else {
         toast.error("Erro ao gerar link de pagamento");
       }
