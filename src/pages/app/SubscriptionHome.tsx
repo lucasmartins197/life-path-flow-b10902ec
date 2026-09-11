@@ -1,6 +1,7 @@
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
+import { abrirCheckoutStripe, checarAssinaturaAtiva } from "@/lib/checkout";
 import { ArrowLeft, Check, CreditCard, Crown, Loader2, X, ShieldCheck, AlertTriangle, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -196,7 +197,26 @@ export default function SubscriptionHome() {
       console.log("Checkout response:", data);
 
       if (data?.url) {
-        window.location.href = data.url;
+        // Abre o Stripe: na web redireciona; no app abre navegador interno e,
+        // ao voltar, checa se a assinatura ficou ativa (webhook ja gravou).
+        await abrirCheckoutStripe(data.url, async () => {
+          const ativo = await checarAssinaturaAtiva(authUser.id);
+          if (ativo) {
+            await refreshProfile();
+            toast({
+              title: "Parabéns!",
+              description: "Sua assinatura foi ativada com sucesso.",
+            });
+            navigate("/app", { replace: true });
+          } else {
+            // Pagamento ainda nao confirmado (pode estar processando).
+            await refreshProfile();
+            toast({
+              title: "Verificando pagamento",
+              description: "Se você concluiu o pagamento, ele será confirmado em instantes.",
+            });
+          }
+        });
       } else {
         toast({
           title: "Erro",
