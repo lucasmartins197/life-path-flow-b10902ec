@@ -34,7 +34,7 @@ jobs:
           VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY }}
 
       - name: Install Capacitor
-        run: npm install @capacitor/core @capacitor/cli @capacitor/android
+        run: npm install @capacitor/core @capacitor/cli @capacitor/android @capacitor/browser @capacitor/app
 
       - name: Init Capacitor
         run: npx cap init "Saindo do Jogo" "br.com.saindodojogo.app" --web-dir dist
