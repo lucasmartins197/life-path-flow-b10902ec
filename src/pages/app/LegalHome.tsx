@@ -21,6 +21,7 @@ import { BottomNavigation } from "@/components/BottomNavigation";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { RecoverySimulator } from "@/components/legal/RecoverySimulator";
 import { supabase } from "@/integrations/supabase/client";
+import { abrirCheckoutStripe, checarPagamentoRecente } from "@/lib/checkout";
 import { toast } from "sonner";
 
 type TopicKey = "dividas" | "patrimonio" | "trabalho" | "negativado" | "autoexclusao" | "familia";
@@ -117,7 +118,8 @@ function renderMarkdown(text: string) {
 export default function LegalHome() {
   const navigate = useNavigate();
   const [params] = useSearchParams();
-  const paymentSuccess = params.get("success") === "true";
+  const [pagouNoApp, setPagouNoApp] = useState(false);
+  const paymentSuccess = params.get("success") === "true" || pagouNoApp;
   const [activeTopic, setActiveTopic] = useState<Topic | null>(null);
   const [content, setContent] = useState<string>("");
   const [loading, setLoading] = useState(false);
@@ -183,7 +185,16 @@ export default function LegalHome() {
         return;
       }
       if (data?.url) {
-        window.open(data.url, "_blank");
+        // Web: abre normal. App: navegador interno e, ao voltar, checa se o
+        // pagamento juridico entrou (webhook grava) e mostra a agenda.
+        await abrirCheckoutStripe(data.url, async () => {
+          const pago = await checarPagamentoRecente(user.id, "legal");
+          if (pago) {
+            setPagouNoApp(true);
+          } else {
+            toast.error("Pagamento não confirmado. Se você concluiu, aguarde alguns instantes.");
+          }
+        });
       } else {
         toast.error("URL de pagamento não retornada");
       }
