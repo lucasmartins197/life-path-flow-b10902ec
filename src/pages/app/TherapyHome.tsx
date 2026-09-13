@@ -5,7 +5,7 @@ import { ChevronLeft, CreditCard, Calendar, Loader2, CheckCircle2 } from "lucide
 import { BottomNavigation } from "@/components/BottomNavigation";
 import { PortoSeguroButton } from "@/components/PortoSeguroButton";
 import { supabase } from "@/integrations/supabase/client";
-import { abrirCheckoutStripe, checarPagamentoRecente } from "@/lib/checkout";
+import { abrirCheckoutStripe, checarPagamentoRecente, ehAppNativo } from "@/lib/checkout";
 import { toast } from "sonner";
 export default function TherapyHome() {
   const navigate = useNavigate();
@@ -106,6 +106,7 @@ export default function TherapyHome() {
           price_id: "price_1TePGm1kqWoIkJvR8JFLZde6",
           mode: "payment",
           success_path: "/app/terapia?success=true",
+          is_native: ehAppNativo(),
           cancel_path: "/app/terapia",
           ...(appliedCoupon ? { coupon_id: appliedCoupon.id } : {}),
         },
@@ -121,7 +122,8 @@ export default function TherapyHome() {
       if (data?.url) {
         // Web: redireciona. App: abre navegador interno e, ao voltar, checa
         // no banco se o pagamento da terapia entrou (webhook grava) e mostra a agenda.
-        await abrirCheckoutStripe(data.url, async () => {
+        await abrirCheckoutStripe(data.url, async (status: string) => {
+          if (status === "cancelado") return;
           const pago = await checarPagamentoRecente(user.id, "therapy");
           if (pago) {
             setPagouNoApp(true);
