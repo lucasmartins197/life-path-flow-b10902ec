@@ -53,18 +53,27 @@ export async function abrirCheckoutStripe(
   checkoutUrl: string,
   onReturn?: () => void | Promise<void>
 ): Promise<void> {
+  // ── DIAGNOSTICO TEMPORARIO: mostra na tela o que o app detecta ──
+  const cap = (window as any)?.Capacitor;
+  const plataforma = cap?.getPlatform ? cap.getPlatform() : "SEM getPlatform";
+  const temCapacitor = cap ? "SIM" : "NAO";
+  alert(`DIAG 1:\nCapacitor existe? ${temCapacitor}\nPlataforma: ${plataforma}\nÉ nativo? ${isNativeApp()}`);
+
   // Web (ou se o plugin nao carregar): redirecionamento normal, como sempre.
   if (!isNativeApp()) {
+    alert("DIAG 2: app NAO se reconhece como nativo -> vai abrir navegador de fora");
     window.location.href = checkoutUrl;
     return;
   }
 
   const mod = await loadBrowser();
   if (!mod?.Browser) {
-    // Sem o plugin, cai no comportamento antigo para nao travar o usuario.
+    alert("DIAG 3: plugin @capacitor/browser NAO carregou -> vai abrir navegador de fora");
     window.location.href = checkoutUrl;
     return;
   }
+
+  alert("DIAG 4: tudo OK, vai abrir o Stripe DENTRO do app agora");
 
   const { Browser } = mod;
 
