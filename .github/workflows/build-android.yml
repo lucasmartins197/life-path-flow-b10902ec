@@ -40,6 +40,36 @@ jobs:
       - name: Add Android platform
         run: npx cap add android
 
+      - name: Registrar deep link (saindodojogo://) no AndroidManifest
+        run: |
+          MANIFEST=android/app/src/main/AndroidManifest.xml
+          # Insere um intent-filter para o esquema saindodojogo:// dentro da
+          # MainActivity, logo apos a linha da tag <activity ... MainActivity.
+          python3 - "$MANIFEST" <<'PYEOF'
+          import sys, re
+          path = sys.argv[1]
+          m = open(path, encoding="utf-8").read()
+          intent = (
+              '\n            <intent-filter>\n'
+              '                <action android:name="android.intent.action.VIEW" />\n'
+              '                <category android:name="android.intent.category.DEFAULT" />\n'
+              '                <category android:name="android.intent.category.BROWSABLE" />\n'
+              '                <data android:scheme="saindodojogo" />\n'
+              '            </intent-filter>\n'
+          )
+          # Achar a MainActivity e inserir o intent-filter antes de fechar </activity>
+          # que pertence a ela. Estrategia: inserir apos o primeiro intent-filter
+          # existente (o do LAUNCHER), que fica dentro da MainActivity.
+          idx = m.find("</intent-filter>")
+          if idx != -1 and "saindodojogo" not in m:
+              pos = idx + len("</intent-filter>")
+              m = m[:pos] + intent + m[pos:]
+              open(path, "w", encoding="utf-8").write(m)
+              print("Deep link saindodojogo:// registrado no manifest")
+          else:
+              print("AVISO: nao inseriu (ja existe ou nao achou intent-filter)")
+          PYEOF
+
       - name: Gerar icones do app (ancora) para o launcher
         run: |
           npm install @capacitor/assets --save-dev
