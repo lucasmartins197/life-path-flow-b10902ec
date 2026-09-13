@@ -17,8 +17,18 @@ import { supabase } from "@/integrations/supabase/client";
 // ─────────────────────────────────────────────────────────────────────────────
 
 function isNativeApp(): boolean {
-  const cap = (window as any)?.Capacitor;
-  return !!cap?.isNativePlatform?.();
+  try {
+    // Usa o MESMO metodo do revenuecat.ts que comprovadamente funciona no app.
+    // getPlatform() retorna "ios" | "android" | "web". So NAO e nativo se "web".
+    const cap = (window as any)?.Capacitor;
+    if (cap && typeof cap.getPlatform === "function") {
+      const plat = cap.getPlatform();
+      return plat === "ios" || plat === "android";
+    }
+    return false;
+  } catch {
+    return false;
+  }
 }
 
 async function loadBrowser(): Promise<any | null> {
