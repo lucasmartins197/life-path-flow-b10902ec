@@ -1,25 +1,19 @@
 import { supabase } from "@/integrations/supabase/client";
 
 // ─────────────────────────────────────────────────────────────────────────────
-// abrirCheckoutStripe — abre o checkout do Stripe do jeito certo em cada ambiente
+// checkout — pagamento Stripe no app com retorno via DEEP LINK (profissional)
 //
-// Problema que isto resolve: no app Android empacotado, fazer
-// window.location.href = url_do_stripe joga o usuario para o navegador do
-// SISTEMA (fora do app). Depois de pagar, o Stripe redireciona para o site web
-// e o APP nunca fica sabendo — a tela nao atualiza.
+// Fluxo no app:
+// 1. abrirCheckoutStripe abre o Stripe num navegador interno (@capacitor/browser)
+// 2. Ao terminar, o Stripe redireciona para saindodojogo://pagamento?status=...
+// 3. O Android reconhece o deep link, e o @capacitor/app dispara "appUrlOpen"
+// 4. Nosso listener FECHA o navegador e chama o callback (que checa o banco)
 //
-// Solucao: no app (Capacitor), abrimos o Stripe num navegador INTERNO
-// (@capacitor/browser). Quando o usuario termina e fecha esse navegador,
-// verificamos no banco se o pagamento foi confirmado (o webhook do Stripe grava
-// de forma confiavel) e atualizamos a tela. Sem depender de deep link fragil.
-//
-// Na web, o comportamento continua o de sempre (redirect normal).
+// Na web, tudo continua com redirect normal (sem deep link).
 // ─────────────────────────────────────────────────────────────────────────────
 
 function isNativeApp(): boolean {
   try {
-    // Usa o MESMO metodo do revenuecat.ts que comprovadamente funciona no app.
-    // getPlatform() retorna "ios" | "android" | "web". So NAO e nativo se "web".
     const cap = (window as any)?.Capacitor;
     if (cap && typeof cap.getPlatform === "function") {
       const plat = cap.getPlatform();
@@ -33,71 +27,89 @@ function isNativeApp(): boolean {
 
 async function loadBrowser(): Promise<any | null> {
   try {
-    // Nome em variavel + @vite-ignore: impede o Rollup de tentar resolver o
-    // pacote no build web (ele so existe no app nativo, instalado no build).
-    const mod = await import(
-      /* @vite-ignore */ "@capacitor/browser"
-    );
+    const mod = await import(/* @vite-ignore */ "@capacitor/browser");
     return mod;
   } catch {
     return null;
   }
 }
 
+async function loadApp(): Promise<any | null> {
+  try {
+    const mod = await import(/* @vite-ignore */ "@capacitor/app");
+    return mod;
+  } catch {
+    return null;
+  }
+}
+
+// Guarda o callback do checkout em andamento, para o deep link chamar ao voltar.
+let retornoPendente: ((status: string, tipo: string) => void | Promise<void>) | null = null;
+
+/**
+ * Inicializa o listener de deep link UMA vez (chamar no arranque do app).
+ * Quando o Stripe redireciona para saindodojogo://pagamento?status=...&tipo=...,
+ * fecha o navegador interno e dispara o callback pendente.
+ */
+export async function initDeepLinkPagamento(): Promise<void> {
+  if (!isNativeApp()) return;
+  const appMod = await loadApp();
+  if (!appMod?.App) return;
+
+  appMod.App.addListener("appUrlOpen", async (event: { url: string }) => {
+    const url = event?.url || "";
+    if (!url.startsWith("saindodojogo://pagamento")) return;
+
+    // Fecha o navegador interno do Stripe
+    const browserMod = await loadBrowser();
+    try { await browserMod?.Browser?.close(); } catch { /* ignore */ }
+
+    // Extrai status e tipo do deep link
+    const params = new URLSearchParams(url.split("?")[1] || "");
+    const status = params.get("status") || "";
+    const tipo = params.get("tipo") || "";
+
+    if (retornoPendente) {
+      const cb = retornoPendente;
+      retornoPendente = null;
+      // da um tempo para o webhook do Stripe gravar antes de checar
+      await new Promise((r) => setTimeout(r, 1500));
+      await cb(status, tipo);
+    }
+  });
+}
+
 /**
  * Abre o checkout do Stripe.
- * @param checkoutUrl  URL retornada pelo create-checkout-session
- * @param onReturn     Chamado quando o usuario volta do navegador interno (só no app).
- *                     Use para recarregar o perfil / checar se o pagamento entrou.
+ * @param checkoutUrl URL do create-checkout-session (ja vem com deep link no app)
+ * @param onReturn    Chamado quando o deep link volta (status: "sucesso"|"cancelado")
  */
 export async function abrirCheckoutStripe(
   checkoutUrl: string,
-  onReturn?: () => void | Promise<void>
+  onReturn?: (status: string, tipo: string) => void | Promise<void>
 ): Promise<void> {
-  // ── DIAGNOSTICO TEMPORARIO: mostra na tela o que o app detecta ──
-  const cap = (window as any)?.Capacitor;
-  const plataforma = cap?.getPlatform ? cap.getPlatform() : "SEM getPlatform";
-  const temCapacitor = cap ? "SIM" : "NAO";
-  alert(`DIAG 1:\nCapacitor existe? ${temCapacitor}\nPlataforma: ${plataforma}\nÉ nativo? ${isNativeApp()}`);
-
-  // Web (ou se o plugin nao carregar): redirecionamento normal, como sempre.
   if (!isNativeApp()) {
-    alert("DIAG 2: app NAO se reconhece como nativo -> vai abrir navegador de fora");
     window.location.href = checkoutUrl;
     return;
   }
 
   const mod = await loadBrowser();
   if (!mod?.Browser) {
-    alert("DIAG 3: plugin @capacitor/browser NAO carregou -> vai abrir navegador de fora");
     window.location.href = checkoutUrl;
     return;
   }
 
-  alert("DIAG 4: tudo OK, vai abrir o Stripe DENTRO do app agora");
+  // Registra o callback para o deep link chamar quando o Stripe voltar
+  if (onReturn) retornoPendente = onReturn;
 
-  const { Browser } = mod;
-
-  // Quando o usuario fecha o navegador interno (apos pagar ou desistir),
-  // disparamos o onReturn uma unica vez.
-  const listener = await Browser.addListener("browserFinished", async () => {
-    try {
-      await listener.remove();
-    } catch {
-      /* ignore */
-    }
-    if (onReturn) await onReturn();
-  });
-
-  // Abre o Stripe dentro do app.
-  await Browser.open({ url: checkoutUrl, presentationStyle: "fullscreen" });
+  await mod.Browser.open({ url: checkoutUrl, presentationStyle: "fullscreen" });
 }
 
-/**
- * Verifica no banco se a assinatura do usuario ficou ativa.
- * Usado apos o retorno do checkout no app. O webhook do Stripe ja gravou
- * subscription_status = "active" quando o pagamento foi confirmado.
- */
+/** Diz ao checkout se estamos no app (para ele mandar deep link). */
+export function ehAppNativo(): boolean {
+  return isNativeApp();
+}
+
 export async function checarAssinaturaAtiva(userId: string): Promise<boolean> {
   const { data } = await supabase
     .from("profiles")
@@ -108,15 +120,11 @@ export async function checarAssinaturaAtiva(userId: string): Promise<boolean> {
   return status === "active" || status === "canceling";
 }
 
-/**
- * Verifica no banco se ha um pagamento recente de um tipo (terapia/juridico).
- * Usado apos o retorno do checkout desses servicos no app.
- */
 export async function checarPagamentoRecente(
   userId: string,
   paymentType: string
 ): Promise<boolean> {
-  const desde = new Date(Date.now() - 30 * 60 * 1000).toISOString(); // ultimos 30 min
+  const desde = new Date(Date.now() - 30 * 60 * 1000).toISOString();
   const { data } = await supabase
     .from("payments")
     .select("id")
