@@ -17,7 +17,7 @@ Deno.serve(async (req) => {
     
     // Extract user_id from request body instead of JWT
     let user_id, email;
-    let price_id, mode, success_path, cancel_path, coupon_id;
+    let price_id, mode, success_path, cancel_path, coupon_id, is_native;
     try {
       const body = await req.json();
       user_id = body.user_id;
@@ -27,6 +27,7 @@ Deno.serve(async (req) => {
       success_path = body.success_path;
       cancel_path = body.cancel_path;
       coupon_id = body.coupon_id;
+      is_native = body.is_native;
     } catch(e) {}
 
     if (!user_id || !email) {
@@ -64,8 +65,15 @@ Deno.serve(async (req) => {
 
     const stripeKey = Deno.env.get("STRIPE_SECRET_KEY")!;
     const APP_BASE_URL = "https://app.apostandonavida.com.br";
-    const successUrl = success_path ? `${APP_BASE_URL}${success_path}` : `${APP_BASE_URL}/app?payment=success`;
-    const cancelUrl = cancel_path ? `${APP_BASE_URL}${cancel_path}` : `${APP_BASE_URL}/app/assinatura?canceled=true`;
+    // No app nativo, o retorno e via DEEP LINK (saindodojogo://) — assim o
+    // Android fecha o navegador e reabre o app automaticamente. Na web, URL normal.
+    const DEEP_LINK = "saindodojogo://pagamento";
+    const successUrl = is_native
+      ? `${DEEP_LINK}?status=sucesso${success_path && success_path.includes("terapia") ? "&tipo=terapia" : success_path && success_path.includes("juridico") ? "&tipo=juridico" : "&tipo=assinatura"}`
+      : (success_path ? `${APP_BASE_URL}${success_path}` : `${APP_BASE_URL}/app?payment=success`);
+    const cancelUrl = is_native
+      ? `${DEEP_LINK}?status=cancelado`
+      : (cancel_path ? `${APP_BASE_URL}${cancel_path}` : `${APP_BASE_URL}/app/assinatura?canceled=true`);
     const sessionParams: any = {
       customer_email: email,
       mode: checkoutMode,
