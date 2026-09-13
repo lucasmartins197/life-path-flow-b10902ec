@@ -68,7 +68,7 @@ jobs:
         run: |
           cd android
           chmod +x gradlew
-          ./gradlew bundleRelease \
+          ./gradlew bundleRelease assembleRelease \
             -Pandroid.injected.signing.store.file=${{ github.workspace }}/android/app/upload.keystore \
             -Pandroid.injected.signing.store.password=${{ secrets.KEYSTORE_PASSWORD }} \
             -Pandroid.injected.signing.key.alias=${{ secrets.KEY_ALIAS }} \
@@ -79,4 +79,11 @@ jobs:
         with:
           name: saindo-do-jogo-release
           path: android/app/build/outputs/bundle/release/app-release.aab
+          retention-days: 30
+
+      - name: Upload APK (para teste direto no celular)
+        uses: actions/upload-artifact@v4
+        with:
+          name: saindo-do-jogo-apk
+          path: android/app/build/outputs/apk/release/app-release.apk
           retention-days: 30
