@@ -35,8 +35,9 @@ async function loadBrowser(): Promise<any | null> {
   try {
     // Nome em variavel + @vite-ignore: impede o Rollup de tentar resolver o
     // pacote no build web (ele so existe no app nativo, instalado no build).
-    const pkg = "@capacitor/browser";
-    const mod = await import(/* @vite-ignore */ pkg);
+    const mod = await import(
+      /* @vite-ignore */ "@capacitor/browser"
+    );
     return mod;
   } catch {
     return null;
