@@ -21,7 +21,7 @@ import { BottomNavigation } from "@/components/BottomNavigation";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { RecoverySimulator } from "@/components/legal/RecoverySimulator";
 import { supabase } from "@/integrations/supabase/client";
-import { abrirCheckoutStripe, checarPagamentoRecente } from "@/lib/checkout";
+import { abrirCheckoutStripe, checarPagamentoRecente, ehAppNativo } from "@/lib/checkout";
 import { toast } from "sonner";
 
 type TopicKey = "dividas" | "patrimonio" | "trabalho" | "negativado" | "autoexclusao" | "familia";
@@ -172,6 +172,7 @@ export default function LegalHome() {
           price_id: priceMap[priceAlias],
           mode: "payment",
           success_path: "/app/juridico?success=true",
+          is_native: ehAppNativo(),
           cancel_path: "/app/juridico",
         },
       });
@@ -187,7 +188,8 @@ export default function LegalHome() {
       if (data?.url) {
         // Web: abre normal. App: navegador interno e, ao voltar, checa se o
         // pagamento juridico entrou (webhook grava) e mostra a agenda.
-        await abrirCheckoutStripe(data.url, async () => {
+        await abrirCheckoutStripe(data.url, async (status: string) => {
+          if (status === "cancelado") return;
           const pago = await checarPagamentoRecente(user.id, "legal");
           if (pago) {
             setPagouNoApp(true);
