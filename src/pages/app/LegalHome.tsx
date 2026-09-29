@@ -22,6 +22,7 @@ import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { RecoverySimulator } from "@/components/legal/RecoverySimulator";
 import { supabase } from "@/integrations/supabase/client";
 import { abrirCheckoutStripe, checarPagamentoRecente, ehAppNativo } from "@/lib/checkout";
+import { isIOSNative, purchaseAppleConsumable, PRODUTO_JURIDICO } from "@/lib/revenuecat";
 import { toast } from "sonner";
 
 type TopicKey = "dividas" | "patrimonio" | "trabalho" | "negativado" | "autoexclusao" | "familia";
@@ -161,6 +162,21 @@ export default function LegalHome() {
         navigate("/auth");
         return;
       }
+
+      // iOS: compra via Apple IAP (App Store exige). No Android segue o Stripe abaixo.
+      if (isIOSNative()) {
+        const res = await purchaseAppleConsumable(PRODUTO_JURIDICO);
+        if (res.cancelled) {
+          return;
+        }
+        if (res.success) {
+          setPagouNoApp(true);
+        } else {
+          toast.error(res.error || "Não foi possível concluir a compra.");
+        }
+        return; // no iOS, nao segue para o Stripe
+      }
+
       const priceMap = {
         legal_consult: "price_1TePGr1kqWoIkJvR69tvR5K7",
         legal_full: "price_1TePGr1kqWoIkJvR69tvR5K7",
