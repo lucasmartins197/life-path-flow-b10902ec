@@ -9,14 +9,12 @@ workflows:
         PACKAGE_NAME: com.apostandonavida.stakereal
         VITE_SUPABASE_URL: https://dmrlkxwpbwmzpdecsgnw.supabase.co
         VITE_SUPABASE_PUBLISHABLE_KEY: $SUPABASE_ANON_KEY
-      node: "20"
+      node: "22"
     scripts:
       - name: Install dependencies
         script: npm install
       - name: Build web app
         script: npm run build
-      - name: Install Capacitor Android
-        script: npm install @capacitor/core @capacitor/cli @capacitor/android
       - name: Init Capacitor
         script: npx cap init "Saindo do Jogo" "com.apostandonavida.stakereal" --web-dir dist
       - name: Add Android platform
@@ -45,21 +43,24 @@ workflows:
         BUNDLE_ID: com.apostandonavida.stakereal
         VITE_SUPABASE_URL: https://dmrlkxwpbwmzpdecsgnw.supabase.co
         VITE_SUPABASE_PUBLISHABLE_KEY: $SUPABASE_ANON_KEY
-      node: "20"
+      node: "22"
     scripts:
       - name: Install dependencies
         script: npm install
       - name: Build web app
         script: npm run build
-      - name: Install Capacitor iOS
-        script: npm install @capacitor/core @capacitor/cli @capacitor/ios
-      - name: Confirmar plugin RevenueCat instalado
-        script: |
-          npm ls @revenuecat/purchases-capacitor || npm install @revenuecat/purchases-capacitor@^13.2.0
       - name: Init Capacitor
         script: npx cap init "Saindo do Jogo" "com.apostandonavida.stakereal" --web-dir dist
       - name: Add iOS platform
         script: npx cap add ios || true
+      - name: Registrar deep link (saindodojogo://) no Info.plist
+        script: |
+          PLIST=ios/App/App/Info.plist
+          /usr/libexec/PlistBuddy -c "Add :CFBundleURLTypes array" "$PLIST" 2>/dev/null || true
+          /usr/libexec/PlistBuddy -c "Add :CFBundleURLTypes:0 dict" "$PLIST" 2>/dev/null || true
+          /usr/libexec/PlistBuddy -c "Add :CFBundleURLTypes:0:CFBundleURLSchemes array" "$PLIST" 2>/dev/null || true
+          /usr/libexec/PlistBuddy -c "Add :CFBundleURLTypes:0:CFBundleURLSchemes:0 string saindodojogo" "$PLIST" 2>/dev/null || true
+          echo "Deep link saindodojogo:// registrado no Info.plist"
       - name: Gerar icones do app (ancora)
         script: |
           npm install @capacitor/assets --save-dev
