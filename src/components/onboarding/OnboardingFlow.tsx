@@ -1041,7 +1041,7 @@ function ReadyScreen({
       {/* Confetti */}
       <Confetti />
 
-      <div className="flex-1 flex flex-col items-center justify-center text-center relative z-10 min-h-0">
+      <div className="flex-1 flex flex-col items-center justify-start text-center relative z-10 min-h-0 pt-2">
         <div
           className="h-16 w-16 rounded-full flex items-center justify-center mb-6 animate-scale-in"
           style={{ backgroundColor: "rgba(201,168,76,0.15)" }}
