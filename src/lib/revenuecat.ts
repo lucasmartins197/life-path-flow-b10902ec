@@ -7,6 +7,10 @@
 const REVENUECAT_APPLE_API_KEY = "appl_XZdQKDutyJKeAZcKTIIIQAkWurv";
 const ENTITLEMENT_ID = "Saindo do Jogo Pro";
 
+// Product IDs dos consumiveis (terapia e juridico) — iguais ao App Store Connect
+export const PRODUTO_TERAPIA = "terapia_sessao";
+export const PRODUTO_JURIDICO = "juridico_consulta";
+
 let isConfigured = false;
 
 export function isIOSNative(): boolean {
@@ -114,5 +118,42 @@ export async function restoreApplePurchases(): Promise<boolean> {
   } catch (e) {
     console.error("Erro ao restaurar compras:", e);
     return false;
+  }
+}
+
+
+/**
+ * Compra um produto CONSUMIVEL avulso (terapia ou juridico) via Apple IAP.
+ * Usado no iOS. No Android, o fluxo continua sendo o Stripe (deep link).
+ * @param productId  "terapia_sessao" ou "juridico_consulta"
+ */
+export async function purchaseAppleConsumable(productId: string): Promise<{
+  success: boolean;
+  cancelled?: boolean;
+  error?: string;
+}> {
+  if (!isIOSNative()) return { success: false, error: "Não é iOS" };
+  const mod = await loadPurchases();
+  if (!mod) return { success: false, error: "RevenueCat indisponível" };
+  try {
+    const { Purchases } = mod;
+    // Busca o produto pela loja (App Store) pelo identifier
+    const { products } = await Purchases.getProducts({
+      productIdentifiers: [productId],
+    });
+    if (!products || products.length === 0) {
+      return { success: false, error: "Produto não encontrado na App Store" };
+    }
+    const produto = products[0];
+    await Purchases.purchaseStoreProduct({ product: produto });
+    // Consumivel: se chegou aqui sem lançar erro, a compra foi concluida.
+    return { success: true };
+  } catch (e: any) {
+    // O RevenueCat lança erro com userCancelled quando o usuario cancela
+    if (e?.userCancelled || e?.code === "1" || e?.message?.includes("cancel")) {
+      return { success: false, cancelled: true };
+    }
+    console.error("Erro na compra do consumível:", e);
+    return { success: false, error: e?.message || "Erro na compra" };
   }
 }
