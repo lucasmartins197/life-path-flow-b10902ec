@@ -65,6 +65,8 @@ workflows:
         script: |
           npm install @capacitor/assets --save-dev
           npx capacitor-assets generate --ios --assetPath assets
+      - name: Sync Capacitor
+        script: npx cap sync ios
       - name: Fix deployment target
         script: |
           cd ios/App
@@ -72,8 +74,6 @@ workflows:
           grep -q "platform :ios" Podfile || sed -i "" "1s/^/platform :ios, '16.0'\n/" Podfile
           sed -i "" "s/IPHONEOS_DEPLOYMENT_TARGET = [0-9.]*/IPHONEOS_DEPLOYMENT_TARGET = 16.0/g" App.xcodeproj/project.pbxproj
           pod install --repo-update
-      - name: Sync Capacitor
-        script: npx cap sync ios
       - name: Build and export IPA
         script: |
           xcode-project use-profiles
