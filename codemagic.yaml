@@ -75,26 +75,15 @@ workflows:
         script: npx cap sync ios
       - name: Fix deployment target
         script: |
-          # Localiza o Podfile onde quer que o cap sync tenha criado
-          PODFILE=$(find ios -name Podfile | head -1)
-          if [ -z "$PODFILE" ]; then
-            echo "ERRO: Podfile nao existe. Estrutura da pasta ios:"
-            find ios -maxdepth 3 -type f 2>/dev/null | head -30
-            exit 1
-          fi
-          PODDIR=$(dirname "$PODFILE")
-          echo "Podfile encontrado em: $PODDIR"
-          cd "$PODDIR"
-          sed -i "" "s/platform :ios, '[0-9.]*'/platform :ios, '16.0'/" Podfile || true
-          grep -q "platform :ios" Podfile || sed -i "" "1s/^/platform :ios, '16.0'\n/" Podfile
-          # ajustar deployment target no projeto
-          find . -name project.pbxproj -exec sed -i "" "s/IPHONEOS_DEPLOYMENT_TARGET = [0-9.]*/IPHONEOS_DEPLOYMENT_TARGET = 16.0/g" {} \; 2>/dev/null || true
-          pod install --repo-update
+          # Capacitor 8 usa Swift Package Manager (SPM), nao CocoaPods.
+          # Nao existe Podfile; ajustamos o deployment target no projeto Xcode.
+          find ios -name project.pbxproj -exec sed -i "" "s/IPHONEOS_DEPLOYMENT_TARGET = [0-9.]*/IPHONEOS_DEPLOYMENT_TARGET = 16.0/g" {} \;
+          echo "Deployment target ajustado para 16.0"
       - name: Build and export IPA
         script: |
           xcode-project use-profiles
-          xcodebuild -workspace ios/App/App.xcworkspace -scheme App -configuration Release -archivePath build/App.xcarchive archive
-          xcode-project build-ipa --workspace ios/App/App.xcworkspace --scheme App --config Release
+          # Capacitor 8/SPM usa .xcodeproj (nao ha .xcworkspace)
+          xcode-project build-ipa --project ios/App/App.xcodeproj --scheme App --config Release
     artifacts:
       - build/ios/ipa/*.ipa
     publishing:
