@@ -52,7 +52,13 @@ workflows:
       - name: Init Capacitor
         script: npx cap init "Saindo do Jogo" "com.apostandonavida.stakereal" --web-dir dist
       - name: Add iOS platform
-        script: npx cap add ios || true
+        script: |
+          npx cap add ios
+          echo "=== Conteudo da pasta ios apos cap add ==="
+          ls -la ios/ || echo "PASTA ios NAO CRIADA"
+          ls -la ios/App/ || echo "ios/App NAO existe"
+          echo "=== Procurar Podfile ==="
+          find ios -name Podfile 2>/dev/null || echo "Podfile NAO encontrado"
       - name: Registrar deep link (saindodojogo://) no Info.plist
         script: |
           PLIST=ios/App/App/Info.plist
@@ -69,10 +75,20 @@ workflows:
         script: npx cap sync ios
       - name: Fix deployment target
         script: |
-          cd ios/App
+          # Localiza o Podfile onde quer que o cap sync tenha criado
+          PODFILE=$(find ios -name Podfile | head -1)
+          if [ -z "$PODFILE" ]; then
+            echo "ERRO: Podfile nao existe. Estrutura da pasta ios:"
+            find ios -maxdepth 3 -type f 2>/dev/null | head -30
+            exit 1
+          fi
+          PODDIR=$(dirname "$PODFILE")
+          echo "Podfile encontrado em: $PODDIR"
+          cd "$PODDIR"
           sed -i "" "s/platform :ios, '[0-9.]*'/platform :ios, '16.0'/" Podfile || true
           grep -q "platform :ios" Podfile || sed -i "" "1s/^/platform :ios, '16.0'\n/" Podfile
-          sed -i "" "s/IPHONEOS_DEPLOYMENT_TARGET = [0-9.]*/IPHONEOS_DEPLOYMENT_TARGET = 16.0/g" App.xcodeproj/project.pbxproj
+          # ajustar deployment target no projeto
+          find . -name project.pbxproj -exec sed -i "" "s/IPHONEOS_DEPLOYMENT_TARGET = [0-9.]*/IPHONEOS_DEPLOYMENT_TARGET = 16.0/g" {} \; 2>/dev/null || true
           pod install --repo-update
       - name: Build and export IPA
         script: |
