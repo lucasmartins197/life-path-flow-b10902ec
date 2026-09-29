@@ -6,6 +6,7 @@ import { BottomNavigation } from "@/components/BottomNavigation";
 import { PortoSeguroButton } from "@/components/PortoSeguroButton";
 import { supabase } from "@/integrations/supabase/client";
 import { abrirCheckoutStripe, checarPagamentoRecente, ehAppNativo } from "@/lib/checkout";
+import { isIOSNative, purchaseAppleConsumable, PRODUTO_TERAPIA } from "@/lib/revenuecat";
 import { toast } from "sonner";
 export default function TherapyHome() {
   const navigate = useNavigate();
@@ -98,6 +99,21 @@ export default function TherapyHome() {
         toast.error("Faça login para continuar");
         navigate("/auth");
         return;
+      }
+
+      // iOS: compra via Apple IAP (App Store exige). No Android segue o Stripe abaixo.
+      if (isIOSNative()) {
+        const res = await purchaseAppleConsumable(PRODUTO_TERAPIA);
+        if (res.cancelled) {
+          return; // usuario cancelou, nada a fazer
+        }
+        if (res.success) {
+          // Compra Apple concluida: mostra a agenda (mesmo destino do Android)
+          setPagouNoApp(true);
+        } else {
+          toast.error(res.error || "Não foi possível concluir a compra.");
+        }
+        return; // no iOS, nao segue para o Stripe
       }
       const { data, error } = await supabase.functions.invoke("create-checkout-session", {
         body: {
