@@ -1037,11 +1037,12 @@ function ReadyScreen({
   saving: boolean;
 }) {
   return (
-    <div className="h-full w-full flex flex-col bg-background px-6 pt-[max(env(safe-area-inset-top),4rem)] pb-[max(env(safe-area-inset-bottom),2rem)] overflow-y-auto relative">
+    <div className="h-full w-full flex flex-col bg-background px-6 pt-[max(env(safe-area-inset-top),4rem)] pb-[max(env(safe-area-inset-bottom),2rem)] relative overflow-hidden">
       {/* Confetti */}
       <Confetti />
 
-      <div className="flex-1 flex flex-col items-center justify-start text-center relative z-10 min-h-0 pt-2">
+      {/* Conteudo rola aqui dentro; o botao abaixo fica SEMPRE fixo na base */}
+      <div className="flex-1 min-h-0 overflow-y-auto flex flex-col items-center justify-start text-center relative z-10 pt-2">
         <div
           className="h-16 w-16 rounded-full flex items-center justify-center mb-6 animate-scale-in"
           style={{ backgroundColor: "rgba(201,168,76,0.15)" }}
@@ -1099,7 +1100,7 @@ function ReadyScreen({
         </div>
       </div>
 
-      <div className="space-y-3 relative z-10 mt-6">
+      <div className="space-y-3 relative z-10 mt-4 pt-4 shrink-0 bg-background">
         <Button
           onClick={onStart}
           disabled={saving}
