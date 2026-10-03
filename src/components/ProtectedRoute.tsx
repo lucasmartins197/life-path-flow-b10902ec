@@ -71,7 +71,14 @@ export function ProtectedRoute({ children, allowedRoles, redirectTo = "/auth" }:
   // If profile is null, treat as inactive (redirect to subscription)
   // This handles new users whose profile hasn't been created yet
 
-  const hasSubscription = profile !== null && ["active", "canceling"].includes((profile as any)?.subscription_status);
+  // Acesso válido = status active/canceling E (sem data de expiração OU data no futuro).
+  // Isso faz o Pix de "1 mês" EXPIRAR automaticamente quando subscription_end passa.
+  // Assinatura de cartão (recorrente) geralmente renova o subscription_end via webhook
+  // do Stripe; se não tiver data, o status sozinho basta (não bloqueia à toa).
+  const statusValido = profile !== null && ["active", "canceling"].includes((profile as any)?.subscription_status);
+  const subEnd = (profile as any)?.subscription_end;
+  const naoExpirou = !subEnd || new Date(subEnd) > new Date();
+  const hasSubscription = statusValido && naoExpirou;
 
   // Onboarding vem ANTES do paywall: a pessoa experimenta o app e so entao
   // ve o "assine". Quem ainda nao completou o onboarding NAO e mandado pro
