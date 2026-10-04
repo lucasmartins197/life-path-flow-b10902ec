@@ -299,6 +299,44 @@ serve(async (req) => {
         const THERAPY_PRICE = "price_1TePGm1kqWoIkJvR8JFLZde6";
         const LEGAL_PRICE_1 = "price_1TePGr1kqWoIkJvR69tvR5K7";
         const LEGAL_PRICE_2 = "price_1Ta1p00oEfdN4xGLiElxDceu";
+        // "1 mês via Pix" — pagamento único que ativa a assinatura por 30 dias.
+        const PIX_MENSAL_PRICE = "price_1UMv031kqWoIkJvRYZBTr2IB";
+
+        // Se for o Pix mensal, ativa a assinatura por 30 dias e encerra aqui.
+        if (priceId === PIX_MENSAL_PRICE) {
+          const trintaDias = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
+          const { error: subErr } = await supabase
+            .from("profiles")
+            .update({ subscription_status: "active", subscription_end: trintaDias })
+            .eq("id", userId);
+          if (subErr) {
+            // fallback pela coluna user_id
+            await supabase
+              .from("profiles")
+              .update({ subscription_status: "active", subscription_end: trintaDias })
+              .eq("user_id", userId);
+          }
+          // registra o pagamento tambem
+          await supabase.from("payments").insert({
+            user_id: userId,
+            payment_type: "assinatura_pix",
+            amount: session.amount_total ?? 0,
+            status: "completed",
+            stripe_session_id: session.id,
+          });
+          console.log("Pix mensal: assinatura ativada por 30 dias ate", trintaDias);
+          if (userEmail) {
+            await sendEmail(
+              userEmail,
+              "Pagamento confirmado - Saindo do Jogo",
+              "Seu acesso de 30 dias foi ativado! Aproveite o app. Ao fim dos 30 dias, basta renovar via Pix."
+            );
+          }
+          return new Response(JSON.stringify({ received: true }), {
+            status: 200,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
 
         let payment_type = "other";
         if (priceId === THERAPY_PRICE) payment_type = "therapy";
