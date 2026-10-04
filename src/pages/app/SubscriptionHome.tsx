@@ -109,6 +109,51 @@ export default function SubscriptionHome() {
     }
   }
 
+  // "1 mês via Pix" — pagamento único que o webhook converte em 30 dias de acesso.
+  // Só no Android/web (no iOS a Apple exige IAP). Usa modo "payment" (Pix/boleto/cartão).
+  const handlePixMensal = async () => {
+    if (isIOSNative()) return; // no iOS nao se oferece Pix
+    setLoading(true);
+    try {
+      const { data: { user: authUser } } = await supabase.auth.getUser();
+      if (!authUser) { navigate("/auth"); return; }
+      const response = await fetch("https://dmrlkxwpbwmzpdecsgnw.supabase.co/functions/v1/create-checkout-session", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          user_id: authUser.id,
+          email: authUser.email,
+          price_id: "price_1UMv031kqWoIkJvRYZBTr2IB",
+          mode: "payment",
+          success_path: "/app?payment=success",
+          is_native: ehAppNativo(),
+          cancel_path: "/app/assinatura?canceled=true",
+        }),
+      });
+      const data = await response.json();
+      if (data?.url) {
+        await abrirCheckoutStripe(data.url, async (status: string) => {
+          if (status === "cancelado") return;
+          const ativo = await checarAssinaturaAtiva(authUser.id);
+          if (ativo) {
+            await refreshProfile();
+            toast({ title: "Pagamento confirmado!", description: "Seu acesso de 30 dias foi ativado." });
+            navigate("/app", { replace: true });
+          } else {
+            await refreshProfile();
+            toast({ title: "Processando", description: "Se você concluiu o Pix, o acesso será liberado em instantes." });
+          }
+        });
+      } else {
+        toast({ title: "Erro", description: data?.error || "Tente novamente", variant: "destructive" });
+      }
+    } catch (err: any) {
+      toast({ title: "Erro", description: err.message || "Não foi possível iniciar o pagamento.", variant: "destructive" });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleSubscribe = async () => {
     setLoading(true);
     try {
@@ -526,6 +571,22 @@ export default function SubscriptionHome() {
                 )}
                 Assinar por R$ 79,90/mês
               </Button>
+
+              {/* Pagar 1 mes via Pix (pagamento unico que libera 30 dias).
+                  So fora do iOS (a Apple exige IAP no iPhone). */}
+              {!isIOSNative() && (
+                <Button
+                  onClick={handlePixMensal}
+                  disabled={loading}
+                  variant="outline"
+                  className="w-full h-12 text-base border-2 border-primary text-primary hover:bg-primary/5 mt-3"
+                >
+                  {loading ? (
+                    <Loader2 className="h-5 w-5 animate-spin mr-2" />
+                  ) : null}
+                  Pagar 1 mês via Pix — R$ 79,90
+                </Button>
+              )}
 
               {/* Alternativa de pagamento via Pix pelo WhatsApp da clinica.
                   So aparece FORA do iOS: a Apple proibe direcionar pagamento
