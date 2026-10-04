@@ -74,10 +74,16 @@ Deno.serve(async (req) => {
     const cancelUrl = is_native
       ? `${DEEP_LINK}?status=cancelado`
       : (cancel_path ? `${APP_BASE_URL}${cancel_path}` : `${APP_BASE_URL}/app/assinatura?canceled=true`);
+    // Pix e Boleto só funcionam em pagamento ÚNICO (mode=payment), não em
+    // assinatura recorrente (mode=subscription), pois não há cobrança automática.
+    const metodosPagamento = checkoutMode === "payment"
+      ? ["card", "pix", "boleto"]
+      : ["card"];
+
     const sessionParams: any = {
       customer_email: email,
       mode: checkoutMode,
-      payment_method_types: ["card"],
+      payment_method_types: metodosPagamento,
       line_items: [{ price: resolvedPrice, quantity: 1 }],
       success_url: successUrl,
       cancel_url: cancelUrl,
@@ -91,7 +97,10 @@ Deno.serve(async (req) => {
     const stripeBody = new URLSearchParams();
     stripeBody.set("customer_email", sessionParams.customer_email);
     stripeBody.set("mode", sessionParams.mode);
-    stripeBody.set("payment_method_types[0]", "card");
+    // Adiciona cada metodo de pagamento (card, pix, boleto conforme o modo)
+    metodosPagamento.forEach((metodo, i) => {
+      stripeBody.set(`payment_method_types[${i}]`, metodo);
+    });
     stripeBody.set("line_items[0][price]", resolvedPrice);
     stripeBody.set("line_items[0][quantity]", "1");
     stripeBody.set("success_url", sessionParams.success_url);
