@@ -79,6 +79,10 @@ workflows:
           # Nao existe Podfile; ajustamos o deployment target no projeto Xcode.
           find ios -name project.pbxproj -exec sed -i "" "s/IPHONEOS_DEPLOYMENT_TARGET = [0-9.]*/IPHONEOS_DEPLOYMENT_TARGET = 16.0/g" {} \;
           echo "Deployment target ajustado para 16.0"
+          # iPhone-only (device family 1): remove o iPad do app, evitando o bug de
+          # login no iPad que a Apple reprovou (Guideline 2.1a). Seu publico usa celular.
+          find ios -name project.pbxproj -exec sed -i "" "s/TARGETED_DEVICE_FAMILY = [^;]*/TARGETED_DEVICE_FAMILY = 1/g" {} \;
+          echo "App configurado para iPhone-only (sem iPad)"
       - name: Definir bundle version (unico e crescente)
         script: |
           # A Apple exige que cada envio tenha CFBundleVersion maior que o anterior.
